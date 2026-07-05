@@ -1,0 +1,478 @@
+     1→/* ============================================================
+     2→   Bachat Bazar — App
+     3→   SPA router, drawer/modal rendering, event wiring, init
+     4→   ============================================================ */
+     5→
+     6→const App = (() => {
+     7→  const D = window.DATA;
+     8→  let heroTimer = null, flashTimer = null, topTimer = null;
+     9→  let lastOrder = null;
+    10→
+    11→  /* ---------- Router ---------- */
+    12→  function route() {
+    13→    closeAllPanels();
+    14→    let hash = location.hash.slice(1) || '/';
+    15→    const [path, query] = hash.split('?');
+    16→    const parts = path.split('/').filter(Boolean); // e.g. ['shop'] or ['product', '12']
+    17→    let view;
+    18→    const root = parts[0];
+    19→
+    20→    switch(root) {
+    21→      case undefined: view = Views.home(); break;
+    22→      case 'shop': Views.shopState.page=1; view = Views.shop(query||''); break;
+    23→      case 'product': view = parts[1] ? Views.productDetail(parts[1]) : Views.notFound(); break;
+    24→      case 'cart': view = Views.cartPage(); break;
+    25→      case 'wishlist': view = Views.wishlistPage(); break;
+    26→      case 'compare': view = Views.comparePage(); break;
+    27→      case 'checkout': view = Views.checkout(); break;
+    28→      case 'order-success': view = lastOrder ? Views.orderSuccess(lastOrder) : Views.home(); break;
+    29→      case 'orders': Views.accountState.tab='orders'; view = Views.account(); break;
+    30→      case 'account': view = Views.account(); break;
+    31→      case 'admin': window.location.href='admin.html'; return;
+    32→      case 'deals': view = Views.deals(); break;
+    33→      case 'new': view = Views.newArrivals(); break;
+    34→      case 'about': view = Views.about(); break;
+    35→      case 'faq': view = Views.faq(); break;
+    36→      case 'contact': view = Views.contact(); break;
+    37→      case 'blog': view = parts[1] ? Views.blogPost(parts[1]) : Views.blog(); break;
+    38→      case 'privacy': view = Views.policy('privacy'); break;
+    39→      case 'terms': view = Views.policy('terms'); break;
+    40→      case 'shipping': view = Views.policy('shipping'); break;
+    41→      case 'returns': view = Views.policy('returns'); break;
+    42→      default: view = Views.notFound();
+    43→    }
+    44→
+    45→    const app = document.getElementById('app');
+    46→    // page transition
+    47→    app.style.opacity = '0';
+    48→    setTimeout(()=>{
+    49→      app.innerHTML = view;
+    50→      app.style.transition = 'opacity .3s ease';
+    51→      app.style.opacity = '1';
+    52→      UI.icons();
+    53→      UI.attachRipple();
+    54→      UI.reveal();
+    55→      bindPageEvents();
+    56→      window.scrollTo({top:0,behavior:'auto'});
+    57→    }, 120);
+    58→  }
+    59→
+    60→  /* ---------- Footer ---------- */
+    61→  function renderFooter() {
+    62→    const f = document.createElement('footer');
+    63→    f.className = 'mt-16 glass border-t border-white/20';
+    64→    f.innerHTML = `
+    65→    <div class="max-w-7xl mx-auto px-4 py-12">
+    66→      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+    67→        <div class="col-span-2 lg:col-span-1">
+    68→          <a href="#/" class="flex items-center gap-2 mb-3"><img src="logo.svg" alt="Bachat Bazar" class="w-9 h-9" /><span class="font-display text-xl font-extrabold">Bachat <span class="text-brand-500">Bazar</span></span></a>
+    69→          <p class="text-sm text-slate-500 max-w-xs">Premium online shopping, redefined. Quality products, delivered with care.</p>
+    70→          <div class="flex gap-2 mt-4">
+    71→            ${['facebook','instagram','twitter','youtube','linkedin'].map(s=>`<a href="#/" class="grid place-items-center w-9 h-9 rounded-lg bg-brand-500/10 text-brand-500 hover:bg-brand-500 hover:text-white transition">${UI.icon(s==='twitter'?'twitter':s,'w-4 h-4')}</a>`).join('')}
+    72→          </div>
+    73→        </div>
+    74→        ${[['Shop',['Electronics','Fashion','Shoes','Watches','All Products']],['Customer Service',['Contact Us','FAQs','Track Order','Returns','Shipping Info']],['Company',['About Us','Blog','Careers','Affiliate Program','Privacy Policy']],['Account',['My Account','My Orders','Wishlist','Cart','Sign In']]].map(([t,links])=>`
+    75→          <div><h4 class="font-display font-bold mb-3 text-sm">${t}</h4><ul class="space-y-2 text-sm text-slate-500">${links.map(l=>`<li><a href="#/" class="hover:text-brand-500 transition">${l}</a></li>`).join('')}</ul></div>`).join('')}
+    76→      </div>
+    77→      <div class="border-t border-white/10 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+    78→        <p class="text-sm text-slate-500">© 2026 Bachat Bazar. All rights reserved.</p>
+    79→        <div class="flex items-center gap-3 flex-wrap justify-center">
+    80→          ${['visa','mastercard','paypal','apple-pay','google-pay'].map(p=>`<span class="px-3 py-1.5 rounded-lg glass-strong text-xs font-bold text-slate-500">${UI.icon('credit-card','w-4 h-4')} ${p}</span>`).join('')}
+    81→        </div>
+    82→        <div class="flex gap-3 text-sm text-slate-500"><a href="admin.html" class="hover:text-brand-500 font-semibold flex items-center gap-1">${UI.icon('shield','w-3.5 h-3.5')} Admin Panel</a><a href="#/terms" class="hover:text-brand-500">Terms</a><a href="#/privacy" class="hover:text-brand-500">Privacy</a><a href="#/shipping" class="hover:text-brand-500">Shipping</a></div>
+    83→      </div>
+    84→    </div>`;
+    85→    document.body.appendChild(f);
+    86→  }
+    87→
+    88→  /* ---------- Category dropdown ---------- */
+    89→  function renderCatMenu() {
+    90→    const menu = document.getElementById('catMenu');
+    91→    if(!menu) return;
+    92→    menu.innerHTML = Store.categories().map(c=>`
+    93→      <a href="#/shop?category=${c.id}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-brand-500/10 transition group">
+    94→        <span class="grid place-items-center w-10 h-10 rounded-xl bg-gradient-to-br ${c.color} text-white">${UI.icon(c.icon,'w-5 h-5')}</span>
+    95→        <span><span class="block text-sm font-semibold">${c.name}</span><span class="block text-xs text-slate-400">${Store.allProducts().filter(p=>p.category===c.id).length} items</span></span>
+    96→      </a>`).join('');
+    97→  }
+    98→
+    99→  /* ---------- Mobile menu ---------- */
+   100→  function openMobileMenu() {
+   101→    const m = document.getElementById('mobileMenu');
+   102→    const aside = m.querySelector('aside');
+   103→    aside.innerHTML = `
+   104→      <div class="flex items-center justify-between mb-5">
+   105→        <span class="font-display text-xl font-extrabold">Menu</span>
+   106→        <button data-close-mobile class="p-2 rounded-xl hover:bg-slate-500/10">${UI.icon('x','w-6 h-6')}</button>
+   107→      </div>
+   108→      <nav class="space-y-1">
+   109→        ${[['home','Home','#/'],['tag','Deals','#/deals'],['sparkle','New Arrivals','#/new'],['box','Shop All','#/shop'],['heart','Wishlist','#/wishlist'],['git-compare','Compare','#/compare'],['shopping-bag','Cart','#/cart'],['package','Orders','#/orders'],['user','Account','#/account'],['shield','Admin Panel','admin.html']].map(([i,l,h])=>`<a href="${h}" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-brand-500/10 text-sm font-medium">${UI.icon(i,'w-5 h-5')} ${l}</a>`).join('')}
+   110→      </nav>
+   111→      <div class="border-t border-white/10 mt-4 pt-4">
+   112→        <p class="text-xs font-semibold text-slate-400 mb-2 px-3">CATEGORIES</p>
+   113→        ${Store.categories().map(c=>`<a href="#/shop?category=${c.id}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-brand-500/10 text-sm"><span class="grid place-items-center w-7 h-7 rounded-lg bg-gradient-to-br ${c.color} text-white">${UI.icon(c.icon,'w-3.5 h-3.5')}</span> ${c.name}</a>`).join('')}
+   114→      </div>`;
+   115→    m.classList.remove('hidden');
+   116→    m.querySelectorAll('[data-close-mobile]').forEach(b=>b.onclick=closeMobileMenu);
+   117→    UI.icons();
+   118→  }
+   119→  function closeMobileMenu(){ document.getElementById('mobileMenu').classList.add('hidden'); }
+   120→
+   121→  /* ---------- Cart drawer ---------- */
+   122→  function renderCartDrawer() {
+   123→    const items = Store.state.cart.map(i=>({...i,p:Store.product(i.id)})).filter(x=>x.p);
+   124→    const wrap = document.getElementById('cartItems');
+   125→    const foot = document.getElementById('cartFooter');
+   126→    if(!items.length){
+   127→      wrap.innerHTML = `<div class="text-center py-16 text-slate-500">${UI.icon('shopping-bag','w-12 h-12 mx-auto mb-3 opacity-40')}<p>Your cart is empty</p><a href="#/shop" data-close-cart class="btn btn-primary mt-4 px-5 py-2.5 text-sm">Start Shopping</a></div>`;
+   128→      foot.innerHTML='';
+   129→      UI.icons(); return;
+   130→    }
+   131→    wrap.innerHTML = items.map(it=>`
+   132→      <div class="cart-drawer-item glass-strong rounded-xl border border-slate-200 dark:border-slate-700 p-3 flex gap-3" data-id="${it.p.id}">
+   133→        <a href="#/product/${it.p.id}" data-close-cart class="w-16 h-16 rounded-lg overflow-hidden shrink-0">${UI.img(D.U(it.p.imageId,160),it.p.name,'w-full h-full object-cover','cd'+it.p.id)}</a>
+   134→        <div class="flex-1 min-w-0">
+   135→          <a href="#/product/${it.p.id}" data-close-cart class="text-sm font-medium hover:text-brand-500 line-clamp-2">${UI.escapeHtml(it.p.name)}</a>
+   136→          <p class="text-xs text-slate-400">${it.p.brand}</p>
+   137→          <div class="flex items-center justify-between mt-1">
+   138→            <div class="flex items-center gap-1">
+   139→              <button class="cdq w-6 h-6 grid place-items-center rounded-md hover:bg-brand-500/10" data-act="minus">${UI.icon('minus','w-3 h-3')}</button>
+   140→              <span class="text-sm font-bold w-6 text-center">${it.qty}</span>
+   141→              <button class="cdq w-6 h-6 grid place-items-center rounded-md hover:bg-brand-500/10" data-act="plus">${UI.icon('plus','w-3 h-3')}</button>
+   142→            </div>
+   143→            <span class="text-sm font-bold text-brand-500">${Store.money(it.p.price*it.qty)}</span>
+   144→          </div>
+   145→        </div>
+   146→        <button class="cdr text-slate-400 hover:text-rose-500 self-start" title="Remove">${UI.icon('x','w-4 h-4')}</button>
+   147→      </div>`).join('');
+   148→    foot.innerHTML = drawerTotals();
+   149→    // events
+   150→    wrap.querySelectorAll('.cdq').forEach(b=> b.onclick=()=>{ const row=b.closest('[data-id]'); const id=+row.dataset.id; const it=Store.state.cart.find(i=>i.id===id); const p=Store.product(id); if(b.dataset.act==='plus') Store.setQty(id,Math.min(it.qty+1,p.stock||99)); else Store.setQty(id,it.qty-1); renderCartDrawer(); Store.updateBadges(); });
+   151→    wrap.querySelectorAll('.cdr').forEach(b=> b.onclick=()=>{ const id=+b.closest('[data-id]').dataset.id; Store.removeFromCart(id); renderCartDrawer(); });
+   152→    foot.querySelectorAll('[data-cd-act]').forEach(b=> b.onclick=()=>{ const act=b.dataset.cdAct; if(act==='save'){ Store.state.cart.forEach(i=>Store.saveForLater(i.id)); renderCartDrawer(); Store.updateBadges(); } else if(act==='checkout'){ UI.closeDrawer('cartDrawer'); location.hash='#/checkout'; } else if(act==='clear'){ Store.state.cart=[]; Store.save(); renderCartDrawer(); Store.updateBadges(); } });
+   153→    foot.querySelector('#drawerCouponApply')?.addEventListener('click',()=>{ const inp=foot.querySelector('#drawerCouponInput'); Store.applyCoupon(inp.value); renderCartDrawer(); });
+   154→    UI.icons();
+   155→  }
+   156→  function drawerTotals(){
+   157→    const t=Store.cartTotals();
+   158→    return `
+   159→    ${Store.state.coupon?`<div class="flex items-center justify-between text-sm text-emerald-500 bg-emerald-500/10 rounded-lg px-3 py-2">${UI.icon('ticket','w-4 h-4')} ${Store.state.coupon.code} applied <button id="drawerCouponRemove" class="text-rose-400 hover:text-rose-500">${UI.icon('x','w-3.5 h-3.5')}</button></div>`:`<div class="flex gap-2"><input id="drawerCouponInput" placeholder="Coupon code" class="flex-1 px-3 py-2 rounded-lg bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:ring-2 focus:ring-brand-500"><button id="drawerCouponApply" class="btn btn-ghost px-3 py-2 text-sm">Apply</button></div>`}
+   160→    <div class="space-y-1 text-sm border-t border-white/10 pt-3">
+   161→      <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span class="font-semibold">${t.subDisplay}</span></div>
+   162→      ${t.discount>0?`<div class="flex justify-between text-emerald-500"><span>Discount</span><span>−${t.discountDisplay}</span></div>`:''}
+   163→      <div class="flex justify-between"><span class="text-slate-500">Shipping</span><span class="${t.shipping===0?'text-emerald-500':''} font-semibold">${t.shipping===0?'FREE':t.shipDisplay}</span></div>
+   164→      <div class="flex justify-between"><span class="text-slate-500">Tax</span><span>${t.taxDisplay}</span></div>
+   165→    </div>
+   166→    <div class="flex justify-between items-center border-t border-white/10 pt-3"><span class="font-display font-bold">Total</span><span class="font-display text-xl font-extrabold text-brand-500">${t.totalDisplay}</span></div>
+   167→    <div class="grid grid-cols-2 gap-2">
+   168→      <button data-cd-act="clear" class="btn btn-ghost py-2.5 text-sm">${UI.icon('trash-2','w-4 h-4')} Clear</button>
+   169→      <button data-cd-act="save" class="btn btn-ghost py-2.5 text-sm">${UI.icon('bookmark','w-4 h-4')} Save</button>
+   170→    </div>
+   171→    <button data-cd-act="checkout" class="btn btn-primary w-full py-3.5">${UI.icon('shield-check','w-5 h-5')} Checkout · ${t.totalDisplay}</button>`;
+   172→  }
+   173→
+   174→  /* ---------- Wishlist drawer ---------- */
+   175→  function renderWishlistDrawer(){
+   176→    const items = Store.state.wishlist.map(id=>Store.product(id)).filter(Boolean);
+   177→    const wrap = document.getElementById('wishlistItems');
+   178→    if(!items.length){ wrap.innerHTML=`<div class="text-center py-16 text-slate-500">${UI.icon('heart','w-12 h-12 mx-auto mb-3 opacity-40')}<p>Your wishlist is empty</p><a href="#/shop" data-close-wishlist class="btn btn-primary mt-4 px-5 py-2.5 text-sm">Discover Products</a></div>`; UI.icons(); return; }
+   179→    wrap.innerHTML = items.map(p=>`
+   180→      <div class="glass-strong rounded-xl border border-slate-200 dark:border-slate-700 p-3 flex gap-3" data-id="${p.id}">
+   181→        <a href="#/product/${p.id}" data-close-wishlist class="w-16 h-16 rounded-lg overflow-hidden shrink-0">${UI.img(D.U(p.imageId,160),p.name,'w-full h-full object-cover','wd'+p.id)}</a>
+   182→        <div class="flex-1 min-w-0"><a href="#/product/${p.id}" data-close-wishlist class="text-sm font-medium hover:text-brand-500 line-clamp-2">${UI.escapeHtml(p.name)}</a><p class="text-xs text-slate-400">${p.brand}</p><p class="text-sm font-bold text-brand-500 mt-1">${Store.money(p.price)}</p></div>
+   183→        <div class="flex flex-col gap-1"><button class="wdr-add w-8 h-8 grid place-items-center rounded-lg bg-brand-500 text-white" title="Add to cart">${UI.icon('shopping-cart','w-3.5 h-3.5')}</button><button class="wdr w-8 h-8 grid place-items-center rounded-lg hover:bg-rose-500/10 text-rose-500" title="Remove">${UI.icon('trash-2','w-3.5 h-3.5')}</button></div>
+   184→      </div>`).join('');
+   185→    wrap.querySelectorAll('.wdr-add').forEach(b=>b.onclick=()=>{ Store.addToCart(b.closest('[data-id]').dataset.id,1); });
+   186→    wrap.querySelectorAll('.wdr').forEach(b=>b.onclick=()=>{ Store.toggleWishlist(b.closest('[data-id]').dataset.id); renderWishlistDrawer(); Store.updateBadges(); });
+   187→    UI.icons();
+   188→  }
+   189→
+   190→  /* ---------- Notifications panel ---------- */
+   191→  function renderNotifPanel(){
+   192→    const panel = document.getElementById('notifPanel');
+   193→    const ns = Store.state.notifs.length ? Store.state.notifs : [
+   194→      {icon:'tag', title:'Flash Sale Live!', text:'Up to 50% off selected items', read:false},
+   195→      {icon:'truck', title:'Free Shipping', text:'On all orders over $50', read:false},
+   196→      {icon:'gift', title:'Earn Rewards', text:'Get points on every purchase', read:true},
+   197→    ];
+   198→    panel.innerHTML = `
+   199→      <div class="flex items-center justify-between p-4 border-b border-white/10">
+   200→        <h3 class="font-display font-bold">Notifications</h3>
+   201→        <button id="markReadBtn" class="text-xs text-brand-500 hover:underline">Mark all read</button>
+   202→      </div>
+   203→      <div class="max-h-80 overflow-y-auto">${ns.map(n=>`
+   204→        <div class="flex gap-3 p-4 border-b border-white/5 hover:bg-brand-500/5 ${n.read?'opacity-60':''}">
+   205→          <span class="grid place-items-center w-9 h-9 rounded-lg bg-brand-500/15 text-brand-500 shrink-0">${UI.icon(n.icon,'w-4 h-4')}</span>
+   206→          <div class="flex-1 min-w-0"><p class="text-sm font-semibold">${n.title}</p><p class="text-xs text-slate-400">${n.text}</p></div>
+   207→          ${!n.read?'<span class="w-2 h-2 rounded-full bg-brand-500 mt-2 shrink-0"></span>':''}
+   208→        </div>`).join('')}</div>`;
+   209→    panel.classList.remove('hidden');
+   210→    document.getElementById('markReadBtn').onclick=()=>{ Store.markAllRead(); renderNotifPanel(); Store.updateBadges(); };
+   211→    UI.icons();
+   212→  }
+   213→
+   214→  /* ---------- Page-specific event binding ---------- */
+   215→  function bindPageEvents(){
+   216→    // Home: hero slider + counters + countdowns
+   217→    initHeroSlider();
+   218→    initCounters();
+   219→    initCountdowns();
+   220→    initNewsletter();
+   221→
+   222→    // Shop: filters, sort, pagination
+   223→    initShop();
+   224→
+   225→    // Product detail
+   226→    initProductDetail();
+   227→
+   228→    // Cart page
+   229→    initCartPage();
+   230→
+   231→    // Compare page
+   232→    initComparePage();
+   233→
+   234→    // Checkout
+   235→    initCheckout();
+   236→
+   237→    // Auth modal internal
+   238→    initAuthEvents();
+   239→
+   240→    // Account tabs
+   241→    document.querySelectorAll('[data-acctab]').forEach(b=> b.onclick=()=>{ Views.accountState.tab=b.dataset.acctab; App.render(); });
+   242→    const lo = document.getElementById('logoutBtn'); if(lo) lo.onclick=()=>{ Store.logout(); location.hash='#/'; };
+   243→
+   244→    // Admin tabs
+   245→    document.querySelectorAll('[data-admtab]').forEach(b=> b.onclick=()=>{ Views.adminState.tab=b.dataset.admtab; App.render(); });
+   246→
+   247→    // generic card actions across any product grid on the page
+   248→    Views.bindCardActions(document.getElementById('app'));
+   249→  }
+   250→
+   251→  function initHeroSlider(){
+   252→    const slides = document.querySelectorAll('#heroSlides .slide');
+   253→    if(!slides.length) return;
+   254→    let i=0;
+   255→    clearInterval(heroTimer);
+   256→    function go(n){ slides.forEach(s=>s.classList.add('hidden')); slides[n].classList.remove('hidden'); slides[n].classList.add('active'); document.querySelectorAll('#heroDots button').forEach((b,k)=>{ b.className = 'slide-dots h-2 rounded-full transition-all '+(k===n?'w-8 bg-brand-500':'w-2 bg-slate-300 dark:bg-slate-600'); }); i=n; }
+   257→    heroTimer = setInterval(()=>go((i+1)%slides.length),5000);
+   258→    document.querySelectorAll('#heroDots button').forEach(b=> b.onclick=()=>{ clearInterval(heroTimer); go(+b.dataset.slide); });
+   259→  }
+   260→
+   261→  function initCounters(){
+   262→    document.querySelectorAll('[data-count]').forEach(el=>{
+   263→      if(el._counted) return; el._counted=true;
+   264→      const obs = new IntersectionObserver((ents)=>{
+   265→        ents.forEach(e=>{ if(e.isIntersecting){ UI.animateCount(el,+el.dataset.count,1400,el.dataset.prefix||'',el.dataset.suffix||''); obs.disconnect(); } });
+   266→      },{threshold:.4});
+   267→      obs.observe(el);
+   268→    });
+   269→  }
+   270→
+   271→  function initCountdowns(){
+   272→    const end = Date.now()+8*3600*1000 + 42*60*1000;
+   273→    const flashH=document.getElementById('flashh'),flashM=document.getElementById('flashm'),flashS=document.getElementById('flashs');
+   274→    const top=document.getElementById('topCountdown'), deals=document.getElementById('dealsCountdown');
+   275→    clearInterval(flashTimer); clearInterval(topTimer);
+   276→    function tick(){
+   277→      let d=end-Date.now(); if(d<0)d=0;
+   278→      const h=Math.floor(d/36e5),m=Math.floor(d%36e5/6e4),s=Math.floor(d%6e4/1e3);
+   279→      if(flashH)flashH.textContent=String(h).padStart(2,'0');
+   280→      if(flashM)flashM.textContent=String(m).padStart(2,'0');
+   281→      if(flashS)flashS.textContent=String(s).padStart(2,'0');
+   282→      if(top)top.textContent=`${h}h ${m}m ${s}s`;
+   283→      if(deals)deals.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+   284→    }
+   285→    tick(); flashTimer=setInterval(tick,1000); topTimer=flashTimer;
+   286→  }
+   287→
+   288→  function initNewsletter(){
+   289→    const form=document.getElementById('newsletterForm'); if(!form) return;
+   290→    form.onsubmit=e=>{ e.preventDefault(); Store.state.newsletter=true; Store.save(); form.innerHTML=`<div class="text-center"><span class="grid place-items-center w-14 h-14 mx-auto rounded-full bg-emerald-500 text-white mb-3 scale-in">${UI.icon('check','w-7 h-7')}</span><p class="font-display text-xl font-bold">Subscribed!</p><p class="text-slate-300 text-sm mt-1">Use code <strong class="text-brand-400">WELCOME10</strong> for 10% off.</p></div>`; UI.toast('Subscribed! Check your email for 10% off code.','success'); UI.icons(); };
+   291→  }
+   292→
+   293→  /* ---- Shop events ---- */
+   294→  function initShop(){
+   295→    const grid=document.getElementById('shopGrid'); if(!grid) return;
+   296→    // initial render with skeleton then results
+   297→    Views.renderShopGrid();
+   298→    // sort
+   299→    const sort=document.getElementById('sortSelect'); if(sort) sort.onchange=()=>{ Views.shopState.sort=sort.value; Views.shopState.page=1; Views.renderShopGrid(); };
+   300→    // filters
+   301→    document.querySelectorAll('input[name="fcat"]').forEach(r=> r.onchange=()=>{ Views.shopState.filters.category=r.value||null; Views.shopState.page=1; Views.renderShopGrid(); });
+   302→    document.querySelectorAll('input[name="frating"]').forEach(r=> r.onchange=()=>{ Views.shopState.filters.rating=+r.value; Views.shopState.page=1; Views.renderShopGrid(); });
+   303→    const pr=document.getElementById('priceRange'); if(pr) pr.oninput=()=>{ Views.shopState.filters.priceMax=+pr.value; document.getElementById('priceVal').textContent=Store.money(pr.value); pr.style.setProperty('--val',(pr.value/200000)*100+'%'); Views.shopState.page=1; Views.renderShopGrid(); };
+   304→    document.querySelectorAll('.brand-cb').forEach(c=> c.onchange=()=>{ const brands=[...document.querySelectorAll('.brand-cb:checked')].map(x=>x.value); Views.shopState.filters.brand=brands; Views.shopState.page=1; Views.renderShopGrid(); });
+   305→    const fs=document.getElementById('fStock'); if(fs) fs.onchange=()=>{ Views.shopState.filters.inStock=fs.checked; Views.shopState.page=1; Views.renderShopGrid(); };
+   306→    const fd=document.getElementById('fDiscount'); if(fd) fd.onchange=()=>{ Views.shopState.filters.discount=fd.checked; Views.shopState.page=1; Views.renderShopGrid(); };
+   307→    const clear=()=>{ Views.shopState.filters={category:null,brand:[],priceMax:200000,rating:0,inStock:false,discount:false}; Views.shopState.page=1; App.render(); };
+   308→    document.getElementById('clearFilters')?.addEventListener('click',clear);
+   309→    document.getElementById('clearFilters2')?.addEventListener('click',clear);
+   310→    const mfb=document.getElementById('mobileFilterBtn');
+   311→    if(mfb) mfb.onclick=()=>{ const f=document.getElementById('filters'); f.classList.toggle('hidden'); };
+   312→  }
+   313→
+   314→  /* ---- Product detail events ---- */
+   315→  function initProductDetail(){
+   316→    const root=document.getElementById('app');
+   317→    // thumbnails
+   318→    root.querySelectorAll('.thumb').forEach(t=> t.onclick=()=>{ const box=document.getElementById('zoomBox'); box.querySelector('img').src=t.dataset.img; box.querySelector('img').setAttribute('onerror',`this.onerror=null;this.src='https://picsum.photos/seed/${t.dataset.seed}/900'`); root.querySelectorAll('.thumb').forEach(x=>x.classList.replace('border-brand-500','border-transparent')); t.classList.add('border-brand-500'); t.classList.remove('border-transparent'); });
+   319→    // zoom
+   320→    const zt=document.getElementById('zoomToggle'), zb=document.getElementById('zoomBox');
+   321→    if(zt&&zb){ zt.onclick=()=>{ zb.classList.toggle('zoomed'); zt.querySelector('i')?.setAttribute('data-lucide', zb.classList.contains('zoomed')?'zoom-out':'zoom-in'); UI.icons(); }; if(zb){ let move=false; zb.addEventListener('mousemove',e=>{ if(!zb.classList.contains('zoomed'))return; const r=zb.getBoundingClientRect(); const x=((e.clientX-r.left)/r.width)*100, y=((e.clientY-r.top)/r.height)*100; zb.querySelector('img').style.transformOrigin=`${x}% ${y}%`; }); } }
+   322→    const v360=document.getElementById('view360'); if(v360) v360.onclick=()=>UI.toast('360° view loading… (demo)','info');
+   323→    const vv=document.getElementById('viewVideo'); if(vv) vv.onclick=()=>UI.openModal('genericModal',`<div class="p-2"><button onclick="UI.closeModal('genericModal')" class="absolute top-3 right-3 z-10 p-2 rounded-xl hover:bg-slate-500/10">${UI.icon('x','w-5 h-5')}</button><video controls class="w-full rounded-2xl" poster="${D.U(Store.product(location.hash.split('/')[2])?.imageId||'1498049794561-7780e7231661',900)}"><source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"></video></div>`);
+   324→    // qty
+   325→    const qm=document.getElementById('qtyMinus'), qp=document.getElementById('qtyPlus'), qi=document.getElementById('qtyInput');
+   326→    if(qm) qm.onclick=()=>{ qi.value=Math.max(1,+qi.value-1); };
+   327→    if(qp) qp.onclick=()=>{ const p=Store.product(location.hash.split('/')[2]); qi.value=Math.min(p?.stock||99,+qi.value+1); };
+   328→    // add to cart / buy now
+   329→    const add=document.getElementById('addCartBtn'); if(add) add.onclick=()=>{ const id=location.hash.split('/')[2]; if(Store.addToCart(id,+qi.value)){ renderCartDrawer(); Store.updateBadges(); } };
+   330→    const buy=document.getElementById('buyNowBtn'); if(buy) buy.onclick=()=>{ const id=location.hash.split('/')[2]; if(Store.addToCart(id,+qi.value)){ Store.updateBadges(); location.hash='#/checkout'; } };
+   331→    const wb=document.getElementById('wishBtn'); if(wb) wb.onclick=()=>{ const id=location.hash.split('/')[2]; const on=Store.toggleWishlist(id); wb.classList.toggle('text-accent-500',on); };
+   332→    const cb=document.getElementById('cmpBtn'); if(cb) cb.onclick=()=>{ const id=location.hash.split('/')[2]; const on=Store.toggleCompare(id); cb.classList.toggle('text-brand-500',on); };
+   333→    const sb=document.getElementById('shareBtn'); if(sb) sb.onclick=()=>{ navigator.clipboard?.writeText(location.href).then(()=>UI.toast('Link copied!','success')) || UI.toast('Share: '+location.href,'info'); };
+   334→    const fbt=document.getElementById('fbtAdd'); if(fbt) fbt.onclick=()=>{ const id=location.hash.split('/')[2]; const p=Store.product(id); const fbtP=Store.allProducts().filter(x=>x.category===p.category&&x.id!==p.id).slice(0,2); [p,...fbtP].forEach(x=>Store.addToCart(x.id,1)); renderCartDrawer(); Store.updateBadges(); };
+   335→    // tabs
+   336→    root.querySelectorAll('.tab-btn').forEach(b=> b.onclick=()=>{ root.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); const p=Store.product(location.hash.split('/')[2]); document.getElementById('tabContent').innerHTML=Views.productTab(b.dataset.tab,p); UI.icons(); initReviewEvents(); });
+   337→    const wr=document.getElementById('writeReviewBtn'); if(wr) wr.onclick=()=>UI.toast('Review form opened (demo)','info');
+   338→    initReviewEvents();
+   339→  }
+   340→  function initReviewEvents(){ document.querySelectorAll('[data-helpful]').forEach(b=> b.onclick=()=>{ const c=b.textContent.match(/\d+/); const n=c?+c[0]+1:1; b.innerHTML=UI.icon('thumbs-up','w-4 h-4')+` Helpful (${n})`; b.classList.add('text-brand-500'); UI.icons(); UI.toast('Thanks for your feedback!','success',1500); }); }
+   341→
+   342→  /* ---- Cart page events ---- */
+   343→  function initCartPage(){
+   344→    const root=document.getElementById('app');
+   345→    root.querySelectorAll('.qbtn').forEach(b=> b.onclick=()=>{ const row=b.closest('.cart-row'); const id=+row.dataset.id; const it=Store.state.cart.find(i=>i.id===id); const p=Store.product(id); const inp=row.querySelector('.qty-val'); let q=+inp.value; if(b.dataset.act==='plus') q=Math.min(it.qty+1,p.stock||99); else q=Math.max(1,it.qty-1); Store.setQty(id,q); App.render(); });
+   346→    root.querySelectorAll('.qty-val').forEach(inp=> inp.onchange=()=>{ const id=+inp.closest('.cart-row').dataset.id; Store.setQty(id,Math.max(1,+inp.value)); App.render(); });
+   347→    root.querySelectorAll('.cart-remove').forEach(b=> b.onclick=()=>{ Store.removeFromCart(b.dataset.id); App.render(); renderCartDrawer(); });
+   348→    root.querySelectorAll('.move-cart').forEach(b=> b.onclick=()=>{ Store.moveToCart(b.dataset.id); App.render(); renderCartDrawer(); });
+   349→    const clr=document.getElementById('clearCartBtn'); if(clr) clr.onclick=()=>UI.confirm('Clear entire cart?',()=>{ Store.state.cart=[]; Store.save(); Store.updateBadges(); App.render(); renderCartDrawer(); });
+   350→    const ac=document.getElementById('applyCouponBtn'); if(ac) ac.onclick=()=>{ const inp=document.getElementById('couponInput'); if(Store.applyCoupon(inp.value)) App.render(); };
+   351→    document.querySelectorAll('.coupon-chip').forEach(c=> c.onclick=()=>{ document.getElementById('couponInput').value=c.dataset.code; Store.applyCoupon(c.dataset.code); App.render(); });
+   352→  }
+   353→
+   354→  /* ---- Compare page events ---- */
+   355→  function initComparePage(){
+   356→    const root=document.getElementById('app');
+   357→    root.querySelectorAll('.cmp-remove').forEach(b=> b.onclick=()=>{ Store.toggleCompare(b.dataset.id); App.render(); Store.updateBadges(); });
+   358→    root.querySelectorAll('.cmp-add').forEach(b=> b.onclick=()=> Store.addToCart(b.dataset.id,1));
+   359→  }
+   360→
+   361→  /* ---- Checkout events ---- */
+   362→  function initCheckout(){
+   363→    const root=document.getElementById('app');
+   364→    const form=document.getElementById('checkoutForm');
+   365→    if(form) form.onsubmit=e=>{ e.preventDefault(); Views.checkoutState.step=2; App.render(); };
+   366→    const back=root.querySelector('#stepBack'); if(back) back.onclick=()=>{ Views.checkoutState.step=Math.max(1,Views.checkoutState.step-1); App.render(); };
+   367→    const next=root.querySelector('#stepNext');
+   368→    if(next) next.onclick=()=>{ if(Views.checkoutState.step===2){ const sel=document.querySelector('input[name="ship"]:checked'); if(sel) Views.checkoutState.shipping=sel.value; Views.checkoutState.giftWrap=document.getElementById('giftWrap')?.checked||false; } if(Views.checkoutState.step===3){ const sel=document.querySelector('input[name="pay"]:checked'); if(sel) Views.checkoutState.payment=sel.value; } Views.checkoutState.step++; App.render(); };
+   369→    // payment method change -> refresh fields
+   370→    root.querySelectorAll('input[name="pay"]').forEach(r=> r.onchange=()=>{ Views.checkoutState.payment=r.value; document.getElementById('payFields').innerHTML=Views.payFields(r.value); UI.icons(); });
+   371→    // shipping method change
+   372→    root.querySelectorAll('input[name="ship"]').forEach(r=> r.onchange=()=>{ Views.checkoutState.shipping=r.value; });
+   373→    const place=root.getElementById('placeOrderBtn'); if(place) place.onclick=()=>placeOrder();
+   374→  }
+   375→  function placeOrder(){
+   376→    const order=Store.placeOrder(Views.checkoutState.payment, Store.state.addresses[0]);
+   377→    lastOrder=order;
+   378→    UI.toast('Payment processed successfully','success');
+   379→    setTimeout(()=>{ location.hash='#/order-success'; },500);
+   380→  }
+   381→
+   382→  /* ---- Auth events ---- */
+   383→  function initAuthEvents(){
+   384→    const modal=document.getElementById('authModal');
+   385→    if(modal.classList.contains('hidden')) return;
+   386→    const body=document.getElementById('authBody'); if(!body) return;
+   387→    body.querySelectorAll('[data-auth]').forEach(b=> b.onclick=()=>{ Views.authState.mode=b.dataset.auth; Views.auth(); });
+   388→    const form=document.getElementById('authForm');
+   389→    if(form) form.onsubmit=e=>{ e.preventDefault(); const m=Views.authState.mode;
+   390→      if(m==='login'){ const email=form.email?.value||'demo@bachatbazar.com'; Store.login(email); UI.closeModal('authModal'); App.render(); }
+   391→      else if(m==='register'){ const name=form.name?.value||'New User'; const email=form.email?.value||'new@bachatbazar.com'; Store.register(name,email); UI.closeModal('authModal'); App.render(); }
+   392→      else if(m==='forgot'){ Views.authState.mode='otp'; Views.auth(); }
+   393→      else if(m==='otp'){ UI.closeModal('authModal'); const email=Store.state.user?.email||'demo@bachatbazar.com'; Store.login(email); App.render(); UI.toast('Email verified! Welcome back.','success'); }
+   394→    };
+   395→    // social
+   396→    body.querySelectorAll('.social-login').forEach(b=> b.onclick=()=>{ UI.toast(`${b.dataset.social} sign in (demo)`,'info'); setTimeout(()=>{ Store.login(`user@${b.dataset.social.toLowerCase()}.com`); UI.closeModal('authModal'); App.render(); },600); });
+   397→    // otp auto-advance
+   398→    const otps=body.querySelectorAll('.otp-input'); if(otps.length){ otps.forEach((inp,i)=> inp.addEventListener('input',()=>{ if(inp.value&&i<otps.length-1) otps[i+1].focus(); })); }
+   399→  }
+   400→
+   401→  /* ---------- helpers ---------- */
+   402→  function closeAllPanels(){ document.getElementById('notifPanel')?.classList.add('hidden'); }
+   403→  function openAccount(){ if(Store.state.user) location.hash='#/account'; else { Views.authState.mode='login'; Views.auth(); } }
+   404→
+   405→  /* ---------- global wiring ---------- */
+   406→  function wireGlobal(){
+   407→    // nav icon buttons
+   408→    document.querySelectorAll('[data-route]').forEach(b=> b.onclick=()=> location.hash=b.dataset.route);
+   409→    document.getElementById('cartBtn').onclick=()=>{ renderCartDrawer(); UI.openDrawer('cartDrawer'); };
+   410→    document.getElementById('wishlistBtn').onclick=()=>{ renderWishlistDrawer(); UI.openDrawer('wishlistDrawer'); };
+   411→    document.getElementById('compareNavBtn').onclick=()=> location.hash='#/compare';
+   412→    document.getElementById('accountBtn').onclick=openAccount;
+   413→    document.getElementById('menuBtn').onclick=openMobileMenu;
+   414→    document.getElementById('themeToggle').onclick=()=> Store.toggleTheme();
+   415→    document.getElementById('notifBtn').onclick=()=> renderNotifPanel();
+   416→    document.querySelector('[data-currency-toggle]').onclick=()=> Store.cycleCurrency();
+   417→    document.querySelector('[data-lang-toggle]').onclick=()=> UI.toast('Language: English (demo multi-language)','info');
+   418→
+   419→    // drawer/modal close
+   420→    document.querySelectorAll('[data-close-cart]').forEach(b=> b.onclick=()=> UI.closeDrawer('cartDrawer'));
+   421→    document.querySelectorAll('[data-close-wishlist]').forEach(b=> b.onclick=()=> UI.closeDrawer('wishlistDrawer'));
+   422→    document.querySelectorAll('[data-close-quickview]').forEach(b=> b.onclick=()=> UI.closeModal('quickViewModal'));
+   423→    document.querySelectorAll('[data-close-auth]').forEach(b=> b.onclick=()=> UI.closeModal('authModal'));
+   424→    document.querySelectorAll('[data-close-generic]').forEach(b=> b.onclick=()=> UI.closeModal('genericModal'));
+   425→    document.getElementById('catDropdown')?.querySelector('button').addEventListener('click',()=> document.getElementById('catMenu').classList.toggle('hidden'));
+   426→    // close cat menu on outside click
+   427→    document.addEventListener('click',e=>{ if(!e.target.closest('#catDropdown')) document.getElementById('catMenu')?.classList.add('hidden'); });
+   428→
+   429→    // back to top
+   430→    const btt=document.getElementById('backToTop');
+   431→    window.addEventListener('scroll',()=>{ btt.classList.toggle('hidden', window.scrollY<400); document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>20); });
+   432→    btt.onclick=UI.scrollTop;
+   433→
+   434→    // chat widget
+   435→    document.getElementById('chatWidget').onclick=()=> UI.openModal('genericModal', Views.chatBox());
+   436→
+   437→    // cookie consent
+   438→    const cc=document.getElementById('cookieConsent');
+   439→    if(Store.state.cookieConsent===null){ cc.classList.remove('hidden'); }
+   440→    document.getElementById('cookieAccept').onclick=()=>{ Store.state.cookieConsent=true; Store.save(); cc.classList.add('hidden'); UI.toast('Cookies accepted','success',1500); };
+   441→    document.getElementById('cookieDecline').onclick=()=>{ Store.state.cookieConsent=false; Store.save(); cc.classList.add('hidden'); };
+   442→
+   443→    // ESC closes modals/drawers
+   444→    document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ ['quickViewModal','authModal','genericModal'].forEach(id=>UI.closeModal(id)); ['cartDrawer','wishlistDrawer'].forEach(id=>UI.closeDrawer(id)); closeMobileMenu(); } });
+   445→
+   446→    // hash change -> route
+   447→    window.addEventListener('hashchange', route);
+   448→  }
+   449→
+   450→  /* ---------- Chat box ---------- */
+   451→  Views.chatBox = function(){
+   452→    return `<div class="p-5"><div class="flex items-center justify-between mb-3"><div class="flex items-center gap-2"><span class="grid place-items-center w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-white">${UI.icon('headphones','w-5 h-5')}</span><div><p class="font-bold text-sm">Bachat Bazar Support</p><p class="text-xs text-emerald-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online</p></div></div><button onclick="UI.closeModal('genericModal')" class="p-2 rounded-xl hover:bg-slate-500/10">${UI.icon('x','w-5 h-5')}</button></div>
+   453→    <div id="chatLog" class="h-64 overflow-y-auto space-y-2 mb-3 pr-1"><div class="flex gap-2"><span class="w-7 h-7 rounded-full bg-brand-500 text-white grid place-items-center text-xs shrink-0">L</span><div class="glass-strong rounded-2xl rounded-tl-sm px-3 py-2 text-sm max-w-[80%]">Hi! 👋 Welcome to Bachat Bazar. How can I help you today?</div></div></div>
+   454→    <div class="flex gap-2 flex-wrap mb-3">${['Track my order','Return policy','Talk to human'].map(q=>`<button class="chat-quick text-xs px-3 py-1.5 rounded-full bg-brand-500/10 text-brand-500 hover:bg-brand-500/20">${q}</button>`).join('')}</div>
+   455→    <form id="chatForm" class="flex gap-2"><input id="chatInput" placeholder="Type a message…" class="flex-1 px-4 py-2.5 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500 text-sm"><button class="btn btn-primary px-4 py-2.5">${UI.icon('send','w-4 h-4')}</button></form></div>`;
+   456→  };
+   457→
+   458→  /* ---------- init ---------- */
+   459→  function init(){
+   460→    Store.applyTheme();
+   461→    Store.updateBadges();
+   462→    renderCatMenu();
+   463→    renderFooter();
+   464→    UI.initSearch();
+   465→    UI.attachRipple();
+   466→    wireGlobal();
+   467→    route();
+   468→    UI.icons();
+   469→    // seed a welcome notification
+   470→    if(!Store.state.notifs.length){ Store.addNotif({icon:'gift', title:'Welcome to Bachat Bazar!', text:'Use code WELCOME10 for 10% off your first order'}); Store.updateBadges(); }
+   471→  }
+   472→
+   473→  return { init, render: route, renderCartDrawer, renderWishlistDrawer, route };
+   474→})();
+   475→
+   476→window.App = App;
+   477→document.addEventListener('DOMContentLoaded', App.init);
+   478→

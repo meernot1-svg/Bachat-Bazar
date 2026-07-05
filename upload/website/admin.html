@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <title>Bachat Bazar · Admin Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode:'class',
+      theme:{ extend:{
+        fontFamily:{ sans:['Inter','sans-serif'], display:['"Plus Jakarta Sans"','Inter','sans-serif'] },
+        colors:{ brand:{50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81'}, accent:{400:'#f472b6',500:'#ec4899',600:'#db2777'} },
+        boxShadow:{ glow:'0 0 40px -10px rgba(99,102,241,.45)' }
+      } }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    body{ background:#0b1020; }
+    #adminGate{ background: radial-gradient(1200px 600px at 80% -10%, rgba(99,102,241,.18), transparent), radial-gradient(900px 500px at -10% 110%, rgba(236,72,153,.14), transparent), #0b1020; }
+    #adminGate input{ letter-spacing:.15em; }
+    @keyframes shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+    .shake{ animation:shake .3s ease; }
+    .admin-bg{ background: radial-gradient(1200px 600px at 80% -10%, rgba(99,102,241,.18), transparent), radial-gradient(900px 500px at -10% 110%, rgba(236,72,153,.14), transparent), #0b1020; }
+    .nav-item{ display:flex; align-items:center; gap:.7rem; padding:.7rem .9rem; border-radius:.9rem; font-size:.875rem; font-weight:500; color:#94a3b8; transition:all .18s ease; cursor:pointer; }
+    .nav-item:hover{ background:rgba(99,102,241,.12); color:#e2e8f0; }
+    .nav-item.active{ background:linear-gradient(135deg,rgba(99,102,241,.25),rgba(236,72,153,.18)); color:#fff; box-shadow:inset 0 0 0 1px rgba(129,140,248,.35); }
+    .nav-item.active i{ color:#a5b4fc; }
+    .card{ background:rgba(30,41,59,.6); border:1px solid rgba(148,163,184,.12); border-radius:1.25rem; }
+    .input{ width:100%; padding:.6rem .8rem; border-radius:.8rem; background:rgba(15,23,42,.6); border:1px solid rgba(148,163,184,.18); outline:none; color:#e2e8f0; font-size:.875rem; }
+    .input:focus{ border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.25); }
+    .btn2{ position:relative; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; gap:.5rem; font-weight:600; border-radius:.8rem; transition:all .15s; cursor:pointer; font-size:.875rem; }
+    .btn2:active{ transform:scale(.96); }
+    .btn-pri{ background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; box-shadow:0 8px 20px -8px rgba(79,70,229,.7); }
+    .btn-pri:hover{ transform:translateY(-1px); box-shadow:0 12px 26px -8px rgba(79,70,229,.9); }
+    .btn-acc{ background:linear-gradient(135deg,#ec4899,#f43f5e); color:#fff; }
+    .btn-gh{ background:rgba(99,102,241,.12); color:#a5b4fc; }
+    .btn-gh:hover{ background:rgba(99,102,241,.22); }
+    .chip{ font-size:.7rem; padding:.15rem .55rem; border-radius:999px; font-weight:600; }
+    table tbody tr:hover{ background:rgba(99,102,241,.06); }
+    .switch{ position:relative; width:42px; height:24px; background:#334155; border-radius:999px; transition:.2s; cursor:pointer; }
+    .switch.on{ background:#6366f1; }
+    .switch::after{ content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:.2s; }
+    .switch.on::after{ left:21px; }
+  </style>
+</head>
+<body class="admin-bg text-slate-200 font-sans antialiased min-h-screen">
+
+  <!-- ===== Password Gate ===== -->
+  <div id="adminGate" class="fixed inset-0 z-[200] flex items-center justify-center">
+    <div class="card p-8 w-full max-w-md mx-4">
+      <div class="text-center mb-6">
+        <span class="inline-grid place-items-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-accent-500 text-white shadow-glow mb-3">
+          <i data-lucide="shield-check" class="w-7 h-7"></i>
+        </span>
+        <h1 class="font-display text-2xl font-extrabold text-white">Bachat Bazar</h1>
+        <p class="text-sm text-brand-400 font-semibold tracking-widest mt-1">ADMIN CONSOLE</p>
+        <p class="text-sm text-slate-400 mt-3">Enter your password to access the admin panel</p>
+      </div>
+      <form id="gateForm" class="space-y-4">
+        <div class="relative">
+          <i data-lucide="lock" class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+          <input id="gatePassword" type="password" class="input pl-10 text-center" placeholder="Enter password" autocomplete="off" autofocus>
+        </div>
+        <p id="gateError" class="text-sm text-rose-400 text-center hidden"></p>
+        <button type="submit" class="btn2 btn-pri w-full py-3">
+          <i data-lucide="unlock" class="w-4 h-4"></i> Unlock Console
+        </button>
+        <a href="index.html" class="block text-center text-sm text-slate-400 hover:text-brand-300 mt-4">
+          <i data-lucide="arrow-left" class="w-4 h-4 inline"></i> Back to Store
+        </a>
+      </form>
+    </div>
+  </div>
+
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed lg:sticky top-0 z-40 h-screen w-64 shrink-0 -translate-x-full lg:translate-x-0 transition-transform bg-slate-950/70 backdrop-blur-xl border-r border-white/5 flex flex-col">
+      <div class="p-5 flex items-center gap-2 border-b border-white/5">
+        <img src="logo.svg" alt="Bachat Bazar" class="w-9 h-9" />
+        <div><p class="font-display font-extrabold leading-none">Bachat Bazar</p><p class="text-[.65rem] text-brand-400 font-semibold tracking-widest">ADMIN CONSOLE</p></div>
+      </div>
+      <nav id="nav" class="flex-1 overflow-y-auto p-3 space-y-1"></nav>
+      <div class="p-3 border-t border-white/5 space-y-1">
+        <a href="index.html" class="nav-item"><i data-lucide="external-link" class="w-4 h-4"></i> View Storefront</a>
+        <a href="index.html" id="logoutBtn" class="nav-item text-rose-400 hover:bg-rose-500/10" onclick="sessionStorage.removeItem('bb_admin_auth')"><i data-lucide="log-out" class="w-4 h-4"></i> Logout</a>
+      </div>
+    </aside>
+    <div id="overlay" class="fixed inset-0 bg-black/60 z-30 hidden lg:hidden" onclick="Admin.toggleSidebar()"></div>
+
+    <!-- Main -->
+    <div class="flex-1 min-w-0 flex flex-col">
+      <!-- Topbar -->
+      <header class="sticky top-0 z-20 bg-slate-950/60 backdrop-blur-xl border-b border-white/5">
+        <div class="flex items-center gap-3 px-4 h-16">
+          <button onclick="Admin.toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-white/5"><i data-lucide="menu" class="w-6 h-6"></i></button>
+          <div class="relative flex-1 max-w-md">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <input id="adminSearch" placeholder="Search products, orders…" class="input pl-9" />
+          </div>
+          <div class="ml-auto flex items-center gap-2">
+            <button class="p-2 rounded-lg hover:bg-white/5 relative"><i data-lucide="bell" class="w-5 h-5"></i><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent-500"></span></button>
+            <button onclick="Admin.toast('Settings saved','info')" class="p-2 rounded-lg hover:bg-white/5"><i data-lucide="settings" class="w-5 h-5"></i></button>
+            <div class="flex items-center gap-2 pl-2 border-l border-white/10">
+              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80" class="w-8 h-8 rounded-full object-cover" onerror="this.src='https://picsum.photos/seed/admin/80'">
+              <div class="hidden sm:block"><p class="text-sm font-semibold leading-none">Admin</p><p class="text-[.7rem] text-slate-400">admin@bachatbazar.com</p></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main id="adminApp" class="p-4 md:p-6 flex-1"></main>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="adminModal" class="modal fixed inset-0 z-[80] hidden grid place-items-center p-4">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="Admin.closeModal()"></div>
+    <div class="modal-panel relative card max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"></div>
+  </div>
+  <!-- Toasts -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 w-[22rem] max-w-[90vw]"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    (function(){
+      var GATE_KEY = 'bb_admin_auth';
+      var ADMIN_PASS = 'BA56CR7VK18';
+      var gate = document.getElementById('adminGate');
+      var form = document.getElementById('gateForm');
+      var pwd = document.getElementById('gatePassword');
+      var err = document.getElementById('gateError');
+      if (sessionStorage.getItem(GATE_KEY) === '1') {
+        gate.style.display = 'none';
+      } else {
+        // stop admin.js from initialising until unlocked
+        document.addEventListener('DOMContentLoaded', function(){
+          if (sessionStorage.getItem(GATE_KEY) !== '1') Admin._locked = true;
+        }, true);
+      }
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        if (pwd.value === ADMIN_PASS) {
+          sessionStorage.setItem(GATE_KEY, '1');
+          gate.style.display = 'none';
+          Admin._locked = false;
+          if (typeof Admin.init === 'function') Admin.init();
+          if (window.lucide) lucide.createIcons();
+        } else {
+          err.textContent = 'Incorrect password. Please try again.';
+          err.classList.remove('hidden');
+          pwd.value = '';
+          form.classList.add('shake');
+          setTimeout(function(){ form.classList.remove('shake'); }, 300);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

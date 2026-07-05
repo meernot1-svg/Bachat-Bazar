@@ -1,0 +1,639 @@
+     1→/* ============================================================
+     2→   Lumière — Views (part 1)
+     3→   Shared components, Home, Shop, Product Detail, Cart/Wishlist/Compare pages
+     4→   ============================================================ */
+     5→
+     6→const Views = {};
+     7→
+     8→/* ---------- Shared component: product card ---------- */
+     9→Views.productCard = function(p, opts={}) {
+    10→  const inWish = Store.inWishlist(p.id);
+    11→  const inCmp = Store.inCompare(p.id);
+    12→  const out = p.stock <= 0;
+    13→  const disc = p.oldPrice && p.oldPrice>p.price ? Math.round((1-p.price/p.oldPrice)*100) : 0;
+    14→  return `
+    15→  <div class="product-card group fade-up" data-id="${p.id}">
+    16→    <div class="card-img-wrap relative aspect-product">
+    17→      <a href="#/product/${p.id}" class="block h-full">
+    18→        ${UI.img(p.images[0], p.name, 'card-img w-full h-full object-cover', 'p'+p.id)}
+    19→      </a>
+    20→      ${disc?`<span class="absolute top-2 left-2 badge-discount">-${disc}%</span>`:''}
+    21→      ${p.isNew?`<span class="absolute top-2 ${disc?'left-16':'left-2'} badge-new text-[.7rem] font-bold px-2 py-1 rounded-lg">NEW</span>`:''}
+    22→      ${out?`<span class="absolute top-2 right-2 badge-stock-out text-[.7rem] font-bold px-2 py-1 rounded-lg">OUT OF STOCK</span>`:''}
+    23→      <!-- action buttons -->
+    24→      <button data-wish="${p.id}" class="card-action right-2 ${inWish?'active':''}" title="Wishlist">${UI.icon('heart','w-4 h-4')}</button>
+    25→      <button data-cmp="${p.id}" class="card-action right-12 ${inCmp?'active':''}" title="Compare">${UI.icon('git-compare','w-4 h-4')}</button>
+    26→      <!-- quick view -->
+    27→      <div class="card-quick p-3 glass-strong border-t border-white/10">
+    28→        <button data-quick="${p.id}" class="btn btn-ghost w-full py-2 text-sm">${UI.icon('eye','w-4 h-4')} Quick View</button>
+    29→      </div>
+    30→    </div>
+    31→    <div class="p-3 flex flex-col flex-1">
+    32→      <div class="flex items-center justify-between">
+    33→        <span class="text-[.7rem] font-semibold text-brand-500 uppercase tracking-wide">${p.brand}</span>
+    34→        <span class="text-[.7rem] ${out?'text-rose-500':'text-emerald-500'}">${out?'Out of stock':`In stock (${p.stock})`}</span>
+    35→      </div>
+    36→      <a href="#/product/${p.id}" class="font-medium text-sm mt-1 line-clamp-2 hover:text-brand-500 transition">${UI.escapeHtml(p.name)}</a>
+    37→      <div class="flex items-center gap-1 mt-1">
+    38→        ${UI.stars(p.rating,'w-3.5 h-3.5')}
+    39→        <span class="text-xs text-slate-400">(${p.reviews.toLocaleString()})</span>
+    40→      </div>
+    41→      <div class="flex items-end gap-2 mt-2">
+    42→        <span class="text-lg font-bold">${Store.money(p.price)}</span>
+    43→        ${p.oldPrice>p.price?`<span class="text-xs text-slate-400 line-through mb-0.5">${Store.money(p.oldPrice)}</span>`:''}
+    44→      </div>
+    45→      <button data-add="${p.id}" class="btn btn-primary w-full mt-3 py-2.5 text-sm ${out?'opacity-50 pointer-events-none':''}" ${out?'disabled':''}>
+    46→        ${UI.icon('shopping-cart','w-4 h-4')} Add to Cart
+    47→      </button>
+    48→    </div>
+    49→  </div>`;
+    50→};
+    51→
+    52→/* grid wrapper */
+    53→Views.productGrid = function(list){ return `<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 stagger">${list.map(p=>Views.productCard(p)).join('')}</div>`; };
+    54→
+    55→Views.sectionHeading = function(title, sub, link){ return `
+    56→  <div class="flex items-end justify-between gap-4 mb-6" data-reveal>
+    57→    <div>
+    58→      ${sub?`<p class="text-brand-500 font-semibold text-sm uppercase tracking-wider">${sub}</p>`:''}
+    59→      <h2 class="font-display text-2xl md:text-3xl font-extrabold tracking-tight">${title}</h2>
+    60→    </div>
+    61→    ${link?`<a href="${link}" class="btn btn-ghost px-4 py-2 text-sm shrink-0">View all ${UI.icon('arrow-right','w-4 h-4')}</a>`:''}
+    62→  </div>`; };
+    63→
+    64→/* ============================================================
+    65→   HOME PAGE
+    66→   ============================================================ */
+    67→Views.home = function() {
+    68→  const D = window.DATA;
+    69→  return `
+    70→  <div class="fade-in">
+    71→    <!-- HERO -->
+    72→    <section class="relative overflow-hidden">
+    73→      <div class="absolute inset-0 -z-0">
+    74→        <div class="blob w-[40rem] h-[40rem] bg-brand-500/30 -top-40 -left-40 animate-float"></div>
+    75→        <div class="blob w-[30rem] h-[30rem] bg-accent-500/30 top-20 right-0" style="animation-delay:-3s"></div>
+    76→      </div>
+    77→      <div class="max-w-7xl mx-auto px-4 py-10 md:py-16 relative">
+    78→        <div class="grid lg:grid-cols-2 gap-8 items-center">
+    79→          <!-- text + slides -->
+    80→          <div class="relative min-h-[18rem]">
+    81→            <div id="heroSlides" class="relative h-full">
+    82→              ${D.HERO_SLIDES.map((s,i)=>`
+    83→                <div class="slide ${i===0?'active':''} ${i===0?'':'hidden'}">
+    84→                  <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/15 text-brand-500 text-xs font-semibold mb-4"><span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span> Limited time offer</p>
+    85→                  <h1 class="font-display text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">${s.title}</h1>
+    86→                  <p class="text-slate-500 dark:text-slate-300 text-lg mt-4">${s.sub}</p>
+    87→                  <div class="flex flex-wrap gap-3 mt-7">
+    88→                    <a href="${s.route}" class="btn btn-primary px-7 py-3.5">${s.cta} ${UI.icon('arrow-right','w-5 h-5')}</a>
+    89→                    <a href="#/shop" class="btn btn-light px-7 py-3.5">Browse All</a>
+    90→                  </div>
+    91→                </div>`).join('')}
+    92→            </div>
+    93→            <div class="flex gap-2 mt-6" id="heroDots">
+    94→              ${D.HERO_SLIDES.map((_,i)=>`<button data-slide="${i}" class="slide-dots h-2 rounded-full ${i===0?'w-8 bg-brand-500':'w-2 bg-slate-300 dark:bg-slate-600'}"></button>`).join('')}
+    95→            </div>
+    96→          </div>
+    97→          <!-- featured visual -->
+    98→          <div class="relative hidden lg:block">
+    99→            <div class="relative rounded-[2rem] overflow-hidden shadow-card aspect-[4/3]">
+   100→              ${UI.img(D.U(D.HERO_SLIDES[0].img, 900), 'Featured products', 'w-full h-full object-cover','hero')}
+   101→            </div>
+   102→            <div class="absolute -bottom-5 -left-5 glass rounded-2xl border border-white/20 shadow-card p-4 flex items-center gap-3 animate-float">
+   103→              <span class="grid place-items-center w-12 h-12 rounded-xl bg-emerald-500 text-white">${UI.icon('truck','w-6 h-6')}</span>
+   104→              <div><p class="font-bold text-sm">Free Shipping</p><p class="text-xs text-slate-500">On orders over $50</p></div>
+   105→            </div>
+   106→            <div class="absolute -top-5 -right-5 glass rounded-2xl border border-white/20 shadow-card p-4 flex items-center gap-3" style="animation-delay:-2s">
+   107→              <span class="grid place-items-center w-12 h-12 rounded-xl bg-amber-500 text-white">${UI.icon('shield-check','w-6 h-6')}</span>
+   108→              <div><p class="font-bold text-sm">Secure Payment</p><p class="text-xs text-slate-500">100% protected</p></div>
+   109→            </div>
+   110→          </div>
+   111→        </div>
+   112→      </div>
+   113→    </section>
+   114→
+   115→    <!-- TRUST MARQUEE -->
+   116→    <section class="py-5 border-y border-slate-200/60 dark:border-slate-800 overflow-hidden">
+   117→      <div class="marquee whitespace-nowrap text-slate-400 font-semibold text-sm">
+   118→        ${['Apple','Nike','Samsung','Sony','Adidas','Zara','Rolex','Bose','Logitech','IKEA','Nintendo'].map(b=>`<span class="flex items-center gap-3">${UI.icon('star','w-4 h-4 text-amber-400')} ${b}</span>`).join('')}
+   119→        ${['Apple','Nike','Samsung','Sony','Adidas','Zara','Rolex','Bose','Logitech','IKEA','Nintendo'].map(b=>`<span class="flex items-center gap-3">${UI.icon('star','w-4 h-4 text-amber-400')} ${b}</span>`).join('')}
+   120→      </div>
+   121→    </section>
+   122→
+   123→    <!-- CATEGORIES -->
+   124→    <section class="max-w-7xl mx-auto px-4 py-12">
+   125→      ${Views.sectionHeading('Shop by Category','Browse')}
+   126→      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" data-reveal>
+   127→        ${Store.categories().map(c=>`
+   128→          <a href="#/shop?category=${c.id}" class="group relative rounded-2xl overflow-hidden aspect-[4/5] shadow-card">
+   129→            <div class="absolute inset-0 bg-gradient-to-br ${c.color} opacity-90"></div>
+   130→            ${UI.img(D.U(c.img,400), c.name, 'w-full h-full object-cover mix-blend-overlay group-hover:scale-110 transition-transform duration-500','cat'+c.id)}
+   131→            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+   132→            <div class="absolute inset-0 p-4 flex flex-col justify-end text-white">
+   133→              <span class="grid place-items-center w-9 h-9 rounded-xl bg-white/20 backdrop-blur mb-2">${UI.icon(c.icon,'w-5 h-5')}</span>
+   134→              <span class="font-display font-bold">${c.name}</span>
+   135→            </div>
+   136→          </a>`).join('')}
+   137→      </div>
+   138→    </section>
+   139→
+   140→    <!-- FLASH SALE COUNTDOWN -->
+   141→    <section class="max-w-7xl mx-auto px-4 pb-12">
+   142→      <div class="relative rounded-3xl overflow-hidden gradient-bg p-8 md:p-12 text-white shadow-glow" data-reveal>
+   143→        <div class="blob w-72 h-72 bg-white/20 -top-20 -right-20"></div>
+   144→        <div class="relative flex flex-col md:flex-row items-center justify-between gap-6">
+   145→          <div>
+   146→            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold mb-3">${UI.icon('zap','w-3.5 h-3.5')} FLASH SALE</span>
+   147→            <h2 class="font-display text-3xl md:text-4xl font-extrabold">Mega Deals, Ends Soon!</h2>
+   148→            <p class="text-white/80 mt-2">Up to 50% off selected items. Hurry before they're gone.</p>
+   149→          </div>
+   150→          <div class="flex gap-3">
+   151→            ${[['Hours','h'],['Mins','m'],['Secs','s']].map(([l,k])=>`
+   152→              <div class="glass-strong rounded-2xl text-center px-4 py-3 min-w-[4.5rem] text-slate-800">
+   153→                <div id="flash${k}" class="text-3xl font-extrabold tabular-nums">00</div>
+   154→                <div class="text-[.65rem] font-semibold text-slate-500 uppercase">${l}</div>
+   155→              </div>`).join('')}
+   156→          </div>
+   157→        </div>
+   158→        <a href="#/deals" class="btn btn-light mt-7 px-7 py-3 self-start">${UI.icon('flame','w-5 h-5')} Shop Flash Deals</a>
+   159→      </div>
+   160→    </section>
+   161→
+   162→    <!-- FEATURED PRODUCTS -->
+   163→    <section class="max-w-7xl mx-auto px-4 py-8">
+   164→      ${Views.sectionHeading('Featured Products','Handpicked', '#/shop?filter=featured')}
+   165→      ${Views.productGrid(Store.allProducts().filter(p=>p.featured).slice(0,8))}
+   166→    </section>
+   167→
+   168→    <!-- PROMO BANNERS -->
+   169→    <section class="max-w-7xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-5">
+   170→      ${[
+   171→        {t:'New Arrivals',d:'Fresh drops every week',r:'#/new',c:'from-brand-600 to-indigo-600',i:'sparkles',img:'1469334021218-15f7d4f88cd1'},
+   172→        {t:'Best Sellers',d:'Customer favorites',r:'#/shop?sort=best-selling',c:'from-rose-500 to-accent-500',i:'flame',img:'1542291026-7eec264c27ff'}
+   173→      ].map(b=>`
+   174→        <a href="${b.r}" class="group relative rounded-3xl overflow-hidden aspect-[16/8] shadow-card" data-reveal>
+   175→          <div class="absolute inset-0 bg-gradient-to-r ${b.c} opacity-90"></div>
+   176→          ${UI.img(D.U(b.img,700),'', 'w-full h-full object-cover mix-blend-overlay group-hover:scale-105 transition-transform duration-700','ban'+b.t)}
+   177→          <div class="absolute inset-0 flex flex-col justify-center p-8 text-white">
+   178→            <span class="grid place-items-center w-12 h-12 rounded-xl bg-white/20 mb-3">${UI.icon(b.i,'w-6 h-6')}</span>
+   179→            <h3 class="font-display text-2xl font-extrabold">${b.t}</h3>
+   180→            <p class="text-white/80">${b.d}</p>
+   181→            <span class="btn btn-light mt-4 px-5 py-2.5 self-start text-sm">Explore ${UI.icon('arrow-right','w-4 h-4')}</span>
+   182→          </div>
+   183→        </a>`).join('')}
+   184→    </section>
+   185→
+   186→    <!-- BEST SELLERS -->
+   187→    <section class="max-w-7xl mx-auto px-4 py-8">
+   188→      ${Views.sectionHeading('Best Sellers','Top rated', '#/shop?sort=top-rated')}
+   189→      ${Views.productGrid(Store.allProducts().filter(p=>p.bestSeller).slice(0,8))}
+   190→    </section>
+   191→
+   192→    <!-- STATS COUNTERS -->
+   193→    <section class="max-w-7xl mx-auto px-4 py-12">
+   194→      <div class="glass rounded-3xl border border-white/20 p-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center" data-reveal>
+   195→        ${[['50K+','Happy Customers','users'],['1M+','Orders Delivered','package'],['10K+','Products','box'],['4.8★','Average Rating','star']].map(([n,l,i])=>`
+   196→          <div>
+   197→            <span class="grid place-items-center w-12 h-12 mx-auto rounded-xl bg-brand-500/15 text-brand-500 mb-2">${UI.icon(i,'w-6 h-6')}</span>
+   198→            <div class="text-3xl font-extrabold font-display" data-count="${parseInt(n)}" data-prefix="${n.includes('+')?'+':n.includes('★')?'':''}" data-suffix="${n.includes('★')?'★':n.includes('K')?'K+':n.includes('M')?'M+':''}">0</div>
+   199→            <div class="text-sm text-slate-500">${l}</div>
+   200→          </div>`).join('')}
+   201→      </div>
+   202→    </section>
+   203→
+   204→    <!-- TESTIMONIALS -->
+   205→    <section class="max-w-7xl mx-auto px-4 py-8">
+   206→      ${Views.sectionHeading('What Our Customers Say','Testimonials')}
+   207→      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5" data-reveal>
+   208→        ${D.TESTIMONIALS.map(t=>`
+   209→          <div class="glass rounded-2xl border border-white/20 p-5 fade-up">
+   210→            ${UI.stars(t.rating)}
+   211→            <p class="text-sm mt-3 text-slate-600 dark:text-slate-300">"${UI.escapeHtml(t.text)}"</p>
+   212→            <div class="flex items-center gap-3 mt-4">
+   213→              <img src="${D.U(t.avatar,100)}" class="w-10 h-10 rounded-full object-cover" onerror="this.src='https://picsum.photos/seed/u${t.name}/80'">
+   214→              <div><p class="font-semibold text-sm">${t.name}</p><p class="text-xs text-emerald-500 flex items-center gap-1">${UI.icon('badge-check','w-3.5 h-3.5')} ${t.role}</p></div>
+   215→            </div>
+   216→          </div>`).join('')}
+   217→      </div>
+   218→    </section>
+   219→
+   220→    <!-- BLOG -->
+   221→    <section class="max-w-7xl mx-auto px-4 py-12">
+   222→      ${Views.sectionHeading('From Our Blog','Insights', '#/blog')}
+   223→      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5" data-reveal>
+   224→        ${D.BLOGS.map(b=>`
+   225→          <a href="#/blog/${b.id}" class="group glass rounded-2xl border border-white/20 overflow-hidden fade-up">
+   226→            <div class="aspect-[16/10] overflow-hidden">${UI.img(D.U(b.img,500),b.title,'w-full h-full object-cover group-hover:scale-110 transition-transform duration-500','blog'+b.id)}</div>
+   227→            <div class="p-4">
+   228→              <p class="text-xs text-slate-400">${b.date} · ${b.author}</p>
+   229→              <h3 class="font-display font-bold mt-1 group-hover:text-brand-500 transition">${b.title}</h3>
+   230→              <p class="text-sm text-slate-500 mt-1 line-clamp-2">${b.excerpt}</p>
+   231→            </div>
+   232→          </a>`).join('')}
+   233→      </div>
+   234→    </section>
+   235→
+   236→    <!-- NEWSLETTER -->
+   237→    ${Views.newsletterSection()}
+   238→  </div>`;
+   239→};
+   240→
+   241→Views.newsletterSection = function(){
+   242→  return `<section class="max-w-7xl mx-auto px-4 py-12">
+   243→    <div class="relative rounded-3xl overflow-hidden bg-slate-900 text-white p-8 md:p-14 text-center" data-reveal>
+   244→      <div class="blob w-96 h-96 bg-brand-500/40 -top-40 left-1/4"></div>
+   245→      <div class="blob w-80 h-80 bg-accent-500/40 -bottom-40 right-1/4"></div>
+   246→      <div class="relative">
+   247→        ${UI.icon('mail-open','w-10 h-10 mx-auto text-brand-400')}
+   248→        <h2 class="font-display text-3xl md:text-4xl font-extrabold mt-3">Join Our Newsletter</h2>
+   249→        <p class="text-slate-300 mt-2 max-w-md mx-auto">Subscribe and get <strong>10% off</strong> your first order plus exclusive deals and early access.</p>
+   250→        <form id="newsletterForm" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mt-6">
+   251→          <input type="email" required placeholder="Enter your email" class="flex-1 px-5 py-3 rounded-xl bg-white/10 border border-white/20 placeholder-slate-400 outline-none focus:ring-2 focus:ring-brand-500">
+   252→          <button class="btn btn-primary px-6 py-3">${UI.icon('send','w-5 h-5')} Subscribe</button>
+   253→        </form>
+   254→      </div>
+   255→    </div>
+   256→  </section>`;
+   257→};
+   258→
+   259→/* ============================================================
+   260→   SHOP PAGE — filters, sorting, pagination, infinite scroll toggle
+   261→   ============================================================ */
+   262→Views.shopState = { page:1, perPage:8, sort:'featured', view:'grid', filters:{category:null,brand:[],priceMax:200000,rating:0,inStock:false,discount:false}, query:null };
+   263→
+   264→Views.shop = function(params={}) {
+   265→  // parse query string
+   266→  const q = {};
+   267→  if (params.q) { const u=new URLSearchParams(params); for(const [k,v] of u) q[k]=v; }
+   268→  if (q.category) Views.shopState.filters.category = q.category;
+   269→  if (q.sort) Views.shopState.sort = q.sort;
+   270→  if (q.q) Views.shopState.query = q.q; else Views.shopState.query = null;
+   271→
+   272→  return `
+   273→  <div class="max-w-7xl mx-auto px-4 py-8 fade-in">
+   274→    ${q.category?`<div class="mb-4"><span class="text-sm text-slate-500">Home / Shop / </span><span class="text-sm font-semibold capitalize">${q.category}</span></div>`:''}
+   275→    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+   276→      <div>
+   277→        <h1 class="font-display text-3xl font-extrabold">${q.q?`Results for "${UI.escapeHtml(q.q)}"`:'All Products'}</h1>
+   278→        <p class="text-slate-500 text-sm mt-1" id="resultCount"></p>
+   279→      </div>
+   280→      <div class="flex items-center gap-2">
+   281→        <button id="mobileFilterBtn" class="btn btn-ghost px-4 py-2 text-sm lg:hidden">${UI.icon('sliders-horizontal','w-4 h-4')} Filters</button>
+   282→        <select id="sortSelect" class="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:ring-2 focus:ring-brand-500">
+   283→          ${[['featured','Featured'],['price-low','Price: Low to High'],['price-high','Price: High to Low'],['newest','Newest'],['best-selling','Best Selling'],['top-rated','Top Rated']].map(([v,l])=>`<option value="${v}" ${Views.shopState.sort===v?'selected':''}>${l}</option>`).join('')}
+   284→        </select>
+   285→      </div>
+   286→    </div>
+   287→
+   288→    <div class="grid lg:grid-cols-[18rem_1fr] gap-6">
+   289→      <!-- Filters -->
+   290→      <aside id="filters" class="lg:block">
+   291→        ${Views.filterPanel()}
+   292→      </aside>
+   293→
+   294→      <!-- Products -->
+   295→      <div>
+   296→        <div id="shopGrid" class="min-h-[40vh]">${UI.skeletonGrid(8)}</div>
+   297→        <div id="pagination" class="mt-8 flex justify-center"></div>
+   298→      </div>
+   299→    </div>
+   300→  </div>`;
+   301→};
+   302→
+   303→Views.filterPanel = function(){
+   304→  const D = window.DATA;
+   305→  const f = Views.shopState.filters;
+   306→  return `
+   307→  <div class="glass rounded-2xl border border-white/20 p-5 space-y-6 sticky top-32">
+   308→    <div class="flex items-center justify-between">
+   309→      <h3 class="font-display font-bold">Filters</h3>
+   310→      <button id="clearFilters" class="text-xs text-brand-500 hover:underline">Clear all</button>
+   311→    </div>
+   312→
+   313→    <!-- Category -->
+   314→    <div>
+   315→      <p class="text-sm font-semibold mb-2">Category</p>
+   316→      <div class="space-y-1 max-h-44 overflow-auto pr-1">
+   317→        <label class="flex items-center gap-2 text-sm py-1 cursor-pointer"><input type="radio" name="fcat" value="" ${!f.category?'checked':''} class="accent-brand-500"> All</label>
+   318→        ${Store.categories().map(c=>`<label class="flex items-center gap-2 text-sm py-1 cursor-pointer"><input type="radio" name="fcat" value="${c.id}" ${f.category===c.id?'checked':''} class="accent-brand-500"> ${c.name}</label>`).join('')}
+   319→      </div>
+   320→    </div>
+   321→
+   322→    <!-- Price -->
+   323→    <div>
+   324→      <div class="flex justify-between text-sm mb-2"><span class="font-semibold">Max Price</span><span id="priceVal" class="text-brand-500 font-bold">${Store.money(f.priceMax)}</span></div>
+   325→      <input type="range" min="0" max="200000" step="500" value="${f.priceMax}" id="priceRange" class="range w-full" style="--val:${(f.priceMax/200000)*100}%">
+   326→    </div>
+   327→
+   328→    <!-- Rating -->
+   329→    <div>
+   330→      <p class="text-sm font-semibold mb-2">Rating</p>
+   331→      <div class="space-y-1">
+   332→        ${[4,3,2,1].map(r=>`<label class="flex items-center gap-2 text-sm py-1 cursor-pointer"><input type="radio" name="frating" value="${r}" ${f.rating===r?'checked':''} class="accent-brand-500"> ${UI.stars(r,'w-3.5 h-3.5')} & up</label>`).join('')}
+   333→        <label class="flex items-center gap-2 text-sm py-1 cursor-pointer"><input type="radio" name="frating" value="0" ${f.rating===0?'checked':''} class="accent-brand-500"> Any</label>
+   334→      </div>
+   335→    </div>
+   336→
+   337→    <!-- Brand -->
+   338→    <div>
+   339→      <p class="text-sm font-semibold mb-2">Brand</p>
+   340→      <div class="space-y-1 max-h-40 overflow-auto pr-1">
+   341→        ${Array.from(new Set([...D.BRANDS, ...Store.allProducts().map(p=>p.brand)])).map(b=>`<label class="flex items-center gap-2 text-sm py-1 cursor-pointer"><input type="checkbox" value="${b}" class="accent-brand-500 brand-cb"> ${b}</label>`).join('')}
+   342→      </div>
+   343→    </div>
+   344→
+   345→    <!-- Toggles -->
+   346→    <div class="space-y-2">
+   347→      <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="fStock" ${f.inStock?'checked':''} class="accent-brand-500"> In stock only</label>
+   348→      <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="fDiscount" ${f.discount?'checked':''} class="accent-brand-500"> On sale only</label>
+   349→    </div>
+   350→  </div>`;
+   351→};
+   352→
+   353→Views.applyFilters = function(){
+   354→  const D = window.DATA;
+   355→  let list = [...Store.allProducts()];
+   356→  const f = Views.shopState.filters;
+   357→  if (Views.shopState.query) {
+   358→    const q = Views.shopState.query.toLowerCase();
+   359→    list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.includes(q));
+   360→  }
+   361→  if (f.category) list = list.filter(p => p.category === f.category);
+   362→  if (f.brand.length) list = list.filter(p => f.brand.includes(p.brand));
+   363→  list = list.filter(p => p.price <= f.priceMax);
+   364→  if (f.rating) list = list.filter(p => p.rating >= f.rating);
+   365→  if (f.inStock) list = list.filter(p => p.stock > 0);
+   366→  if (f.discount) list = list.filter(p => p.oldPrice && p.oldPrice > p.price);
+   367→
+   368→  switch(Views.shopState.sort){
+   369→    case 'price-low': list.sort((a,b)=>a.price-b.price); break;
+   370→    case 'price-high': list.sort((a,b)=>b.price-a.price); break;
+   371→    case 'newest': list.sort((a,b)=>(b.isNew-a.isNew)); break;
+   372→    case 'best-selling': list.sort((a,b)=>b.reviews-a.reviews); break;
+   373→    case 'top-rated': list.sort((a,b)=>b.rating-a.rating); break;
+   374→    default: list.sort((a,b)=>(b.featured-a.featured));
+   375→  }
+   376→  return list;
+   377→};
+   378→
+   379→Views.renderShopGrid = function(){
+   380→  const grid = document.getElementById('shopGrid'); if(!grid) return;
+   381→  const all = Views.applyFilters();
+   382→  const s = Views.shopState;
+   383→  const start = (s.page-1)*s.perPage;
+   384→  const pageItems = all.slice(start, start+s.perPage);
+   385→  const count = document.getElementById('resultCount');
+   386→  if(count) count.textContent = `${all.length} products found`;
+   387→  if (pageItems.length===0){
+   388→    grid.innerHTML = `<div class="text-center py-20"><span class="grid place-items-center w-20 h-20 mx-auto rounded-full bg-slate-200/60 text-slate-400 mb-4">${UI.icon('search-x','w-10 h-10')}</span><h3 class="font-display text-xl font-bold">No products found</h3><p class="text-slate-500 mt-1">Try adjusting your filters</p><button id="clearFilters2" class="btn btn-primary mt-5 px-6 py-2.5">Clear filters</button></div>`;
+   389→    document.getElementById('pagination').innerHTML='';
+   390→    UI.attachRipple(grid);
+   391→    return;
+   392→  }
+   393→  // skeleton flash then render
+   394→  grid.innerHTML = UI.skeletonGrid(Math.min(s.perPage,8));
+   395→  setTimeout(()=>{
+   396→    grid.innerHTML = Views.productGrid(pageItems);
+   397→    UI.icons(); UI.attachRipple(grid); Views.bindCardActions(grid);
+   398→    // pagination
+   399→    const pages = Math.ceil(all.length/s.perPage);
+   400→    const pg = document.getElementById('pagination');
+   401→    if (pages>1){
+   402→      pg.innerHTML = `<div class="flex items-center gap-1">${Array.from({length:pages}).map((_,i)=>{
+   403→        const n=i+1; return `<button class="page-btn w-10 h-10 rounded-xl text-sm font-semibold ${n===s.page?'btn btn-primary':'btn btn-ghost'}">${n}</button>`;
+   404→      }).join('')}</div>`;
+   405→      pg.querySelectorAll('.page-btn').forEach((b,i)=>b.onclick=()=>{ Views.shopState.page=i+1; Views.renderShopGrid(); window.scrollTo({top:0,behavior:'smooth'}); });
+   406→    } else pg.innerHTML='';
+   407→  }, 350);
+   408→};
+   409→
+   410→/* bind product card actions (shared) */
+   411→Views.bindCardActions = function(root){
+   412→  root.querySelectorAll('[data-add]').forEach(b=> b.onclick = ()=> Store.addToCart(b.dataset.add,1));
+   413→  root.querySelectorAll('[data-wish]').forEach(b=> b.onclick = (e)=>{ e.preventDefault(); const on=Store.toggleWishlist(b.dataset.wish); b.classList.toggle('active',on); });
+   414→  root.querySelectorAll('[data-cmp]').forEach(b=> b.onclick = (e)=>{ e.preventDefault(); const on=Store.toggleCompare(b.dataset.cmp); b.classList.toggle('active',on); });
+   415→  root.querySelectorAll('[data-quick]').forEach(b=> b.onclick = (e)=>{ e.preventDefault(); UI.openModal('quickViewModal'); Views.quickView(b.dataset.quick); });
+   416→};
+   417→
+   418→/* ============================================================
+   419→   PRODUCT DETAIL PAGE
+   420→   ============================================================ */
+   421→Views.productDetail = function(id){
+   422→  const p = Store.product(id);
+   423→  if(!p) return Views.notFound();
+   424→  Store.pushRecent(p.id);
+   425→  const D = window.DATA;
+   426→  const gallery = [p.imageId, ...Store.allProducts().filter(x=>x.category===p.category && x.id!==p.id).slice(0,3).map(x=>x.imageId)].slice(0,4);
+   427→  const related = p.related.map(rid=>Store.product(rid)).filter(Boolean);
+   428→  const fbt = Store.allProducts().filter(x=>x.category===p.category && x.id!==p.id).slice(0,2);
+   429→  const reviews = Views.mockReviews(p);
+   430→  const inWish = Store.inWishlist(p.id);
+   431→  const inCmp = Store.inCompare(p.id);
+   432→  const disc = p.oldPrice>p.price ? Math.round((1-p.price/p.oldPrice)*100) : 0;
+   433→
+   434→  return `
+   435→  <div class="max-w-7xl mx-auto px-4 py-8 fade-in">
+   436→    <div class="text-sm text-slate-500 mb-5"><a href="#/" class="hover:text-brand-500">Home</a> / <a href="#/shop?category=${p.category}" class="hover:text-brand-500 capitalize">${p.category}</a> / <span class="text-slate-700 dark:text-slate-300">${UI.escapeHtml(p.name)}</span></div>
+   437→
+   438→    <div class="grid lg:grid-cols-2 gap-8">
+   439→      <!-- Gallery -->
+   440→      <div>
+   441→        <div class="zoom-container rounded-3xl overflow-hidden shadow-card aspect-product relative" id="zoomBox">
+   442→          ${UI.img(D.U(p.imageId,900), p.name, 'w-full h-full object-cover','pd'+p.id)}
+   443→          ${disc?`<span class="absolute top-4 left-4 badge-discount text-sm">-${disc}%</span>`:''}
+   444→          <button class="absolute top-4 right-4 glass-strong rounded-xl p-2" id="zoomToggle" title="Zoom">${UI.icon('zoom-in','w-5 h-5')}</button>
+   445→        </div>
+   446→        <div class="grid grid-cols-4 gap-3 mt-3">
+   447→          ${gallery.map((g,i)=>`<button class="thumb rounded-xl overflow-hidden border-2 ${i===0?'border-brand-500':'border-transparent'} aspect-product" data-img="${D.U(g,900)}" data-seed="g${p.id}${i}">${UI.img(D.U(g,400),'', 'w-full h-full object-cover hover:opacity-80','g'+p.id+i)}</button>`).join('')}
+   448→        </div>
+   449→        <div class="flex gap-2 mt-3">
+   450→          <button id="view360" class="btn btn-ghost flex-1 py-2.5 text-sm">${UI.icon('rotate-3d','w-4 h-4')} 360° View</button>
+   451→          <button id="viewVideo" class="btn btn-ghost flex-1 py-2.5 text-sm">${UI.icon('play-circle','w-4 h-4')} Product Video</button>
+   452→        </div>
+   453→      </div>
+   454→
+   455→      <!-- Info -->
+   456→      <div>
+   457→        <div class="flex items-center gap-2">
+   458→          <span class="text-brand-500 font-semibold text-sm uppercase">${p.brand}</span>
+   459→          ${p.isNew?`<span class="badge-new text-[.7rem] font-bold px-2 py-0.5 rounded">NEW</span>`:''}
+   460→        </div>
+   461→        <h1 class="font-display text-3xl md:text-4xl font-extrabold mt-1">${UI.escapeHtml(p.name)}</h1>
+   462→        <div class="flex items-center gap-3 mt-3">
+   463→          ${UI.stars(p.rating,'w-5 h-5')}
+   464→          <span class="text-sm text-slate-500">${p.rating} · ${p.reviews.toLocaleString()} reviews</span>
+   465→          <span class="text-slate-300">|</span>
+   466→          <span class="text-sm ${p.stock>0?'text-emerald-500':'text-rose-500'} font-semibold">${p.stock>0?`In stock (${p.stock})`:'Out of stock'}</span>
+   467→        </div>
+   468→
+   469→        <div class="flex items-end gap-3 mt-5">
+   470→          <span class="text-4xl font-extrabold">${Store.money(p.price)}</span>
+   471→          ${p.oldPrice>p.price?`<span class="text-lg text-slate-400 line-through mb-1">${Store.money(p.oldPrice)}</span><span class="badge-discount mb-1">Save ${disc}%</span>`:''}
+   472→        </div>
+   473→        <p class="text-xs text-slate-400 mt-1">SKU: ${p.sku}</p>
+   474→
+   475→        <p class="text-slate-600 dark:text-slate-300 mt-5 leading-relaxed">${UI.escapeHtml(p.description)}</p>
+   476→
+   477→        <!-- qty + actions -->
+   478→        <div class="flex flex-wrap items-center gap-3 mt-6">
+   479→          <div class="flex items-center glass rounded-xl border border-white/20 overflow-hidden">
+   480→            <button id="qtyMinus" class="px-4 py-3 hover:bg-brand-500/10">${UI.icon('minus','w-4 h-4')}</button>
+   481→            <input id="qtyInput" type="number" value="1" min="1" max="${p.stock||1}" class="w-12 text-center bg-transparent outline-none font-bold">
+   482→            <button id="qtyPlus" class="px-4 py-3 hover:bg-brand-500/10">${UI.icon('plus','w-4 h-4')}</button>
+   483→          </div>
+   484→          <button id="addCartBtn" class="btn btn-primary px-7 py-3.5 flex-1 min-w-[12rem]">${UI.icon('shopping-cart','w-5 h-5')} Add to Cart</button>
+   485→          <button id="buyNowBtn" class="btn btn-accent px-7 py-3.5">${UI.icon('zap','w-5 h-5')} Buy Now</button>
+   486→        </div>
+   487→        <div class="flex gap-2 mt-3">
+   488→          <button id="wishBtn" class="btn btn-ghost px-5 py-2.5 text-sm ${inWish?'text-accent-500':''}">${UI.icon('heart','w-4 h-4')} ${inWish?'Wishlisted':'Wishlist'}</button>
+   489→          <button id="cmpBtn" class="btn btn-ghost px-5 py-2.5 text-sm ${inCmp?'text-brand-500':''}">${UI.icon('git-compare','w-4 h-4')} Compare</button>
+   490→          <button id="shareBtn" class="btn btn-ghost px-5 py-2.5 text-sm">${UI.icon('share-2','w-4 h-4')} Share</button>
+   491→        </div>
+   492→
+   493→        <!-- delivery info -->
+   494→        <div class="glass rounded-2xl border border-white/20 p-4 mt-6 grid grid-cols-2 gap-3 text-sm">
+   495→          ${[['truck','Free Delivery','2-4 days'],['rotate-ccw','30-Day Returns','No questions'],['shield-check','2-Year Warranty','Official'],['credit-card','Secure Payment','Encrypted']].map(([i,t,d])=>`
+   496→            <div class="flex items-center gap-2"><span class="grid place-items-center w-9 h-9 rounded-lg bg-brand-500/15 text-brand-500">${UI.icon(i,'w-4 h-4')}</span><div><p class="font-semibold text-xs">${t}</p><p class="text-slate-400 text-xs">${d}</p></div></div>`).join('')}
+   497→        </div>
+   498→      </div>
+   499→    </div>
+   500→
+   501→    <!-- TABS -->
+   502→    <div class="mt-12">
+   503→      <div class="flex gap-2 border-b border-slate-200 dark:border-slate-700 overflow-x-auto no-scrollbar">
+   504→        ${[['desc','Description'],['specs','Specifications'],['feat','Features'],['reviews','Reviews ('+p.reviews+')'],['qa','Q & A']].map(([k,l],i)=>`<button class="tab-btn ${i===0?'active':''}" data-tab="${k}">${l}</button>`).join('')}
+   505→      </div>
+   506→      <div class="py-6" id="tabContent">
+   507→        ${Views.productTab('desc', p)}
+   508→      </div>
+   509→    </div>
+   510→
+   511→    <!-- Frequently bought together -->
+   512→    <section class="mt-10">
+   513→      ${Views.sectionHeading('Frequently Bought Together','Bundle')}
+   514→      <div class="glass rounded-2xl border border-white/20 p-5 flex flex-wrap items-center gap-4" data-reveal>
+   515→        ${[p,...fbt].map((pr,i)=>`
+   516→          <div class="flex items-center gap-4">
+   517→            <a href="#/product/${pr.id}" class="w-24 h-24 rounded-xl overflow-hidden">${UI.img(D.U(pr.imageId,200),pr.name,'w-full h-full object-cover','fbt'+pr.id)}</a>
+   518→            <div class="min-w-[8rem]"><p class="text-sm font-medium line-clamp-1">${UI.escapeHtml(pr.name)}</p><p class="text-sm text-brand-500 font-bold">${Store.money(pr.price)}</p></div>
+   519→          </div>${i<[p,...fbt].length-1?`<span class="text-2xl text-slate-300">+</span>`:''}`).join('')}
+   520→        <div class="ml-auto text-right">
+   521→          <p class="text-sm text-slate-500">Total: <span class="text-lg font-bold text-brand-500">${Store.money([p,...fbt].reduce((s,x)=>s+x.price,0))}</span></p>
+   522→          <button id="fbtAdd" class="btn btn-primary px-5 py-2.5 text-sm mt-2">${UI.icon('shopping-cart','w-4 h-4')} Add all to cart</button>
+   523→        </div>
+   524→      </div>
+   525→    </section>
+   526→
+   527→    <!-- Related -->
+   528→    ${related.length?`<section class="mt-10">${Views.sectionHeading('Related Products','You may also like')}<div class="grid grid-cols-2 md:grid-cols-4 gap-4">${related.slice(0,4).map(p=>Views.productCard(p)).join('')}</div></section>`:''}
+   529→  </div>`;
+   530→};
+   531→
+   532→Views.productTab = function(key, p){
+   533→  const D = window.DATA;
+   534→  if(key==='desc') return `<p class="text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">${UI.escapeHtml(p.description)}</p><p class="text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl mt-3">Experience uncompromising quality with the ${UI.escapeHtml(p.name)}. Designed and crafted to deliver outstanding performance, it combines premium materials with meticulous attention to detail. Backed by our satisfaction guarantee and dedicated customer support.</p>`;
+   535→  if(key==='specs') return `<table class="w-full max-w-2xl text-sm"><tbody>${Object.entries(p.specs).map(([k,v])=>`<tr class="border-b border-slate-100 dark:border-slate-800"><td class="py-3 font-semibold text-slate-500 w-1/3">${k}</td><td class="py-3">${UI.escapeHtml(String(v))}</td></tr>`).join('')}</tbody></table>`;
+   536→  if(key==='feat') return `<ul class="grid md:grid-cols-2 gap-3 max-w-3xl">${p.features.map(f=>`<li class="flex items-center gap-2 glass rounded-xl border border-white/20 px-4 py-3">${UI.icon('check-circle-2','w-5 h-5 text-emerald-500')} ${UI.escapeHtml(f)}</li>`).join('')}</ul>`;
+   537→  if(key==='reviews') return Views.reviewSection(p);
+   538→  if(key==='qa') return Views.qaSection(p);
+   539→  return '';
+   540→};
+   541→
+   542→Views.mockReviews = function(p){
+   543→  const names=['Jordan Lee','Priya Sharma','Marco Rossi','Yuki Tanaka','Emma Wilson','Ahmed Hassan','Sofia Lopez','David Chen'];
+   544→  const texts=[
+   545→    'Exceeded my expectations! The quality is outstanding and delivery was super fast.',
+   546→    'Great value for money. Would definitely recommend to friends and family.',
+   547→    'Good product overall, minor packaging issue but the item itself is perfect.',
+   548→    'Absolutely love it! Looks even better in person than in the photos.',
+   549→    'Solid build quality and works exactly as described. Very happy with my purchase.',
+   550→    'Premium feel and excellent performance. Worth every penny.'
+   551→  ];
+   552→  const n = Math.min(6, Math.max(3, Math.round(p.reviews/200)));
+   553→  return Array.from({length:n}).map((_,i)=>({
+   554→    name: names[(p.id+i)%names.length],
+   555→    avatar: ['1494790108377-be9c29b29330','1500648767791-00dcc994a43e','1438761681033-6461ffad8d80','1507003211169-0a1dd7228f2d'][i%4],
+   556→    rating: Math.min(5, Math.max(3, Math.round(p.rating) - (i%2))),
+   557→    date: ['2 days ago','1 week ago','3 weeks ago','1 month ago'][i%4],
+   558→    text: texts[(p.id+i)%texts.length],
+   559→    helpful: 5+((p.id*i)%40),
+   560→    verified: true,
+   561→    images: i%3===0 ? [p.imageId] : []
+   562→  }));
+   563→};
+   564→
+   565→Views.reviewSection = function(p){
+   566→  const reviews = Views.mockReviews(p);
+   567→  const dist = [5,4,3,2,1].map(r=>({r, count: Math.round(p.reviews * (r===5?0.62:r===4?0.22:r===3?0.1:r===2?0.04:0.02))}));
+   568→  return `
+   569→  <div class="grid lg:grid-cols-[18rem_1fr] gap-8">
+   570→    <div>
+   571→      <div class="glass rounded-2xl border border-white/20 p-5 text-center">
+   572→        <div class="text-5xl font-extrabold font-display">${p.rating}</div>
+   573→        ${UI.stars(p.rating,'w-5 h-5')}
+   574→        <p class="text-sm text-slate-500 mt-1">${p.reviews.toLocaleString()} reviews</p>
+   575→        <button id="writeReviewBtn" class="btn btn-primary w-full mt-4 py-2.5 text-sm">${UI.icon('pen-square','w-4 h-4')} Write a Review</button>
+   576→      </div>
+   577→      <div class="mt-4 space-y-1">
+   578→        ${dist.map(d=>`<div class="flex items-center gap-2 text-sm"><span class="w-3">${d.r}</span>${UI.icon('star','w-3 h-3 text-amber-400')}<div class="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div class="h-full bg-amber-400" style="width:${(d.count/p.reviews)*100}%"></div></div><span class="text-xs text-slate-400 w-10 text-right">${d.count}</span></div>`).join('')}
+   579→      </div>
+   580→    </div>
+   581→    <div class="space-y-4" id="reviewList">
+   582→      ${reviews.map(r=>`
+   583→        <div class="glass rounded-2xl border border-white/20 p-5">
+   584→          <div class="flex items-center gap-3">
+   585→            <img src="${window.DATA.U(r.avatar,80)}" class="w-10 h-10 rounded-full object-cover" onerror="this.src='https://picsum.photos/seed/rev${r.name}/80'">
+   586→            <div class="flex-1"><p class="font-semibold text-sm flex items-center gap-1">${r.name} ${r.verified?`<span class="text-[.65rem] text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Verified</span>`:''}</p><p class="text-xs text-slate-400">${r.date}</p></div>
+   587→            ${UI.stars(r.rating,'w-4 h-4')}
+   588→          </div>
+   589→          <p class="text-sm mt-3 text-slate-600 dark:text-slate-300">${UI.escapeHtml(r.text)}</p>
+   590→          ${r.images.length?`<div class="flex gap-2 mt-3">${r.images.map(im=>`<img src="${window.DATA.U(im,120)}" class="w-16 h-16 rounded-lg object-cover" loading="lazy">`).join('')}</div>`:''}
+   591→          <div class="flex items-center gap-4 mt-3 text-sm text-slate-400">
+   592→            <button class="helpful-btn flex items-center gap-1 hover:text-brand-500" data-helpful>${UI.icon('thumbs-up','w-4 h-4')} Helpful (${r.helpful})</button>
+   593→            <button class="hover:text-brand-500">${UI.icon('flag','w-4 h-4')} Report</button>
+   594→          </div>
+   595→          <div class="mt-3 glass-strong rounded-xl border border-white/10 p-3 text-sm">
+   596→            <p class="font-semibold text-xs text-brand-500 mb-1">${UI.icon('store','w-3.5 h-3.5 inline')} Seller Reply</p>
+   597→            <p class="text-slate-500 text-xs">Thank you for your wonderful review! We're thrilled you love your ${UI.escapeHtml(p.name)}.</p>
+   598→          </div>
+   599→        </div>`).join('')}
+   600→    </div>
+   601→  </div>`;
+   602→};
+   603→
+   604→Views.qaSection = function(p){
+   605→  const qa=[['Is this product covered by warranty?','Yes, it comes with a 1-year official manufacturer warranty.'],['Does it support free returns?','Absolutely. You can return it within 30 days for a full refund.'],['Is the color exactly as shown?','Yes, the product photos are color-accurate. Slight variation may occur due to screen settings.']];
+   606→  return `<div class="max-w-3xl space-y-4">
+   607→    ${qa.map(([q,a])=>`<div class="glass rounded-2xl border border-white/20 p-5"><div class="flex gap-3"><span class="text-brand-500 font-bold">Q.</span><div><p class="font-semibold text-sm">${q}</p><div class="flex gap-3 mt-2"><span class="text-emerald-500 font-bold">A.</span><p class="text-sm text-slate-600 dark:text-slate-300">${a}</p></div></div></div></div>`).join('')}
+   608→    <div class="glass rounded-2xl border border-white/20 p-5"><h3 class="font-display font-bold mb-3">Ask a question</h3><textarea class="w-full p-3 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500 text-sm" rows="3" placeholder="Type your question…"></textarea><button class="btn btn-primary mt-2 px-5 py-2 text-sm" onclick="UI.toast('Question submitted! We will answer shortly.','success')">${UI.icon('send','w-4 h-4')} Submit Question</button></div>
+   609→  </div>`;
+   610→};
+   611→
+   612→/* Quick view modal content */
+   613→Views.quickView = function(id){
+   614→  const p = Store.product(id); if(!p) return;
+   615→  const D = window.DATA;
+   616→  const inWish = Store.inWishlist(p.id);
+   617→  UI.openModal('quickViewModal', `
+   618→    <div class="grid md:grid-cols-2">
+   619→      <div class="aspect-product overflow-hidden">${UI.img(D.U(p.imageId,700),p.name,'w-full h-full object-cover','qv'+p.id)}</div>
+   620→      <div class="p-6">
+   621→        <button onclick="UI.closeModal('quickViewModal')" class="absolute top-3 right-3 p-2 rounded-xl hover:bg-slate-500/10">${UI.icon('x','w-5 h-5')}</button>
+   622→        <span class="text-brand-500 text-xs font-semibold uppercase">${p.brand}</span>
+   623→        <h2 class="font-display text-2xl font-bold mt-1">${UI.escapeHtml(p.name)}</h2>
+   624→        <div class="flex items-center gap-2 mt-2">${UI.stars(p.rating,'w-4 h-5')}<span class="text-sm text-slate-400">(${p.reviews})</span></div>
+   625→        <div class="flex items-end gap-2 mt-3"><span class="text-3xl font-extrabold">${Store.money(p.price)}</span>${p.oldPrice>p.price?`<span class="text-slate-400 line-through">${Store.money(p.oldPrice)}</span>`:''}</div>
+   626→        <p class="text-sm text-slate-500 mt-3 line-clamp-3">${UI.escapeHtml(p.description)}</p>
+   627→        <div class="flex gap-2 mt-5">
+   628→          <button onclick="Store.addToCart(${p.id},1);UI.closeModal('quickViewModal')" class="btn btn-primary flex-1 py-3">${UI.icon('shopping-cart','w-5 h-5')} Add to Cart</button>
+   629→          <button onclick="const o=Store.toggleWishlist(${p.id});this.classList.toggle('text-accent-500',o)" class="btn btn-ghost py-3 ${inWish?'text-accent-500':''}">${UI.icon('heart','w-5 h-5')}</button>
+   630→          <a href="#/product/${p.id}" onclick="UI.closeModal('quickViewModal')" class="btn btn-light py-3">${UI.icon('external-link','w-5 h-5')}</a>
+   631→        </div>
+   632→      </div>
+   633→    </div>`);
+   634→};
+   635→
+   636→Views.notFound = function(){
+   637→  return `<div class="max-w-2xl mx-auto text-center py-24 px-4"><span class="grid place-items-center w-24 h-24 mx-auto rounded-full bg-rose-500/15 text-rose-500 mb-5">${UI.icon('search-x','w-12 h-12')}</span><h1 class="font-display text-4xl font-extrabold">404</h1><p class="text-slate-500 mt-2">Oops! The page you're looking for doesn't exist.</p><a href="#/" class="btn btn-primary mt-6 px-7 py-3">${UI.icon('home','w-5 h-5')} Back to Home</a></div>`;
+   638→};
+   639→

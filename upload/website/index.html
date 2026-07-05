@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Bachat Bazar — a premium modern online shopping platform for electronics, fashion, shoes, watches, beauty and more." />
+  <meta name="theme-color" content="#6366f1" />
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <title>Bachat Bazar — Premium Online Shopping</title>
+
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',
+              500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81'
+            },
+            accent: { 400:'#f472b6', 500:'#ec4899', 600:'#db2777' }
+          },
+          boxShadow: {
+            glow: '0 0 40px -10px rgba(99,102,241,.45)',
+            card: '0 10px 40px -12px rgba(2,6,23,.18)'
+          },
+          animation: {
+            'float':'float 6s ease-in-out infinite',
+            'spin-slow':'spin 14s linear infinite',
+          },
+          keyframes: {
+            float: { '0%,100%':'{transform:translateY(0)}', '50%':'{transform:translateY(-12px)}' }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Icons (lucide) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="font-sans bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-brand-500/30">
+
+  <!-- ===== Top promo bar ===== -->
+  <div id="promoBar" class="bg-gradient-to-r from-brand-600 via-brand-500 to-accent-500 text-white text-xs sm:text-sm">
+    <div class="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+      <p class="flex items-center gap-2 truncate">
+        <i data-lucide="sparkles" class="w-4 h-4"></i>
+        <span>Free shipping on orders over <strong>Rs 25,000</strong> · Flash Sale ends in <span id="topCountdown" class="font-semibold tabular-nums"></span></span>
+      </p>
+      <div class="hidden sm:flex items-center gap-4">
+        <button data-currency-toggle class="hover:underline">PKR Rs</button>
+        <button data-lang-toggle class="hover:underline">EN</button>
+        <a href="#/about" class="hover:underline">Help</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Sticky Navbar ===== -->
+  <header id="navbar" class="sticky top-0 z-50 transition-all duration-300">
+    <div class="glass border-b border-white/20 dark:border-white/10">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex items-center gap-3 h-16">
+          <!-- mobile menu btn -->
+          <button id="menuBtn" class="lg:hidden p-2 rounded-xl hover:bg-slate-500/10" aria-label="Menu">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+
+          <!-- Logo -->
+          <a href="#/" class="flex items-center gap-2 shrink-0 group">
+            <img src="logo.svg" alt="Bachat Bazar" class="w-9 h-9 group-hover:scale-110 transition-transform" />
+            <span class="font-display text-xl font-extrabold tracking-tight">Bachat <span class="text-brand-500">Bazar</span></span>
+          </a>
+
+          <!-- Search -->
+          <div class="flex-1 max-w-2xl mx-auto relative hidden md:block">
+            <div class="relative">
+              <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input id="searchInput" type="text" autocomplete="off" placeholder="Search for products, brands and more…"
+                class="w-full pl-12 pr-24 py-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition shadow-sm" />
+              <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <button id="voiceSearchBtn" title="Voice search" class="p-2 rounded-xl hover:bg-brand-500/10 text-slate-500"><i data-lucide="mic" class="w-5 h-5"></i></button>
+                <button id="searchSubmit" class="px-3 py-1.5 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition">Search</button>
+              </div>
+            </div>
+            <!-- suggestions dropdown -->
+            <div id="searchSuggest" class="hidden absolute z-50 mt-2 w-full glass rounded-2xl border border-white/20 shadow-card overflow-hidden"></div>
+          </div>
+
+          <!-- right icons -->
+          <nav class="flex items-center gap-1 ml-auto">
+            <button data-route="#/deals" class="nav-icon-btn hidden sm:grid" title="Deals"><i data-lucide="tag" class="w-5 h-5"></i><span class="nav-label">Deals</span></button>
+            <button data-route="#/new" class="nav-icon-btn hidden md:grid" title="New Arrivals"><i data-lucide="sparkle" class="w-5 h-5"></i><span class="nav-label">New</span></button>
+            <button data-route="#/orders" class="nav-icon-btn hidden md:grid" title="Orders"><i data-lucide="package" class="w-5 h-5"></i><span class="nav-label">Orders</span></button>
+            <button id="wishlistBtn" class="nav-icon-btn relative" title="Wishlist">
+              <i data-lucide="heart" class="w-5 h-5"></i><span class="nav-label">Wishlist</span>
+              <span id="wishlistCount" class="badge hidden">0</span>
+            </button>
+            <button id="compareNavBtn" class="nav-icon-btn relative hidden sm:grid" title="Compare">
+              <i data-lucide="git-compare" class="w-5 h-5"></i><span class="nav-label">Compare</span>
+              <span id="compareCount" class="badge hidden">0</span>
+            </button>
+            <button id="cartBtn" class="nav-icon-btn relative" title="Cart">
+              <i data-lucide="shopping-bag" class="w-5 h-5"></i><span class="nav-label">Cart</span>
+              <span id="cartCount" class="badge hidden">0</span>
+            </button>
+            <button id="notifBtn" class="nav-icon-btn relative hidden sm:grid" title="Notifications">
+              <i data-lucide="bell" class="w-5 h-5"></i>
+              <span class="badge hidden pulse-dot">!</span>
+            </button>
+            <button id="accountBtn" class="nav-icon-btn" title="Account"><i data-lucide="user" class="w-5 h-5"></i><span class="nav-label">Account</span></button>
+            <button id="themeToggle" class="nav-icon-btn" title="Toggle theme">
+              <i data-lucide="moon" class="w-5 h-5"></i>
+            </button>
+          </nav>
+        </div>
+
+        <!-- category bar -->
+        <div class="hidden lg:flex items-center gap-1 h-11 -mt-1 overflow-x-auto">
+          <div class="relative" id="catDropdown">
+            <button class="cat-link flex items-center gap-1"><i data-lucide="layout-grid" class="w-4 h-4"></i> All Categories <i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+            <div id="catMenu" class="hidden absolute top-full left-0 mt-2 w-[640px] glass rounded-2xl border border-white/20 shadow-card p-4 grid grid-cols-3 gap-2 z-50"></div>
+          </div>
+          <a href="#/shop" class="cat-link">Shop All</a>
+          <a href="#/deals" class="cat-link text-accent-500 font-semibold">Today's Deals</a>
+          <a href="#/new" class="cat-link">New Arrivals</a>
+          <a href="#/shop?sort=best-selling" class="cat-link">Best Sellers</a>
+          <a href="#/blog" class="cat-link">Blog</a>
+          <a href="#/about" class="cat-link">About</a>
+          <a href="#/contact" class="cat-link">Contact</a>
+          <a href="admin.html" class="cat-link ml-auto text-brand-500 font-semibold flex items-center gap-1"><i data-lucide="shield" class="w-4 h-4"></i> Admin Panel</a>
+        </div>
+      </div>
+
+      <!-- mobile search -->
+      <div class="md:hidden px-4 pb-3">
+        <div class="relative">
+          <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input id="searchInputMobile" type="text" placeholder="Search products…" class="w-full pl-12 pr-4 py-2.5 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- mobile slide menu -->
+  <div id="mobileMenu" class="fixed inset-0 z-[60] hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" data-close-mobile></div>
+    <aside class="absolute left-0 top-0 h-full w-80 max-w-[85%] glass border-r border-white/20 p-5 overflow-y-auto"></aside>
+  </div>
+
+  <!-- ===== Main app mount ===== -->
+  <main id="app" class="min-h-[60vh]"></main>
+
+  <!-- ===== Cart Drawer ===== -->
+  <div id="cartDrawer" class="drawer fixed inset-0 z-[70] hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" data-close-cart></div>
+    <aside class="drawer-panel absolute right-0 top-0 h-full w-full sm:w-[26rem] glass border-l border-white/20 flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-white/10">
+        <h3 class="font-display text-lg font-bold flex items-center gap-2"><i data-lucide="shopping-bag" class="w-5 h-5 text-brand-500"></i> Your Cart</h3>
+        <button data-close-cart class="p-2 rounded-xl hover:bg-slate-500/10"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="cartItems" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+      <div id="cartFooter" class="border-t border-white/10 p-4 space-y-3"></div>
+    </aside>
+  </div>
+
+  <!-- ===== Wishlist Drawer ===== -->
+  <div id="wishlistDrawer" class="drawer fixed inset-0 z-[70] hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" data-close-wishlist></div>
+    <aside class="drawer-panel absolute right-0 top-0 h-full w-full sm:w-[26rem] glass border-l border-white/20 flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-white/10">
+        <h3 class="font-display text-lg font-bold flex items-center gap-2"><i data-lucide="heart" class="w-5 h-5 text-accent-500"></i> Wishlist</h3>
+        <button data-close-wishlist class="p-2 rounded-xl hover:bg-slate-500/10"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="wishlistItems" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+    </aside>
+  </div>
+
+  <!-- ===== Quick View Modal ===== -->
+  <div id="quickViewModal" class="modal fixed inset-0 z-[80] hidden grid place-items-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-close-quickview></div>
+    <div class="modal-panel relative glass rounded-3xl border border-white/20 shadow-card w-full max-w-4xl max-h-[90vh] overflow-y-auto"></div>
+  </div>
+
+  <!-- ===== Auth Modal ===== -->
+  <div id="authModal" class="modal fixed inset-0 z-[80] hidden grid place-items-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-close-auth></div>
+    <div class="modal-panel relative glass rounded-3xl border border-white/20 shadow-card w-full max-w-md overflow-hidden"></div>
+  </div>
+
+  <!-- ===== Generic Modal ===== -->
+  <div id="genericModal" class="modal fixed inset-0 z-[80] hidden grid place-items-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-close-generic></div>
+    <div class="modal-panel relative glass rounded-3xl border border-white/20 shadow-card w-full max-w-lg overflow-hidden"></div>
+  </div>
+
+  <!-- ===== Toast container ===== -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 w-[22rem] max-w-[90vw]"></div>
+
+  <!-- ===== Notifications dropdown ===== -->
+  <div id="notifPanel" class="hidden fixed right-3 top-20 z-[60] w-80 glass rounded-2xl border border-white/20 shadow-card overflow-hidden"></div>
+
+  <!-- ===== Back to top ===== -->
+  <button id="backToTop" class="fixed bottom-5 left-5 z-[90] hidden p-3 rounded-2xl bg-brand-500 text-white shadow-glow hover:scale-110 active:scale-95 transition">
+    <i data-lucide="arrow-up" class="w-5 h-5"></i>
+  </button>
+
+  <!-- ===== Live chat widget ===== -->
+  <button id="chatWidget" class="fixed bottom-5 right-24 sm:right-5 z-[90] flex items-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-br from-brand-500 to-accent-500 text-white shadow-glow hover:scale-105 active:scale-95 transition">
+    <i data-lucide="message-circle" class="w-5 h-5"></i>
+    <span class="hidden sm:inline font-semibold text-sm">Live Chat</span>
+  </button>
+
+  <!-- ===== Cookie consent ===== -->
+  <div id="cookieConsent" class="fixed bottom-0 inset-x-0 z-[90] p-4 hidden">
+    <div class="max-w-4xl mx-auto glass rounded-2xl border border-white/20 shadow-card p-4 flex flex-col sm:flex-row items-center gap-4">
+      <i data-lucide="cookie" class="w-6 h-6 text-amber-500 shrink-0"></i>
+      <p class="text-sm flex-1">We use cookies to enhance your browsing experience, personalize content and analyze traffic. By continuing you agree to our <a href="#/privacy" class="text-brand-500 underline">Privacy Policy</a>.</p>
+      <div class="flex gap-2">
+        <button id="cookieDecline" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-sm hover:bg-slate-500/10">Decline</button>
+        <button id="cookieAccept" class="px-4 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600">Accept</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== App scripts ===== -->
+  <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/views.js"></script>
+  <script src="js/views2.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

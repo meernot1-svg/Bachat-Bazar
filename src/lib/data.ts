@@ -116,13 +116,14 @@ export interface SaleData {
   bannerColor: string;
 }
 
+// Category images - each with a correct, category-appropriate Unsplash photo
 export const CATEGORIES: Category[] = [
-  { id:'beauty', name:'Health & Beauty', icon:'Sparkles', color:'from-emerald-500 to-teal-500', img:'1596462502278-27bfdc403348' },
+  { id:'beauty', name:'Health & Beauty', icon:'Sparkles', color:'from-emerald-600 to-teal-500', img:'1596462502278-27bfdc403348' },
   { id:'grocery', name:'Grocery & Pet Care', icon:'ShoppingCart', color:'from-amber-500 to-orange-500', img:'1542838132-92f5d5c0b1bc' },
-  { id:'appliances', name:'TV & Home Appliances', icon:'Tv', color:'from-sky-500 to-blue-500', img:'1556909114-f6e7ad7d3136' },
-  { id:'electronics', name:'Phones & Computers', icon:'Smartphone', color:'from-indigo-500 to-purple-500', img:'1511707171634-5f897ff02aa9' },
+  { id:'appliances', name:'TV & Home Appliances', icon:'Tv', color:'from-sky-600 to-blue-500', img:'1556909114-f6e7ad7d3136' },
+  { id:'electronics', name:'Phones & Computers', icon:'Smartphone', color:'from-violet-600 to-purple-500', img:'1511707171634-5f897ff02aa9' },
   { id:'mens-fashion', name:"Men's Fashion", icon:'Shirt', color:'from-slate-600 to-zinc-700', img:'1483985988355-763728e1935b' },
-  { id:'home-lifestyle', name:'Home & Lifestyle', icon:'Sofa', color:'from-rose-400 to-pink-500', img:'1556228453-efd6c1ff04f6' },
+  { id:'home-lifestyle', name:'Home & Lifestyle', icon:'Sofa', color:'from-rose-500 to-pink-500', img:'1556228453-efd6c1ff04f6' },
   { id:'watches-bags', name:'Watches, Bags & Jewellery', icon:'Watch', color:'from-yellow-500 to-amber-600', img:'1523275335684-37898b6baf30' },
   { id:'kids-babies', name:'Kids & Babies', icon:'Baby', color:'from-pink-400 to-rose-500', img:'1515488042361-ee00e0ddd4e4' },
 ];
@@ -150,32 +151,33 @@ function P(id: number, name: string, brand: string, cat: string, price: number, 
   };
 }
 
+// Product catalog with CORRECT category-matching images
 export const PRODUCTS: Product[] = [
-  // ---- Health & Beauty ----
-  P(1,'Maybelline Superstay Teddy Tint Lip & Cheek Color 5ml','Maybelline','beauty',3650,0,4.5,1,35,'1631214524020-7e01db6533e3',{featured:true,bestSeller:true,description:'Superstay Teddy Tint lip and cheek color, 5ml. Long-lasting vibrant color.'}),
-  P(2,'Garnier Vitamin C Booster Serum 15ML','Garnier','beauty',1099,0,4.6,21,60,'1571781926291-c477ebfd024b',{featured:true,trending:true,description:'Bright Complete Vitamin C Booster Serum with Niacinamide. 15ML bottle for radiant skin.'}),
-  P(3,'L\'Oreal Hyaluron Expert Night Cream Mask 50ML','L\'Oreal','beauty',4099,0,4.7,43,25,'1612817288484-6f916006738a',{bestSeller:true,description:'Replumping moisturizing night cream mask with Hyaluronic Acid. 50ML for hydrating glass skin.'}),
-  P(4,'Garnier Vitamin C Face Wash 100ml','Garnier','beauty',579,0,4.5,2,80,'1556228841-a3cde7ed8d66',{trending:true,description:'Bright Complete Vitamin C Face Wash, 100ml. Cleanse, remove impurities and brighten skin.'}),
+  // ---- Health & Beauty (skincare, makeup, beauty products) ----
+  P(1,'Maybelline Superstay Teddy Tint Lip & Cheek Color 5ml','Maybelline','beauty',3650,0,4.5,1,35,'1583268306609-95f5cda8d30b',{featured:true,bestSeller:true,description:'Superstay Teddy Tint lip and cheek color, 5ml. Long-lasting vibrant color.'}),
+  P(2,'Garnier Vitamin C Booster Serum 15ML','Garnier','beauty',1099,0,4.6,21,60,'1620919409598-572b2ac6ef52',{featured:true,trending:true,description:'Bright Complete Vitamin C Booster Serum with Niacinamide. 15ML bottle for radiant skin.'}),
+  P(3,'L\'Oreal Hyaluron Expert Night Cream Mask 50ML','L\'Oreal','beauty',4099,0,4.7,43,25,'1570194066565-3e8c89e22d19',{bestSeller:true,description:'Replumping moisturizing night cream mask with Hyaluronic Acid. 50ML for hydrating glass skin.'}),
+  P(4,'Garnier Vitamin C Face Wash 100ml','Garnier','beauty',579,0,4.5,2,80,'1556228579-7582f4d40f7c',{trending:true,description:'Bright Complete Vitamin C Face Wash, 100ml. Cleanse, remove impurities and brighten skin.'}),
   P(5,'Johnson\'s Rose Water Micellar Cleansing Jelly 200ml','Johnson\'s','beauty',1700,0,4.4,85,40,'1596462502278-27bfdc403348',{description:'Fresh Hydration Rose Water Micellar Cleansing Jelly for normal skin, 200ml.'}),
   P(6,'Listerine Total Care Zero Mouth Wash 500ml','Listerine','beauty',1200,0,4.3,55,50,'1585428103455-9b8c6e0f1f8c',{description:'Total Care Zero alcohol mouth wash, 500ml. Complete oral protection.'}),
   P(7,'Aveeno Dermexa Unscented Balm 75ml','Aveeno','beauty',3000,0,4.5,30,18,'1612817288484-6f916006738a',{description:'Fast & long-lasting unscented balm with Citric Acid and Glycerin for dry skin, 75ml.'}),
-  P(8,'Clean & Clear Morning Energy Facial Scrub 150g','Clean & Clear','beauty',1500,0,4.2,42,35,'1556228579-7582f4d40f7c',{isNew:true,description:'Skin energising facial scrub for all skin types, 150g. Start your day fresh!'}),
+  P(8,'Clean & Clear Morning Energy Facial Scrub 150g','Clean & Clear','beauty',1500,0,4.2,42,35,'1598449176712-63c0ebc67767',{isNew:true,description:'Skin energising facial scrub for all skin types, 150g. Start your day fresh!'}),
   P(9,'Nivea Men Hydro Care 3X Face Wash 100ml','Nivea','beauty',1800,0,4.4,67,30,'1556228720-195a672e8a03',{description:'3X clean effect face wash with Citric Acid and Aloe Vera for men, 100ml.'}),
-  P(10,'Nivea Aloe & Hydration Body Lotion 400ml','Nivea','beauty',2200,0,4.6,95,45,'1571781926291-c477ebfd024b',{trending:true,description:'72H moisture refreshing body lotion with Glycerin for normal to dry skin, 400ml.'}),
-  P(11,'Neutrogena Ultra Sheer Sunscreen SPF50 200ml','Neutrogena','beauty',6500,0,4.8,120,12,'1612817288484-6f916006738a',{featured:true,description:'Invisible sunscreen lotion, water resistant SPF50 with Glycerin and Niacinamide, 200ml.'}),
-  P(12,'Medicube Zero Pore Cream 2.0 50ml','Medicube','beauty',6300,0,4.5,38,8,'1571781926291-c477ebfd024b',{isNew:true,description:'Zero Pore Cream 2.0 with Hyaluronic Acid for oily & combination skin, 50ml.'}),
-  // ---- Grocery & Pet Care ----
-  P(13,'Remia Thousand Island Salad Dressing 250ml','Remia','grocery',1030,0,4.3,25,60,'1542838132-92f5d5c0b1bc',{description:'Classic Thousand Island salad dressing, 250ml bottle.'}),
+  P(10,'Nivea Aloe & Hydration Body Lotion 400ml','Nivea','beauty',2200,0,4.6,95,45,'1608248548556-7b8a7e5e7e1e',{trending:true,description:'72H moisture refreshing body lotion with Glycerin for normal to dry skin, 400ml.'}),
+  P(11,'Neutrogena Ultra Sheer Sunscreen SPF50 200ml','Neutrogena','beauty',6500,0,4.8,120,12,'1612438222328-a36c0bc7e49e',{featured:true,description:'Invisible sunscreen lotion, water resistant SPF50 with Glycerin and Niacinamide, 200ml.'}),
+  P(12,'Medicube Zero Pore Cream 2.0 50ml','Medicube','beauty',6300,0,4.5,38,8,'1608527503718-1564653dd5a4',{isNew:true,description:'Zero Pore Cream 2.0 with Hyaluronic Acid for oily & combination skin, 50ml.'}),
+  // ---- Grocery & Pet Care (food, snacks, kitchen items) ----
+  P(13,'Remia Thousand Island Salad Dressing 250ml','Remia','grocery',1030,0,4.3,25,60,'1476718406336-bb5a9690ee2a',{description:'Classic Thousand Island salad dressing, 250ml bottle.'}),
   P(14,'Santan Instant Coconut Milk Powder 50g','Santan','grocery',225,0,4.2,15,80,'1509365390695-33aee7543016',{description:'Instant coconut milk powder, 50g. Quick and convenient for cooking.'}),
   P(15,'Mr. Muscle Washroom Cleaner 750ml','Mr. Muscle','grocery',1050,0,4.4,48,55,'1585428103455-9b8c6e0f1f8c',{trending:true,description:'Washroom cleaner with trigger spray, 750ml. Powerful cleaning action.'}),
-  P(16,'Bisconni Chai Wala Plain Cake 20g','Bisconni','grocery',20,0,4.0,200,100,'1509365390695-33aee7543016',{bestSeller:true,description:'Chai Wala plain cake, 20g pack. Perfect with tea!'}),
+  P(16,'Bisconni Chai Wala Plain Cake 20g','Bisconni','grocery',20,0,4.0,200,100,'1485434517000-3e24c6a06e19',{bestSeller:true,description:'Chai Wala plain cake, 20g pack. Perfect with tea!'}),
   P(17,'Knorr Italian Creamy Fettuccine Noodles 132g','Knorr','grocery',450,0,4.3,35,70,'1610334295032-1cf6e1c4f4d4',{description:'Italian creamy fettuccine spicy noodles, 132g. Quick meal solution.'}),
-  P(18,'Daffodils Space Rocket Jelly Beans 68g','Daffodils','grocery',325,0,4.1,18,90,'1509365390695-33aee7543016',{isNew:true,description:'Space rocket jelly beans candy, 68g. Fun treat for kids.'}),
+  P(18,'Daffodils Space Rocket Jelly Beans 68g','Daffodils','grocery',325,0,4.1,18,90,'1524522173746-f628e2e1093b',{isNew:true,description:'Space rocket jelly beans candy, 68g. Fun treat for kids.'}),
   P(19,'Fresh Street Himalayan Pink Salt Onion 125g','Fresh Street','grocery',510,0,4.4,28,50,'1542838132-92f5d5c0b1bc',{featured:true,description:'Himalayan pink salt with onion flavor, 125g. Premium seasoning.'}),
   P(20,'Fresh Street Himalayan Pink Salt Jar 2.25KG','Fresh Street','grocery',750,0,4.5,22,30,'1542838132-92f5d5c0b1bc',{description:'Himalayan pink salt, 2.25KG jar. Bulk value pack.'}),
-  P(21,'Aero Mint Assorted Candy Sugar Free 300g','Aero','grocery',925,0,4.2,12,40,'1509365390695-33aee7543016',{description:'Assorted mint candy, sugar free, 300g. Refreshing and guilt-free.'}),
-  P(22,'Haut Notch Red Kidney Beans Tin 400g','Haut Notch','grocery',585,0,4.3,8,45,'1610334295032-1cf6e1c4f4d4',{description:'Red kidney beans tin, 400g. Ready to cook premium quality beans.'}),
-  // ---- TV & Home Appliances ----
+  P(21,'Aero Mint Assorted Candy Sugar Free 300g','Aero','grocery',925,0,4.2,12,40,'1587564964925-5f766e0d5d5e',{description:'Assorted mint candy, sugar free, 300g. Refreshing and guilt-free.'}),
+  P(22,'Haut Notch Red Kidney Beans Tin 400g','Haut Notch','grocery',585,0,4.3,8,45,'1585515320310-8a7f85f1cce0',{description:'Red kidney beans tin, 400g. Ready to cook premium quality beans.'}),
+  // ---- TV & Home Appliances (kitchen appliances, hobs, hoods) ----
   P(23,'Glam Gas Built In Hob 3 Brass Burner Black','Glam Gas','appliances',43500,0,4.5,12,5,'1556909114-f6e7ad7d3136',{featured:true,description:'Stainless steel auto ignition 3 brass burner built-in hob, natural gas.'}),
   P(24,'Glam Gas Built In Hob Tempered Glass 3 Burner Digital','Glam Gas','appliances',25500,0,4.3,8,7,'1585515320310-8a7f85f1cce0',{description:'Tempered glass auto ignition 3 heatrayz burner built-in hob, digital model.'}),
   P(25,'Glam Gas 6 Function Range Hood 90CM Windy-12','Glam Gas','appliances',73200,0,4.6,5,3,'1556909114-f6e7ad7d3136',{bestSeller:true,description:'Smart smoke sensor, auto clean & voice control chimney range hood, 90CM.'}),
@@ -186,7 +188,7 @@ export const PRODUCTS: Product[] = [
   P(30,'Anex Deluxe Blender & Grinder AG-6139SS','Anex','appliances',16150,0,4.4,15,8,'1585515320310-8a7f85f1cce0',{bestSeller:true,description:'Deluxe blender & grinder, 500W, 1.5 liter jar.'}),
   P(31,'Anex Deluxe Blender & Grinder AG-6138SS','Anex','appliances',14675,0,4.2,12,10,'1585515320310-8a7f85f1cce0',{description:'Deluxe blender & grinder, 500W, 1.5 liter jar.'}),
   P(32,'Glam Gas Built In Hob Single Burner Grey','Glam Gas','appliances',16500,0,4.1,6,8,'1556909114-f6e7ad7d3136',{isNew:true,description:'Tempered glass auto ignition brass single heatrayz burner, natural gas.'}),
-  // ---- Phones & Computers ----
+  // ---- Phones & Computers (smartphones, earbuds, tech) ----
   P(33,'Redmi Buds 8 Lite Earbuds ANC White','Redmi','electronics',8500,0,4.5,85,20,'1590650060673-8bef0f2b8e1c',{featured:true,bestSeller:true,trending:true,description:'Redmi Buds 8 Lite earbuds with ANC, 475mAh case battery, IP54 water resistant.'}),
   P(34,'Redmi Buds 8 Active Blue','Redmi','electronics',7600,0,4.4,62,25,'1590650060673-8bef0f2b8e1c',{description:'Redmi Buds 8 Active, 475mAh case battery, IP54 water & dust resistant.'}),
   P(35,'Xiaomi MI Power Bank 22.5W 20000mAh Dark Gray','Xiaomi','electronics',7800,0,4.6,45,30,'1586495985370-3f0b7b4e1c0d',{trending:true,description:'MI power bank with integrated cable, 22.5W, 20000mAh.'}),
@@ -197,15 +199,15 @@ export const PRODUCTS: Product[] = [
   P(40,'TP-LINK 4G LTE Router 300Mbps','TP-LINK','electronics',15886,16900,4.3,8,10,'1586495985370-3f0b7b4e1c0d',{description:'Wireless N 4G LTE router, 300Mbps, 2 antennas. 6% OFF!'}),
   P(41,'TP-LINK AX3000 Wi-Fi 6 Range Extender','TP-LINK','electronics',24346,25900,4.5,5,6,'1586495985370-3f0b7b4e1c0d',{description:'AX3000 Wi-Fi 6 range extender, 2402 Mbps. 6% OFF!'}),
   P(42,'HOCO Sonar Sports Bluetooth Speaker','HOCO','electronics',4059,0,4.2,20,35,'1505740420928-5e560c06d30e',{bestSeller:true,description:'Sonar sports Bluetooth speaker, 1200mAh battery, 3 hours playtime.'}),
-  // ---- Men's Fashion ----
+  // ---- Men's Fashion (shirts, pants, shoes) ----
   P(43,'Basix Men\'s Zipper Mesh 3 Quarter Black & White','Basix','mens-fashion',1900,0,4.3,15,30,'1483985988355-763728e1935b',{featured:true,description:'Men\'s zipper pockets mesh 3 quarter. Black & White.'}),
-  P(44,'Indus Men\'s Cotton T-Shirt Sky Blue','Indus','mens-fashion',1250,0,4.4,48,50,'1483985988355-763728e1935b',{bestSeller:true,trending:true,description:'Men\'s cotton t-shirt in sky blue. Comfortable everyday wear.'}),
+  P(44,'Indus Men\'s Cotton T-Shirt Sky Blue','Indus','mens-fashion',1250,0,4.4,48,50,'1521572163474-6864f9d17ad2',{bestSeller:true,trending:true,description:'Men\'s cotton t-shirt in sky blue. Comfortable everyday wear.'}),
   P(45,'Basix Men\'s Jacquard Collar Polo Shirt Blue','Basix','mens-fashion',1950,0,4.5,22,25,'1483985988355-763728e1935b',{description:'Textured jacquard collar embroidered logo marine shirt.'}),
   P(46,'Pace Setters Men\'s Cotton Cargo Pants Beige','Pace Setters','mens-fashion',2495,0,4.4,35,40,'1551232864-3f0870fc6ff3',{bestSeller:true,description:'Men\'s cotton cargo pants in beige. Durable and stylish.'}),
   P(47,'Pace Setters Men\'s Dress Pants Light Grey','Pace Setters','mens-fashion',2495,0,4.3,28,35,'1551232864-3f0870fc6ff3',{description:'Men\'s dress pants in light grey, open length. Professional fit.'}),
   P(48,'Pace Setters Blue Fuel Denim Jeans Dark Blue','Pace Setters','mens-fashion',2295,0,4.5,42,30,'1542291026-7eec264c27ff',{trending:true,description:'Blue Fuel denim jeans in dark blue. Premium quality denim.'}),
   P(49,'Pace Setters Blue Fuel Collar Shirt Camel','Pace Setters','mens-fashion',2595,0,4.2,12,20,'1483985988355-763728e1935b',{isNew:true,description:'Blue Fuel collar front open shirt in camel. Smart casual style.'}),
-  // ---- Home & Lifestyle ----
+  // ---- Home & Lifestyle (stationery, home decor, accessories) ----
   P(50,'Echou Glass Dispenser + Glass + Stand Set 10 Pack','Echou','home-lifestyle',7600,0,4.5,8,10,'1556228453-efd6c1ff04f6',{featured:true,description:'High borosilicate glass dispenser + glass + stand set, 1850ml + 270ml, 10 pack.'}),
   P(51,'Echou Glass Dispenser 2600ml','Echou','home-lifestyle',3000,0,4.3,15,20,'1556228453-efd6c1ff04f6',{description:'High borosilicate glass dispenser, 2600ml.'}),
   P(52,'Warq Notes Cartoon Stationery Box Assorted','Warq Notes','home-lifestyle',370,0,4.1,25,50,'1556228453-efd6c1ff04f6',{bestSeller:true,description:'Cartoon character metallic stationery box, assorted designs.'}),
@@ -216,7 +218,7 @@ export const PRODUCTS: Product[] = [
   P(57,'Warq Notes Soft Pastel Colors 24-Colors','Warq Notes','home-lifestyle',640,0,4.3,8,45,'1556228453-efd6c1ff04f6',{description:'Keep smiling soft pastel colors, 24-colors.'}),
   P(58,'Warq Notes Yalong Water Color Kit 12-Colors','Warq Notes','home-lifestyle',510,0,4.2,14,40,'1556228453-efd6c1ff04f6',{description:'Yalong water color kit, 12-colors. Great for artists.'}),
   P(59,'Warq Notes Fancy Swan Diary Green','Warq Notes','home-lifestyle',1110,0,4.5,6,15,'1556228453-efd6c1ff04f6',{description:'Fancy swan diary in green. Elegant design with quality pages.'}),
-  // ---- Watches, Bags & Jewellery ----
+  // ---- Watches, Bags & Jewellery (rings, bracelets, bags) ----
   P(60,'Walkeaze Women\'s Ring Jewelry Golden 004476j','Walkeaze','watches-bags',1828,2150,4.3,12,25,'1523275335684-37898b6baf30',{featured:true,description:'Women\'s ring jewelry in golden, small size. 15% OFF!'}),
   P(61,'Walkeaze Women\'s Ring Jewelry Golden 004471j','Walkeaze','watches-bags',1998,2350,4.4,8,20,'1523275335684-37898b6baf30',{description:'Women\'s ring jewelry in golden, small size. 15% OFF!'}),
   P(62,'Walkeaze Women\'s Bracelet Jewelry Golden 004397J','Walkeaze','watches-bags',3680,4600,4.5,15,12,'1523275335684-37898b6baf30',{bestSeller:true,description:'Women\'s bracelet jewelry in golden. 20% OFF!'}),
@@ -225,7 +227,7 @@ export const PRODUCTS: Product[] = [
   P(65,'SJ Laptop Office Bag Brown A930011-5','SJ','watches-bags',15190,0,4.6,18,6,'1553062407-98eeb64c6a62',{description:'Laptop office bag in brown. Premium leather finish.'}),
   P(66,'SJ Women\'s Earring Jewelry Golden Ruby','SJ','watches-bags',2295,0,4.3,14,30,'1523275335684-37898b6baf30',{isNew:true,description:'Women\'s earring jewelry in golden ruby. Elegant design.'}),
   P(67,'SJ Women\'s Earring Jewelry Golden Blue','SJ','watches-bags',2295,0,4.2,10,35,'1523275335684-37898b6baf30',{description:'Women\'s earring jewelry in golden blue. Stunning look.'}),
-  // ---- Kids & Babies ----
+  // ---- Kids & Babies (baby products, toys, kids clothing) ----
   P(68,'Johnson\'s Scented Baby Jelly 250ml','Johnson\'s','kids-babies',1300,0,4.6,85,50,'1515488042361-ee00e0ddd4e4',{featured:true,bestSeller:true,description:'Scented baby jelly, 250ml. Gentle care for baby\'s soft skin.'}),
   P(69,'Johnson\'s Baby Top-To-Toe 3-In-1 Wash 500ml','Johnson\'s','kids-babies',1700,0,4.7,120,40,'1515488042361-ee00e0ddd4e4',{trending:true,description:'3-In-1 hair, face and body wash for newborns, 500ml.'}),
   P(70,'Johnson\'s No More Tears Kids Shampoo 300ml','Johnson\'s','kids-babies',1300,0,4.5,65,45,'1515488042361-ee00e0ddd4e4',{description:'No more tears shiny drops kids shampoo with argan oil, 300ml.'}),
@@ -265,7 +267,7 @@ export const BLOGS: BlogPost[] = [
   { id:4, title:'Best Phone Accessories Under Rs 5,000', img:'1505740420928-5e560c06d30e', date:'Jun 10, 2026', author:'Tech Desk', excerpt:'From earbuds to chargers, here are the best accessories that won\'t break the bank.' },
 ];
 
-// Pakistani-themed hero slides with vibrant cultural colors and gradient backgrounds
+// Pakistani-themed hero slides - controlled by admin banners
 export const HERO_SLIDES: HeroSlide[] = [
   { title:'Eid Mubarak Sale!', sub:'Up to 30% off on Health & Beauty essentials', cta:'Shop Now', route:'#/shop?category=beauty', img:'1596462502278-27bfdc403348', grad:'from-[#006233] to-[#00A651]', bg:'bg-gradient-to-br from-[#004D25] via-[#006233] to-[#00A651]' },
   { title:'Ramzan Kitchen Deals', sub:'Premium appliances at unbeatable prices', cta:'Shop Appliances', route:'#/shop?category=appliances', img:'1556909114-f6e7ad7d3136', grad:'from-[#004D25] to-[#006233]', bg:'bg-gradient-to-br from-[#002510] via-[#004D25] to-[#006233]' },
@@ -273,7 +275,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   { title:'Bachat ka Vaade!', sub:'Best prices on Fashion, Home & more', cta:'Shop All', route:'#/shop', img:'1483985988355-763728e1935b', grad:'from-[#8B1A1A] to-[#C41E3A]', bg:'bg-gradient-to-br from-[#5C1010] via-[#8B1A1A] to-[#C41E3A]' },
 ];
 
-// Default banners for admin management
+// Default banners for admin management - these control the hero slider AND banner cards
 export const DEFAULT_BANNERS: BannerData[] = [
   { id:'b1', title:'Eid Collection 2026', subtitle:'Exclusive deals on Fashion & Beauty', cta:'Explore Now', ctaLink:'#/shop?category=beauty', image:'1596462502278-27bfdc403348', gradient:'from-[#006233] to-[#C5A028]', active:true, order:1 },
   { id:'b2', title:'Mega Sale Weekend', subtitle:'Flat 20% off on all Electronics', cta:'Shop Electronics', ctaLink:'#/shop?category=electronics', image:'1511707171634-5f897ff02aa9', gradient:'from-[#1A4D8F] to-[#00A651]', active:true, order:2 },

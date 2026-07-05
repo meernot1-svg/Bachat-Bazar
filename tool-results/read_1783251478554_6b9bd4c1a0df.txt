@@ -1,0 +1,202 @@
+   420→  const [saleDialog, setSaleDialog] = useState(false); const [editSale, setEditSale] = useState<SaleData | null>(null);
+   421→  const [sName, setSName] = useState(''); const [sDesc, setSDesc] = useState(''); const [sDisc, setSDisc] = useState(10); const [sStart, setSStart] = useState(''); const [sEnd, setSEnd] = useState(''); const [sCat, setSCat] = useState(''); const [sActive, setSActive] = useState(true); const [sColor, setSColor] = useState('#006233');
+   422→  // Category dialog
+   423→  const [catDialog, setCatDialog] = useState(false); const [editCatId, setEditCatId] = useState('');
+   424→  const [cName, setCName] = useState(''); const [cIcon, setCIcon] = useState('Tag'); const [cColor, setCColor] = useState('from-slate-500 to-slate-700'); const [cImg, setCImg] = useState('');
+   425→
+   426→  const handleLogin = () => { if (pwd === ADMIN_PWD) { setAuthed(true); sessionStorage.setItem('bb_admin', '1'); toast({ title: 'Admin access granted' }); } else { toast({ title: 'Invalid password', variant: 'destructive' }); } };
+   427→
+   428→  if (!authed) return (<div className="animate-fadeUp max-w-sm mx-auto py-20"><Card className="p-6 space-y-4"><div className="text-center"><Lock size={40} className="mx-auto mb-3 text-[#006233]"/><h2 className="text-xl font-bold" style={{ fontFamily: 'var(--font-poppins)' }}>Admin Access</h2><p className="text-sm text-muted-foreground">Enter the admin password</p></div><Input type="password" placeholder="Password" value={pwd} onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()}/><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={handleLogin}>Unlock</Button></Card></div>);
+   429→
+   430→  const allProds = s.allProducts();
+   431→  const filteredProds = pSearch ? allProds.filter(p => p.name.toLowerCase().includes(pSearch.toLowerCase()) || p.brand.toLowerCase().includes(pSearch.toLowerCase())) : allProds;
+   432→  const totalRevenue = s.orders.reduce((sum, o) => sum + o.totals.total, 0);
+   433→  const orderStatusColors: Record<string, string> = { Confirmed: 'bg-blue-500', Processing: 'bg-[#C5A028]', Shipped: 'bg-purple-500', Delivered: 'bg-[#006233]', Cancelled: 'bg-red-500' };
+   434→
+   435→  const openProdDialog = (p?: Product) => {
+   436→    if (p) { setEditProd(p); setPName(p.name); setPBrand(p.brand); setPCat(p.category); setPPrice(p.price); setPOldPrice(p.oldPrice); setPStock(p.stock); setPImg(p.images[0] || ''); setPDesc(p.description); setPFeatured(p.featured); setPNew(p.isNew); setPTrending(p.trending); setPBestSeller(p.bestSeller); }
+   437→    else { setEditProd(null); setPName(''); setPBrand(''); setPCat('beauty'); setPPrice(0); setPOldPrice(0); setPStock(0); setPImg(''); setPDesc(''); setPFeatured(false); setPNew(false); setPTrending(false); setPBestSeller(false); }
+   438→    setProdDialog(true);
+   439→  };
+   440→  const saveProduct = () => {
+   441→    const d: Partial<Product> = { name: pName, brand: pBrand, category: pCat, price: pPrice, oldPrice: pOldPrice, stock: pStock, images: pImg ? [pImg] : undefined, description: pDesc, featured: pFeatured, isNew: pNew, trending: pTrending, bestSeller: pBestSeller };
+   442→    if (editProd) { s.updateProduct(editProd.id, d); toast({ title: 'Product updated' }); } else { s.addProduct(d); toast({ title: 'Product added' }); }
+   443→    setProdDialog(false);
+   444→  };
+   445→
+   446→  const openBanDialog = (b?: BannerData) => {
+   447→    if (b) { setEditBan(b); setBTitle(b.title); setBSub(b.subtitle); setBCta(b.cta); setBLink(b.ctaLink); setBGrad(b.gradient); setBImg(b.image); setBActive(b.active); setBOrder(b.order); }
+   448→    else { setEditBan(null); setBTitle(''); setBSub(''); setBCta('Shop Now'); setBLink('#/shop'); setBGrad('from-[#006233] to-[#00A651]'); setBImg(''); setBActive(true); setBOrder(s.banners.length + 1); }
+   449→    setBanDialog(true);
+   450→  };
+   451→  const saveBanner = () => {
+   452→    const d: Partial<BannerData> = { title: bTitle, subtitle: bSub, cta: bCta, ctaLink: bLink, gradient: bGrad, image: bImg, active: bActive, order: bOrder };
+   453→    if (editBan) { s.updateBanner(editBan.id, d); toast({ title: 'Banner updated' }); } else { s.addBanner(d); toast({ title: 'Banner added' }); }
+   454→    setBanDialog(false);
+   455→  };
+   456→
+   457→  const openSaleDialog = (sale?: SaleData) => {
+   458→    if (sale) { setEditSale(sale); setSName(sale.name); setSDesc(sale.description); setSDisc(sale.discountPercent); setSStart(sale.startDate); setSEnd(sale.endDate); setSCat(sale.categoryId); setSActive(sale.active); setSColor(sale.bannerColor); }
+   459→    else { setEditSale(null); setSName(''); setSDesc(''); setSDisc(10); setSStart(new Date().toISOString().split('T')[0]); setSEnd(new Date(Date.now() + 7 * 864e5).toISOString().split('T')[0]); setSCat(''); setSActive(true); setSColor('#006233'); }
+   460→    setSaleDialog(true);
+   461→  };
+   462→  const saveSale = () => {
+   463→    const d: Partial<SaleData> = { name: sName, description: sDesc, discountPercent: sDisc, startDate: sStart, endDate: sEnd, categoryId: sCat, active: sActive, bannerColor: sColor };
+   464→    if (editSale) { s.updateSale(editSale.id, d); toast({ title: 'Sale updated' }); } else { s.addSale(d); toast({ title: 'Sale added' }); }
+   465→    setSaleDialog(false);
+   466→  };
+   467→
+   468→  const openCatDialog = (c?: { id: string; name: string; icon: string; color: string; img: string }) => {
+   469→    if (c) { setEditCatId(c.id); setCName(c.name); setCIcon(c.icon); setCColor(c.color); setCImg(c.img); }
+   470→    else { setEditCatId(''); setCName(''); setCIcon('Tag'); setCColor('from-slate-500 to-slate-700'); setCImg(''); }
+   471→    setCatDialog(true);
+   472→  };
+   473→  const saveCat = () => {
+   474→    const d = { name: cName, icon: cIcon, color: cColor, img: cImg };
+   475→    if (editCatId) { s.updateCategory(editCatId, d); toast({ title: 'Category updated' }); } else { s.addCategory(d); toast({ title: 'Category added' }); }
+   476→    setCatDialog(false);
+   477→  };
+   478→
+   479→  const adminTabs = [
+   480→    { k: 'dashboard', l: 'Dashboard', icon: BarChart3 },
+   481→    { k: 'products', l: 'Products', icon: BoxIcon },
+   482→    { k: 'orders', l: 'Orders', icon: ClipboardList },
+   483→    { k: 'banners', l: 'Banners', icon: ImageIcon },
+   484→    { k: 'sales', l: 'Sales', icon: Percent },
+   485→    { k: 'categories', l: 'Categories', icon: TableProperties },
+   486→  ];
+   487→
+   488→  return (
+   489→    <div className="animate-fadeUp space-y-6">
+   490→      <div className="flex items-center justify-between"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Admin Panel</h2><Button variant="outline" size="sm" onClick={() => { setAuthed(false); sessionStorage.removeItem('bb_admin'); }}><LogOut size={14} className="mr-1"/>Logout</Button></div>
+   491→      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">{adminTabs.map(t => <button key={t.k} onClick={() => setTab(t.k)} className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${tab === t.k ? 'bg-gradient-to-r from-[#006233] to-[#00A651] text-white shadow' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}><t.icon size={16}/>{t.l}</button>)}</div>
+   492→
+   493→      {/* DASHBOARD */}
+   494→      {tab === 'dashboard' && (<div className="space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4">{[{ icon: BoxIcon, label: 'Products', value: allProds.length, color: 'from-[#006233] to-[#00A651]' },{ icon: ClipboardList, label: 'Orders', value: s.orders.length, color: 'from-[#C5A028] to-[#E5C340]' },{ icon: Banknote, label: 'Revenue', value: s.money(totalRevenue), color: 'from-[#1A4D8F] to-[#2E6BC6]' },{ icon: Users, label: 'Customers', value: Math.max(s.orders.length, 1), color: 'from-[#8B1A1A] to-[#C41E3A]' }].map((c, i) => <Card key={i} className="p-4"><div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${c.color} flex items-center justify-center mb-2`}><c.icon size={18} className="text-white"/></div><p className="text-xs text-muted-foreground">{c.label}</p><p className="text-lg font-bold" style={{ fontFamily: 'var(--font-poppins)' }}>{c.value}</p></Card>)}</div><Card className="p-4"><div className="flex items-center justify-between"><div><h3 className="font-bold" style={{ fontFamily: 'var(--font-poppins)' }}>Reset Catalog</h3><p className="text-xs text-muted-foreground">Restore all products, categories, banners & sales to defaults</p></div><Button variant="destructive" size="sm" onClick={() => { s.resetCatalog(); toast({ title: 'Catalog reset!' }); }}><RotateCcw size={14} className="mr-1"/>Reset</Button></div></Card></div>)}
+   495→
+   496→      {/* PRODUCTS */}
+   497→      {tab === 'products' && (<div className="space-y-4"><div className="flex items-center gap-2"><div className="relative flex-1"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input className="pl-9" placeholder="Search products..." value={pSearch} onChange={e => setPSearch(e.target.value)}/></div><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white shrink-0" onClick={() => openProdDialog()}><PlusCircle size={14} className="mr-1"/>Add Product</Button></div>
+   498→      <div className="rounded-xl border overflow-hidden"><div className="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar"><table className="w-full text-sm"><thead className="bg-muted/50 sticky top-0"><tr><th className="p-3 text-left font-medium">Product</th><th className="p-3 text-left font-medium">Category</th><th className="p-3 text-left font-medium">Price</th><th className="p-3 text-left font-medium">Stock</th><th className="p-3 text-left font-medium">Flags</th><th className="p-3 text-right font-medium">Actions</th></tr></thead><tbody>{filteredProds.map(p => (<tr key={p.id} className="border-t hover:bg-muted/30"><td className="p-3"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded bg-muted overflow-hidden shrink-0"><ProductImage src={p.images[0]} alt="" seed={p.imageId} className="w-full h-full object-cover"/></div><div className="min-w-0"><p className="font-medium truncate max-w-[200px]">{p.name}</p><p className="text-xs text-[#C5A028]">{p.brand}</p></div></div></td><td className="p-3 text-muted-foreground">{s.categories().find(c => c.id === p.category)?.name || p.category}</td><td className="p-3"><span className="font-medium">{s.money(p.price)}</span>{p.oldPrice > p.price && <span className="text-xs text-muted-foreground line-through ml-1">{s.money(p.oldPrice)}</span>}</td><td className="p-3"><span className={p.stock <= 0 ? 'text-red-500 font-medium' : ''}>{p.stock}</span></td><td className="p-3"><div className="flex gap-1 flex-wrap">{p.featured && <Badge className="bg-[#C5A028] text-white text-[10px] px-1.5 py-0">Featured</Badge>}{p.isNew && <Badge className="bg-[#006233] text-white text-[10px] px-1.5 py-0">New</Badge>}{p.trending && <Badge className="bg-purple-500 text-white text-[10px] px-1.5 py-0">Trending</Badge>}{p.bestSeller && <Badge className="bg-[#00A651] text-white text-[10px] px-1.5 py-0">Best</Badge>}</div></td><td className="p-3 text-right"><div className="flex justify-end gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openProdDialog(p)}><Edit size={14}/></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => { s.deleteProduct(p.id); toast({ title: 'Product deleted' }); }}><Trash2 size={14}/></Button></div></td></tr>))}</tbody></table></div></div></div>)}
+   499→
+   500→      {/* ORDERS */}
+   501→      {tab === 'orders' && (<div className="space-y-4"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Orders ({s.orders.length})</h3>
+   502→      {s.orders.length === 0 && <p className="text-muted-foreground text-sm">No orders yet</p>}
+   503→      <div className="space-y-3">{s.orders.map(o => (<Card key={o.id} className="p-4 space-y-3"><div className="flex items-center justify-between flex-wrap gap-2"><div><span className="font-bold">#{o.id}</span><span className="text-xs text-muted-foreground ml-2">{new Date(o.date).toLocaleDateString()}</span><span className="text-xs text-muted-foreground ml-2">{o.payment}</span></div><div className="flex items-center gap-2"><Badge className={`${orderStatusColors[o.status] || 'bg-gray-500'} text-white`}>{o.status}</Badge><Select value={o.status} onValueChange={v => { s.updateOrderStatus(o.id, v); toast({ title: 'Status updated' }); }}><SelectTrigger className="w-[140px] h-7 text-xs"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Confirmed">Confirmed</SelectItem><SelectItem value="Processing">Processing</SelectItem><SelectItem value="Shipped">Shipped</SelectItem><SelectItem value="Delivered">Delivered</SelectItem><SelectItem value="Cancelled">Cancelled</SelectItem></SelectContent></Select></div></div><div className="space-y-1">{o.items.map((it, i) => <div key={i} className="flex justify-between text-sm"><span className="text-muted-foreground">{it.name?.slice(0, 40)} x{it.qty}</span><span>{s.money((it.price || 0) * it.qty)}</span></div>)}</div><div className="flex justify-between font-bold text-sm pt-1 border-t"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{o.totals.totalDisplay}</span></div></Card>))}</div></div>)}
+   504→
+   505→      {/* BANNERS */}
+   506→      {tab === 'banners' && (<div className="space-y-4"><div className="flex items-center justify-between"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Banners ({s.banners.length})</h3><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => openBanDialog()}><PlusCircle size={14} className="mr-1"/>Add Banner</Button></div>
+   507→      <div className="space-y-3">{s.banners.map(b => (<Card key={b.id} className="p-4"><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-3"><div className={`w-24 h-14 rounded-lg bg-gradient-to-r ${b.gradient} flex items-center justify-center`}><span className="text-white/40 text-2xl" style={{ fontFamily: 'serif' }}>&#9734;</span></div><div><p className="font-medium text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{b.title}</p><p className="text-xs text-muted-foreground">{b.subtitle} &middot; Order: {b.order}</p></div></div><div className="flex items-center gap-2"><Switch checked={b.active} onCheckedChange={() => { s.toggleBanner(b.id); toast({ title: b.active ? 'Banner disabled' : 'Banner enabled' }); }}/><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openBanDialog(b)}><Edit size={14}/></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => { s.deleteBanner(b.id); toast({ title: 'Banner deleted' }); }}><Trash2 size={14}/></Button></div></div></Card>))}</div></div>)}
+   508→
+   509→      {/* SALES */}
+   510→      {tab === 'sales' && (<div className="space-y-4"><div className="flex items-center justify-between"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Sales ({s.sales.length})</h3><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => openSaleDialog()}><PlusCircle size={14} className="mr-1"/>Add Sale</Button></div>
+   511→      <div className="space-y-3">{s.sales.map(sale => (<Card key={sale.id} className="p-4"><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-3"><div className="w-24 h-14 rounded-lg flex items-center justify-center text-white font-bold text-lg" style={{ background: `linear-gradient(135deg, ${sale.bannerColor}, ${sale.bannerColor}cc)` }}>{sale.discountPercent}%</div><div><p className="font-medium text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{sale.name}</p><p className="text-xs text-muted-foreground">{sale.description}</p><p className="text-xs text-muted-foreground">{sale.startDate} → {sale.endDate}</p></div></div><div className="flex items-center gap-2"><Switch checked={sale.active} onCheckedChange={() => { s.toggleSale(sale.id); toast({ title: sale.active ? 'Sale disabled' : 'Sale enabled' }); }}/><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openSaleDialog(sale)}><Edit size={14}/></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => { s.deleteSale(sale.id); toast({ title: 'Sale deleted' }); }}><Trash2 size={14}/></Button></div></div></Card>))}</div></div>)}
+   512→
+   513→      {/* CATEGORIES */}
+   514→      {tab === 'categories' && (<div className="space-y-4"><div className="flex items-center justify-between"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Categories ({s.categories().length})</h3><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => openCatDialog()}><PlusCircle size={14} className="mr-1"/>Add Category</Button></div>
+   515→      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">{s.categories().map(c => { const Icon = getCatIcon(c.icon); return (<Card key={c.id} className="p-4"><div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${c.color} flex items-center justify-center`}><Icon size={18} className="text-white"/></div><div><p className="font-medium text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{c.name}</p><p className="text-xs text-muted-foreground">{c.id} &middot; {allProds.filter(p => p.category === c.id).length} products</p></div></div><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openCatDialog(c)}><Edit size={14}/></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => { s.deleteCategory(c.id); toast({ title: 'Category deleted' }); }}><Trash2 size={14}/></Button></div></div></Card>); })}</div></div>)}
+   516→
+   517→      {/* Product Dialog */}
+   518→      <Dialog open={prodDialog} onOpenChange={setProdDialog}><DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editProd ? 'Edit Product' : 'Add Product'}</DialogTitle><DialogDescription>Fill in the product details below.</DialogDescription></DialogHeader>
+   519→      <div className="space-y-3">
+   520→        <div><Label>Name</Label><Input value={pName} onChange={e => setPName(e.target.value)}/></div>
+   521→        <div className="grid grid-cols-2 gap-3"><div><Label>Brand</Label><Input value={pBrand} onChange={e => setPBrand(e.target.value)}/></div><div><Label>Category</Label><Select value={pCat} onValueChange={setPCat}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{s.categories().map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div></div>
+   522→        <div className="grid grid-cols-3 gap-3"><div><Label>Price (Rs)</Label><Input type="number" value={pPrice} onChange={e => setPPrice(Number(e.target.value))}/></div><div><Label>Old Price</Label><Input type="number" value={pOldPrice} onChange={e => setPOldPrice(Number(e.target.value))}/></div><div><Label>Stock</Label><Input type="number" value={pStock} onChange={e => setPStock(Number(e.target.value))}/></div></div>
+   523→        <div><Label>Image URL</Label><Input value={pImg} onChange={e => setPImg(e.target.value)} placeholder="https://..."/></div>
+   524→        <div><Label>Description</Label><Textarea value={pDesc} onChange={e => setPDesc(e.target.value)} rows={2}/></div>
+   525→        <div className="flex flex-wrap gap-4"><div className="flex items-center gap-2"><Switch checked={pFeatured} onCheckedChange={setPFeatured}/><Label className="text-xs">Featured</Label></div><div className="flex items-center gap-2"><Switch checked={pNew} onCheckedChange={setPNew}/><Label className="text-xs">New</Label></div><div className="flex items-center gap-2"><Switch checked={pTrending} onCheckedChange={setPTrending}/><Label className="text-xs">Trending</Label></div><div className="flex items-center gap-2"><Switch checked={pBestSeller} onCheckedChange={setPBestSeller}/><Label className="text-xs">Best Seller</Label></div></div>
+   526→      </div>
+   527→      <DialogFooter><Button variant="outline" onClick={() => setProdDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={saveProduct}><Save size={14} className="mr-1"/>Save</Button></DialogFooter></DialogContent></Dialog>
+   528→
+   529→      {/* Banner Dialog */}
+   530→      <Dialog open={banDialog} onOpenChange={setBanDialog}><DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editBan ? 'Edit Banner' : 'Add Banner'}</DialogTitle><DialogDescription>Configure the banner settings.</DialogDescription></DialogHeader>
+   531→      <div className="space-y-3">
+   532→        <div><Label>Title</Label><Input value={bTitle} onChange={e => setBTitle(e.target.value)}/></div>
+   533→        <div><Label>Subtitle</Label><Input value={bSub} onChange={e => setBSub(e.target.value)}/></div>
+   534→        <div className="grid grid-cols-2 gap-3"><div><Label>CTA Text</Label><Input value={bCta} onChange={e => setBCta(e.target.value)}/></div><div><Label>CTA Link</Label><Input value={bLink} onChange={e => setBLink(e.target.value)}/></div></div>
+   535→        <div><Label>Gradient Class</Label><Input value={bGrad} onChange={e => setBGrad(e.target.value)} placeholder="from-[#006233] to-[#00A651]"/></div>
+   536→        <div><Label>Image (optional)</Label><Input value={bImg} onChange={e => setBImg(e.target.value)} placeholder="Image ID or URL"/></div>
+   537→        <div className="grid grid-cols-2 gap-3"><div className="flex items-center gap-2"><Switch checked={bActive} onCheckedChange={setBActive}/><Label>Active</Label></div><div><Label>Order</Label><Input type="number" value={bOrder} onChange={e => setBOrder(Number(e.target.value))}/></div></div>
+   538→        <div className="rounded-lg p-4 bg-gradient-to-r text-white" style={{ minHeight: 60 }}><div className={`w-full h-full rounded-lg bg-gradient-to-r ${bGrad} p-3`}><p className="font-bold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{bTitle || 'Banner Preview'}</p><p className="text-xs opacity-80">{bSub || 'Subtitle'}</p></div></div>
+   539→      </div>
+   540→      <DialogFooter><Button variant="outline" onClick={() => setBanDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={saveBanner}><Save size={14} className="mr-1"/>Save</Button></DialogFooter></DialogContent></Dialog>
+   541→
+   542→      {/* Sale Dialog */}
+   543→      <Dialog open={saleDialog} onOpenChange={setSaleDialog}><DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editSale ? 'Edit Sale' : 'Add Sale'}</DialogTitle><DialogDescription>Configure the sale event.</DialogDescription></DialogHeader>
+   544→      <div className="space-y-3">
+   545→        <div><Label>Name</Label><Input value={sName} onChange={e => setSName(e.target.value)}/></div>
+   546→        <div><Label>Description</Label><Input value={sDesc} onChange={e => setSDesc(e.target.value)}/></div>
+   547→        <div className="grid grid-cols-2 gap-3"><div><Label>Discount %</Label><Input type="number" value={sDisc} onChange={e => setSDisc(Number(e.target.value))}/></div><div><Label>Category</Label><Select value={sCat || 'all'} onValueChange={setSCat}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">All Categories</SelectItem>{s.categories().map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div></div>
+   548→        <div className="grid grid-cols-2 gap-3"><div><Label>Start Date</Label><Input type="date" value={sStart} onChange={e => setSStart(e.target.value)}/></div><div><Label>End Date</Label><Input type="date" value={sEnd} onChange={e => setSEnd(e.target.value)}/></div></div>
+   549→        <div className="grid grid-cols-2 gap-3"><div><Label>Banner Color</Label><div className="flex gap-2"><input type="color" value={sColor} onChange={e => setSColor(e.target.value)} className="w-10 h-9 rounded border cursor-pointer"/><Input value={sColor} onChange={e => setSColor(e.target.value)} className="flex-1"/></div></div><div className="flex items-center gap-2 pt-5"><Switch checked={sActive} onCheckedChange={setSActive}/><Label>Active</Label></div></div>
+   550→      </div>
+   551→      <DialogFooter><Button variant="outline" onClick={() => setSaleDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={saveSale}><Save size={14} className="mr-1"/>Save</Button></DialogFooter></DialogContent></Dialog>
+   552→
+   553→      {/* Category Dialog */}
+   554→      <Dialog open={catDialog} onOpenChange={setCatDialog}><DialogContent><DialogHeader><DialogTitle>{editCatId ? 'Edit Category' : 'Add Category'}</DialogTitle><DialogDescription>Category details.</DialogDescription></DialogHeader>
+   555→      <div className="space-y-3">
+   556→        <div><Label>Name</Label><Input value={cName} onChange={e => setCName(e.target.value)}/></div>
+   557→        <div className="grid grid-cols-2 gap-3"><div><Label>Icon</Label><Select value={cIcon} onValueChange={setCIcon}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{Object.keys(ICON_MAP).map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent></Select></div><div><Label>Gradient</Label><Input value={cColor} onChange={e => setCColor(e.target.value)} placeholder="from-slate-500 to-slate-700"/></div></div>
+   558→        <div><Label>Image ID</Label><Input value={cImg} onChange={e => setCImg(e.target.value)} placeholder="Unsplash photo ID"/></div>
+   559→      </div>
+   560→      <DialogFooter><Button variant="outline" onClick={() => setCatDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={saveCat}><Save size={14} className="mr-1"/>Save</Button></DialogFooter></DialogContent></Dialog>
+   561→    </div>
+   562→  );
+   563→}
+   564→
+   565→// ─── MAIN APP COMPONENT ───
+   566→export default function BachatBazarApp() {
+   567→  const s = useStore(); const { toast } = useToast();
+   568→  const [route, setRoute] = useState<RouteInfo>(() => parseHash(typeof window !== 'undefined' ? window.location.hash : ''));
+   569→  const [searchOpen, setSearchOpen] = useState(false); const [searchQ, setSearchQ] = useState('');
+   570→  const [mobileMenu, setMobileMenu] = useState(false);
+   571→  const [cartOpen, setCartOpen] = useState(false);
+   572→  const [wishOpen, setWishOpen] = useState(false);
+   573→  const [quickView, setQuickView] = useState<Product | null>(null);
+   574→  const [authOpen, setAuthOpen] = useState(false); const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+   575→  const [authEmail, setAuthEmail] = useState(''); const [authName, setAuthName] = useState('');
+   576→  const [showBackTop, setShowBackTop] = useState(false);
+   577→  const [cookieConsent, setCookieConsent] = useState(() => { if (typeof window !== 'undefined' && localStorage.getItem('bb_cookies') === '1') return true; return false; });
+   578→  const [notifOpen, setNotifOpen] = useState(false);
+   579→
+   580→  // Theme sync
+   581→  useEffect(() => { if (typeof document !== 'undefined') { document.documentElement.classList.toggle('dark', s.theme === 'dark'); } }, [s.theme]);
+   582→  // Cookie consent - initialized from localStorage via useState initializer
+   583→  // Route listener
+   584→  useEffect(() => { const handler = () => { const newRoute = parseHash(window.location.hash); setRoute(newRoute); window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }; window.addEventListener('hashchange', handler); return () => window.removeEventListener('hashchange', handler); }, []);
+   585→  // Scroll listener
+   586→  useEffect(() => { const handler = () => setShowBackTop(window.scrollY > 400); window.addEventListener('scroll', handler, { passive: true }); return () => window.removeEventListener('scroll', handler); }, []);
+   587→
+   588→  const navigate = useCallback((hash: string) => { window.location.hash = hash; }, []);
+   589→  const cartCount = s.cartCount();
+   590→  const wishCount = s.wishlist.length;
+   591→
+   592→  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQ.trim()) { navigate(makeHash('shop', undefined, { search: searchQ.trim() })); setSearchOpen(false); setSearchQ(''); } };
+   593→
+   594→  const handleAuth = () => {
+   595→    if (authMode === 'login') { s.login(authEmail); toast({ title: 'Welcome back!' }); }
+   596→    else { s.register(authName, authEmail); toast({ title: 'Account created!' }); }
+   597→    setAuthOpen(false); setAuthEmail(''); setAuthName('');
+   598→  };
+   599→
+   600→  const currentView = route.view || '';
+   601→  const renderView = () => {
+   602→    switch (currentView) {
+   603→      case '': case 'home': return <HomeView onQuickView={setQuickView} navigate={navigate}/>;
+   604→      case 'shop': return <ShopView query={route.query} onQuickView={setQuickView} navigate={navigate}/>;
+   605→      case 'product': return <ProductDetailView id={route.id} onQuickView={setQuickView} navigate={navigate}/>;
+   606→      case 'cart': return <CartView navigate={navigate}/>;
+   607→      case 'checkout': return <CheckoutView navigate={navigate}/>;
+   608→      case 'wishlist': return <WishlistView onQuickView={setQuickView} navigate={navigate}/>;
+   609→      case 'compare': return <CompareView navigate={navigate}/>;
+   610→      case 'orders': return <OrdersView/>;
+   611→      case 'account': return <AccountView/>;
+   612→      case 'deals': return <DealsView onQuickView={setQuickView} navigate={navigate}/>;
+   613→      case 'new': return <NewArrivalsView onQuickView={setQuickView}/>;
+   614→      case 'about': return <AboutView/>;
+   615→      case 'contact': return <ContactView/>;
+   616→      case 'faq': return <FAQView/>;
+   617→      case 'blog': return <BlogView/>;
+   618→      case 'admin': return <AdminView/>;
+   619→      default: return <NotFoundView navigate={navigate}/>;
+
+[showing lines 420-619 of 761; use offset=620 with limit to continue reading]

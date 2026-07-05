@@ -1,0 +1,202 @@
+   210→function ProductDetailView({ id, onQuickView, navigate }: { id: string; onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   211→  const s = useStore(); const { toast } = useToast(); const [qty, setQty] = useState(1); const [tab, setTab] = useState('desc'); const [imgIdx, setImgIdx] = useState(0);
+   212→  const product = s.getProduct(Number(id));
+   213→  useEffect(() => { if (product) s.pushRecent(product.id); }, [product?.id]);
+   214→  if (!product) return <div className="text-center py-20"><p className="text-lg">Product not found</p><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makeHash('shop'))}>Back to Shop</Button></div>;
+   215→  const inWish = s.inWishlist(product.id); const related = product.related.map(rid => s.getProduct(rid)).filter(Boolean) as Product[];
+   216→  const handleCart = () => { if (s.addToCart(product.id, qty)) { toast({ title: 'Added to cart', description: product.name.slice(0, 40) }); } else { toast({ title: 'Out of stock', variant: 'destructive' }); } };
+   217→  const discount = product.oldPrice > product.price ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
+   218→  return (
+   219→    <div className="animate-fadeUp space-y-8">
+   220→      <button onClick={() => navigate(makeHash('shop'))} className="text-sm text-[#006233] dark:text-[#00A651] hover:underline flex items-center gap-1"><ChevronLeft size={14}/> Back to Shop</button>
+   221→      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+   222→        <div className="space-y-3">
+   223→          <div className="aspect-square rounded-xl overflow-hidden bg-muted"><ProductImage src={product.images[imgIdx] || product.images[0]} alt={product.name} seed={product.imageId} className="w-full h-full object-cover"/></div>
+   224→          {product.images.length > 1 && <div className="flex gap-2 overflow-x-auto no-scrollbar">{product.images.map((img, i) => <button key={i} onClick={() => setImgIdx(i)} className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${i === imgIdx ? 'border-[#006233]' : 'border-transparent'}`}><ProductImage src={img} alt="" seed={product.imageId + i} className="w-full h-full object-cover"/></button>)}</div>}
+   225→        </div>
+   226→        <div className="space-y-4">
+   227→          <p className="text-sm text-[#C5A028] font-semibold" style={{ fontFamily: 'var(--font-poppins)' }}>{product.brand}</p>
+   228→          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>{product.name}</h1>
+   229→          <div className="flex items-center gap-3"><StarRating rating={product.rating}/><span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>{discount > 0 && <Badge className="bg-[#C5A028] text-white">{discount}% OFF</Badge>}</div>
+   230→          <PriceDisplay price={product.price} oldPrice={product.oldPrice}/>
+   231→          <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+   232→          <div className={`text-sm font-medium ${product.stock > 0 ? 'text-[#006233]' : 'text-red-500'}`}>{product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}</div>
+   233→          <Separator/>
+   234→          <div className="flex items-center gap-3">
+   235→            <div className="flex items-center border rounded-lg"><Button variant="ghost" size="icon" onClick={() => setQty(Math.max(1, qty - 1))}><Minus size={14}/></Button><span className="w-10 text-center font-semibold">{qty}</span><Button variant="ghost" size="icon" onClick={() => setQty(Math.min(product.stock, qty + 1))}><Plus size={14}/></Button></div>
+   236→            <Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] hover:from-[#004D25] hover:to-[#006233] text-white font-semibold" onClick={handleCart} disabled={product.stock <= 0}><ShoppingCart size={16} className="mr-2"/> Add to Cart</Button>
+   237→            <Button variant="outline" size="icon" onClick={() => { s.toggleWishlist(product.id); toast({ title: inWish ? 'Removed from wishlist' : 'Added to wishlist' }); }} className={inWish ? 'text-pink-500 border-pink-300' : ''}><Heart size={16} fill={inWish ? 'currentColor' : 'none'}/></Button>
+   238→          </div>
+   239→          <div className="grid grid-cols-2 gap-3 pt-2">{[{ icon: Truck, t: 'Free Delivery' },{ icon: RotateCcw, t: '7-Day Returns' },{ icon: ShieldCheck, t: 'Genuine Product' },{ icon: Banknote, t: 'Cash on Delivery' }].map((f, i) => <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground"><f.icon size={14} className="text-[#006233]"/>{f.t}</div>)}</div>
+   240→        </div>
+   241→      </div>
+   242→      <div className="space-y-4">
+   243→        <div className="flex gap-4 border-b">{[{ k: 'desc', l: 'Description' },{ k: 'features', l: 'Features' },{ k: 'specs', l: 'Specifications' }].map(t => <button key={t.k} onClick={() => setTab(t.k)} className={`pb-2 text-sm font-medium border-b-2 transition ${tab === t.k ? 'border-[#006233] text-[#006233] dark:text-[#00A651] dark:border-[#00A651]' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>{t.l}</button>)}</div>
+   244→        {tab === 'desc' && <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>}
+   245→        {tab === 'features' && <ul className="space-y-2">{product.features.map((f, i) => <li key={i} className="flex items-center gap-2 text-sm"><Check size={14} className="text-[#006233]"/>{f}</li>)}</ul>}
+   246→        {tab === 'specs' && <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{Object.entries(product.specs).map(([k, v]) => <div key={k} className="flex justify-between text-sm p-2 rounded bg-muted/50"><span className="text-muted-foreground">{k}</span><span className="font-medium">{v}</span></div>)}</div>}
+   247→      </div>
+   248→      {related.length > 0 && (<section><h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Related Products</h3><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{related.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+   249→    </div>
+   250→  );
+   251→}
+   252→
+   253→// ─── CART VIEW ───
+   254→function CartView({ navigate }: { navigate: (h: string) => void }) {
+   255→  const s = useStore(); const { toast } = useToast(); const [couponCode, setCouponCode] = useState('');
+   256→  const cart = s.cart; const catalog = s.allProducts(); const totals = s.cartTotals();
+   257→  const cartProducts = cart.map(i => ({ ...i, product: catalog.find(p => p.id === i.id) })).filter(x => x.product);
+   258→  if (cart.length === 0) return <div className="text-center py-20 animate-fadeUp"><ShoppingCart size={64} className="mx-auto mb-4 text-muted-foreground/30"/><h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-poppins)' }}>Your cart is empty</h2><p className="text-muted-foreground mb-6">Add some products to get started!</p><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makeHash('shop'))}>Start Shopping</Button></div>;
+   259→  return (
+   260→    <div className="animate-fadeUp space-y-6">
+   261→      <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Shopping Cart ({s.cartCount()} items)</h2>
+   262→      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   263→        <div className="lg:col-span-2 space-y-3">
+   264→          {cartProducts.map(({ id, qty, product: p }) => p && (<div key={id} className="flex gap-4 p-4 rounded-xl border bg-card"><div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><p className="text-xs text-[#C5A028]">{p.brand}</p><PriceDisplay price={p.price} oldPrice={p.oldPrice}/></div><div className="flex items-center gap-2"><div className="flex items-center border rounded-lg"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => s.setQty(id, Math.max(1, qty - 1))}><Minus size={12}/></Button><span className="w-8 text-center text-sm font-semibold">{qty}</span><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => s.setQty(id, qty + 1)}><Plus size={12}/></Button></div><Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => { s.removeFromCart(id); toast({ title: 'Removed from cart' }); }}><Trash2 size={14}/></Button></div></div>))}
+   265→        </div>
+   266→        <div className="space-y-4">
+   267→          <Card className="p-4 space-y-3"><h3 className="font-bold" style={{ fontFamily: 'var(--font-poppins)' }}>Order Summary</h3><div className="space-y-2 text-sm"><div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{totals.subDisplay}</span></div><div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className="text-[#006233]">-{totals.discountDisplay}</span></div><div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>{totals.shipDisplay}</span></div><div className="flex justify-between"><span className="text-muted-foreground">Tax (8%)</span><span>{totals.taxDisplay}</span></div><Separator/><div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{totals.totalDisplay}</span></div></div></Card>
+   268→          <div className="flex gap-2"><Input placeholder="Coupon code" value={couponCode} onChange={e => setCouponCode(e.target.value)} className="flex-1"/><Button variant="outline" onClick={() => { if (s.applyCoupon(couponCode)) { toast({ title: 'Coupon applied!' }); setCouponCode(''); } else { toast({ title: 'Invalid coupon', variant: 'destructive' }); } }}>Apply</Button></div>
+   269→          {s.coupon && <div className="flex items-center gap-2 text-sm bg-[#006233]/10 p-2 rounded-lg"><Check size={14} className="text-[#006233]"/><span>{s.coupon.label}</span><Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={() => { s.clearCoupon(); toast({ title: 'Coupon removed' }); }}>Remove</Button></div>}
+   270→          <Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-3" onClick={() => navigate(makeHash('checkout'))}>Proceed to Checkout</Button>
+   271→        </div>
+   272→      </div>
+   273→    </div>
+   274→  );
+   275→}
+   276→
+   277→// ─── CHECKOUT VIEW ───
+   278→function CheckoutView({ navigate }: { navigate: (h: string) => void }) {
+   279→  const s = useStore(); const { toast } = useToast(); const [step, setStep] = useState(0); const [payment, setPayment] = useState('cod');
+   280→  const [addr, setAddr] = useState(s.addresses[0] || { id: 1, label: 'Home', name: '', line: '', city: '', state: 'Punjab', zip: '', country: 'Pakistan', phone: '', default: true });
+   281→  const totals = s.cartTotals();
+   282→  if (s.cart.length === 0) { navigate(makeHash('cart')); return null; }
+   283→  const handlePlaceOrder = () => { const order = s.placeOrder(payment, addr); toast({ title: 'Order placed!', description: `Order #${order.id}` }); navigate(makeHash('orders')); };
+   284→  return (
+   285→    <div className="animate-fadeUp space-y-6">
+   286→      <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Checkout</h2>
+   287→      <div className="flex items-center gap-2 mb-6">{['Shipping', 'Payment', 'Review'].map((l, i) => (<React.Fragment key={i}>{i > 0 && <div className={`flex-1 h-0.5 ${i <= step ? 'bg-[#006233]' : 'bg-muted'}`}/>}<div className={`flex items-center gap-2 ${i <= step ? 'text-[#006233] dark:text-[#00A651]' : 'text-muted-foreground'}`}><span className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center ${i <= step ? 'bg-[#006233] text-white' : 'bg-muted text-muted-foreground'}`}>{i + 1}</span><span className="text-sm font-medium hidden sm:inline">{l}</span></div></React.Fragment>))}</div>
+   288→      {step === 0 && (<Card className="p-6 space-y-4"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Shipping Address</h3><div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><Label>Full Name</Label><Input value={addr.name} onChange={e => setAddr({ ...addr, name: e.target.value })} placeholder="Muhammad Ali"/></div><div><Label>Phone</Label><Input value={addr.phone} onChange={e => setAddr({ ...addr, phone: e.target.value })} placeholder="+92 300 1234567"/></div><div className="sm:col-span-2"><Label>Address</Label><Input value={addr.line} onChange={e => setAddr({ ...addr, line: e.target.value })} placeholder="House 42, Block C"/></div><div><Label>City</Label><Input value={addr.city} onChange={e => setAddr({ ...addr, city: e.target.value })} placeholder="Lahore"/></div><div><Label>Province</Label><Input value={addr.state} onChange={e => setAddr({ ...addr, state: e.target.value })}/></div></div><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => setStep(1)}>Continue to Payment</Button></Card>)}
+   289→      {step === 1 && (<Card className="p-6 space-y-4"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Payment Method</h3><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{PAYMENTS.map(p => (<button key={p.id} onClick={() => setPayment(p.id)} className={`flex items-center gap-3 p-4 rounded-xl border-2 transition ${payment === p.id ? 'border-[#006233] bg-[#006233]/5' : 'border-border hover:border-[#006233]/30'}`}><Banknote size={20} className="text-[#006233]"/><span className="font-medium text-sm">{p.name}</span>{payment === p.id && <Check size={16} className="ml-auto text-[#006233]"/>}</button>))}</div><div className="flex gap-2"><Button variant="outline" onClick={() => setStep(0)}>Back</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => setStep(2)}>Review Order</Button></div></Card>)}
+   290→      {step === 2 && (<Card className="p-6 space-y-4"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Review Order</h3><div className="space-y-2"><div className="text-sm"><p className="font-medium">Ship to: {addr.name || 'Not provided'}</p><p className="text-muted-foreground">{addr.line}, {addr.city}, {addr.state}</p></div><Separator/><p className="font-medium text-sm">Payment: {PAYMENTS.find(p => p.id === payment)?.name}</p><Separator/><div className="space-y-1">{s.cart.map(i => { const p = s.getProduct(i.id); return p ? <div key={i.id} className="flex justify-between text-sm"><span>{p.name.slice(0, 40)} x{i.qty}</span><span>{s.money(p.price * i.qty)}</span></div> : null; })}</div><Separator/><div className="flex justify-between font-bold"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{totals.totalDisplay}</span></div></div><div className="flex gap-2"><Button variant="outline" onClick={() => setStep(1)}>Back</Button><Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-3" onClick={handlePlaceOrder}><Lock size={16} className="mr-2"/> Place Order</Button></div></Card>)}
+   291→    </div>
+   292→  );
+   293→}
+   294→
+   295→// ─── WISHLIST VIEW ───
+   296→function WishlistView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   297→  const s = useStore(); const products = s.wishlist.map(id => s.getProduct(id)).filter(Boolean) as Product[];
+   298→  if (products.length === 0) return <div className="text-center py-20 animate-fadeUp"><Heart size={64} className="mx-auto mb-4 text-muted-foreground/30"/><h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-poppins)' }}>Your wishlist is empty</h2><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makeHash('shop'))}>Browse Products</Button></div>;
+   299→  return <div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Wishlist ({products.length})</h2><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{products.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></div>;
+   300→}
+   301→
+   302→// ─── COMPARE VIEW ───
+   303→function CompareView({ navigate }: { navigate: (h: string) => void }) {
+   304→  const s = useStore(); const products = s.compare.map(id => s.getProduct(id)).filter(Boolean) as Product[];
+   305→  if (products.length < 2) return <div className="text-center py-20 animate-fadeUp"><GitCompare size={64} className="mx-auto mb-4 text-muted-foreground/30"/><h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-poppins)' }}>Compare Products</h2><p className="text-muted-foreground mb-4">Add at least 2 products to compare (max 4)</p><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makeHash('shop'))}>Browse Products</Button></div>;
+   306→  return (
+   307→    <div className="animate-fadeUp space-y-6 overflow-x-auto"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Compare Products</h2>
+   308→    <table className="w-full min-w-[600px] text-sm"><thead><tr><th className="p-3 text-left">Feature</th>{products.map(p => <th key={p.id} className="p-3 text-center"><div className="w-20 h-20 mx-auto mb-2 rounded-lg overflow-hidden bg-muted"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><p className="font-medium text-xs truncate">{p.name}</p></th>)}</tr></thead>
+   309→    <tbody>{[['Price', p => s.money(p.price)],['Rating', p => `${p.rating} ⭐`],['Brand', p => p.brand],['Category', p => s.categories().find(c => c.id === p.category)?.name || p.category],['Stock', p => p.stock > 0 ? `${p.stock} available` : 'Out of stock'],['SKU', p => p.sku]].map(([label, fn], i) => <tr key={i} className="border-t"><td className="p-3 font-medium text-muted-foreground">{label}</td>{products.map(p => <td key={p.id} className="p-3 text-center">{fn(p)}</td>)}</tr>)}</tbody></table></div>
+   310→  );
+   311→}
+   312→
+   313→// ─── ORDERS VIEW ───
+   314→function OrdersView() {
+   315→  const s = useStore();
+   316→  if (s.orders.length === 0) return <div className="text-center py-20 animate-fadeUp"><Package size={64} className="mx-auto mb-4 text-muted-foreground/30"/><h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-poppins)' }}>No orders yet</h2><p className="text-muted-foreground">Your order history will appear here</p></div>;
+   317→  return (
+   318→    <div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>My Orders</h2>
+   319→    <div className="space-y-4">{s.orders.map(o => (<Card key={o.id} className="p-4 space-y-3"><div className="flex items-center justify-between"><div><span className="font-bold text-sm">#{o.id}</span><span className="text-xs text-muted-foreground ml-2">{new Date(o.date).toLocaleDateString()}</span></div><Badge className={`${o.status === 'Delivered' ? 'bg-[#006233]' : o.status === 'Cancelled' ? 'bg-red-500' : 'bg-[#C5A028]'} text-white`}>{o.status}</Badge></div><div className="space-y-1">{o.items.map((it, i) => <div key={i} className="flex justify-between text-sm"><span className="text-muted-foreground">{it.name?.slice(0, 40)} x{it.qty}</span><span>{s.money((it.price || 0) * it.qty)}</span></div>)}</div><Separator/><div className="flex justify-between font-bold text-sm"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{o.totals.totalDisplay}</span></div></Card>))}</div></div>
+   320→  );
+   321→}
+   322→
+   323→// ─── ACCOUNT VIEW ───
+   324→function AccountView() {
+   325→  const s = useStore(); const { toast } = useToast(); const [tab, setTab] = useState('profile');
+   326→  if (!s.user) return <div className="text-center py-20 animate-fadeUp"><User size={64} className="mx-auto mb-4 text-muted-foreground/30"/><h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-poppins)' }}>Sign In</h2><p className="text-muted-foreground">Please sign in to view your account</p></div>;
+   327→  return (
+   328→    <div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>My Account</h2>
+   329→    <Tabs value={tab} onValueChange={setTab}><TabsList><TabsTrigger value="profile">Profile</TabsTrigger><TabsTrigger value="addresses">Addresses</TabsTrigger><TabsTrigger value="rewards">Rewards</TabsTrigger></TabsList>
+   330→    <TabsContent value="profile"><Card className="p-6 space-y-4"><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#006233] to-[#00A651] flex items-center justify-center text-white text-2xl font-bold">{s.user.name[0]}</div><div><p className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>{s.user.name}</p><p className="text-sm text-muted-foreground">{s.user.email}</p><p className="text-xs text-muted-foreground">Member since {new Date(s.user.joined).toLocaleDateString()}</p></div></div><Button variant="outline" onClick={() => { s.logout(); toast({ title: 'Logged out' }); }}><LogOut size={14} className="mr-2"/>Logout</Button></Card></TabsContent>
+   331→    <TabsContent value="addresses"><div className="space-y-3">{s.addresses.map(a => (<Card key={a.id} className="p-4"><div className="flex items-center justify-between"><div><p className="font-medium text-sm">{a.label} {a.default && <Badge className="ml-2 bg-[#006233] text-white text-xs">Default</Badge>}</p><p className="text-sm text-muted-foreground">{a.name || 'Not set'} — {a.line}, {a.city}, {a.state}</p><p className="text-xs text-muted-foreground">{a.phone}</p></div></div></Card>))}</div></TabsContent>
+   332→    <TabsContent value="rewards"><Card className="p-6 text-center"><Gift size={48} className="mx-auto mb-4 text-[#C5A028]"/><p className="text-3xl font-bold text-[#C5A028]" style={{ fontFamily: 'var(--font-poppins)' }}>{s.money(s.rewards)}</p><p className="text-sm text-muted-foreground mt-1">Reward Points Balance</p></Card></TabsContent>
+   333→    </Tabs></div>
+   334→  );
+   335→}
+   336→
+   337→// ─── DEALS VIEW ───
+   338→function DealsView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   339→  const s = useStore(); const deals = s.allProducts().filter(p => p.oldPrice > p.price);
+   340→  const flashEnd = useMemo(() => new Date(Date.now() + 12 * 3600000), []);
+   341→  return (
+   342→    <div className="animate-fadeUp space-y-6"><div className="flex items-center justify-between"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><Flame size={24} className="inline mr-2 text-red-500"/>Hot Deals</h2><div className="flex items-center gap-2 text-sm bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full"><Clock size={16} className="text-red-500"/>Ends in <CountdownTimer targetDate={flashEnd}/></div></div>
+   343→    {s.sales.filter(sale => sale.active).map(sale => (<div key={sale.id} className="rounded-xl p-4 text-white shadow-lg" style={{ background: `linear-gradient(135deg, ${sale.bannerColor}, ${sale.bannerColor}cc)` }}><div className="flex items-center justify-between"><div><p className="font-bold" style={{ fontFamily: 'var(--font-poppins)' }}>{sale.name}</p><p className="text-sm opacity-90">{sale.description}</p></div><Badge className="bg-white/20 text-white">{sale.discountPercent}% OFF</Badge></div></div>))}
+   344→    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{deals.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></div>
+   345→  );
+   346→}
+   347→
+   348→// ─── NEW ARRIVALS VIEW ───
+   349→function NewArrivalsView({ onQuickView }: { onQuickView: (p: Product) => void }) {
+   350→  const s = useStore(); const items = s.allProducts().filter(p => p.isNew);
+   351→  return <div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><Zap size={24} className="inline mr-2 text-[#C5A028]"/>New Arrivals</h2><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{items.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></div>;
+   352→}
+   353→
+   354→// ─── ABOUT VIEW ───
+   355→function AboutView() {
+   356→  return (
+   357→    <div className="animate-fadeUp space-y-8"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>About Bachat Bazar</h2>
+   358→    <div className="rounded-xl bg-gradient-to-r from-[#006233] to-[#00A651] p-8 md:p-12 text-white shadow-xl pk-pattern relative overflow-hidden"><div className="absolute right-6 top-6 text-7xl opacity-10" style={{ fontFamily: 'serif' }}>&#9734;</div><h3 className="text-3xl font-extrabold mb-4" style={{ fontFamily: 'var(--font-poppins)' }}>Pakistan&apos;s #1 Online Marketplace</h3><p className="text-lg opacity-90 max-w-2xl">Bachat Bazar is committed to bringing the best products at the most competitive prices to every corner of Pakistan. From Health &amp; Beauty to Electronics, Fashion to Home — we&apos;ve got it all.</p></div>
+   359→    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">{[{ icon: Store, t: '10,000+ Products', d: 'Across 8 major categories' },{ icon: Users, t: '500,000+ Customers', d: 'Trusted across Pakistan' },{ icon: Truck, t: 'Nationwide Delivery', d: 'COD available everywhere' }].map((f, i) => <Card key={i} className="p-6 text-center"><f.icon size={32} className="mx-auto mb-3 text-[#006233]"/><p className="font-bold" style={{ fontFamily: 'var(--font-poppins)' }}>{f.t}</p><p className="text-sm text-muted-foreground">{f.d}</p></Card>)}</div>
+   360→    <Card className="p-6"><h3 className="text-xl font-bold mb-4" style={{ fontFamily: 'var(--font-poppins)' }}>Our Mission</h3><p className="text-muted-foreground leading-relaxed">At Bachat Bazar, we believe every Pakistani deserves access to quality products at fair prices. Our mission is to make online shopping accessible, reliable, and affordable for everyone — from Karachi to Peshawar, Lahore to Quetta. We partner with trusted brands and sellers to ensure every product is genuine and every order is delivered on time.</p></Card>
+   361→    </div>
+   362→  );
+   363→}
+   364→
+   365→// ─── CONTACT VIEW ───
+   366→function ContactView() {
+   367→  const { toast } = useToast();
+   368→  return (
+   369→    <div className="animate-fadeUp space-y-8"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Contact Us</h2>
+   370→    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+   371→      <div className="space-y-4"><Card className="p-6 space-y-4"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Get in Touch</h3><div className="space-y-3"><div className="flex items-center gap-3"><Phone size={18} className="text-[#006233]"/><div><p className="font-medium text-sm">Phone</p><p className="text-sm text-muted-foreground">+92 42 3576 1234</p></div></div><div className="flex items-center gap-3"><Mail size={18} className="text-[#006233]"/><div><p className="font-medium text-sm">Email</p><p className="text-sm text-muted-foreground">support@bachatbazar.pk</p></div></div><div className="flex items-center gap-3"><MapPin size={18} className="text-[#006233]"/><div><p className="font-medium text-sm">Address</p><p className="text-sm text-muted-foreground">Gulberg III, Lahore, Punjab, Pakistan</p></div></div><div className="flex items-center gap-3"><Clock size={18} className="text-[#006233]"/><div><p className="font-medium text-sm">Working Hours</p><p className="text-sm text-muted-foreground">Mon-Sat: 9AM - 9PM PKT</p></div></div></div></Card></div>
+   372→      <Card className="p-6 space-y-4"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Send us a Message</h3><div className="space-y-3"><Input placeholder="Your Name"/><Input placeholder="Your Email" type="email"/><Textarea placeholder="Your Message" rows={4}/><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => toast({ title: 'Message sent!', description: 'We will get back to you soon.' })}><Mail size={14} className="mr-2"/>Send Message</Button></div></Card>
+   373→    </div></div>
+   374→  );
+   375→}
+   376→
+   377→// ─── FAQ VIEW ───
+   378→function FAQView() {
+   379→  const faqs = [
+   380→    { q: 'What payment methods do you accept?', a: 'We accept Credit/Debit Cards, JazzCash, EasyPaisa, Bank Transfer, and Cash on Delivery (COD) across Pakistan.' },
+   381→    { q: 'How long does delivery take?', a: 'Standard delivery takes 3-5 business days. Express delivery is 1-2 business days. Overnight delivery is available for major cities.' },
+   382→    { q: 'What is your return policy?', a: 'We offer a 7-day return policy for all products. Items must be in original packaging and unused condition.' },
+   383→    { q: 'Is Cash on Delivery available?', a: 'Yes! COD is available on all orders across Pakistan. No extra charges for COD payments.' },
+   384→    { q: 'How do I track my order?', a: 'Once your order is shipped, you will receive a tracking number via SMS and email. You can also check order status in My Orders.' },
+   385→    { q: 'Do you offer free shipping?', a: 'Free shipping is available on orders above Rs 25,000. Standard shipping fee of Rs 150 applies to orders below that.' },
+   386→    { q: 'Are the products genuine?', a: 'Yes, we guarantee 100% genuine products. We source directly from authorized distributors and brands.' },
+   387→    { q: 'How do I apply a coupon code?', a: 'Enter your coupon code in the cart page before checkout. The discount will be applied to your order total automatically.' },
+   388→  ];
+   389→  return (
+   390→    <div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Frequently Asked Questions</h2>
+   391→    <Accordion type="single" collapsible>{faqs.map((f, i) => <AccordionItem key={i} value={`q${i}`}><AccordionTrigger className="text-sm font-medium text-left">{f.q}</AccordionTrigger><AccordionContent className="text-sm text-muted-foreground">{f.a}</AccordionContent></AccordionItem>)}</Accordion></div>
+   392→  );
+   393→}
+   394→
+   395→// ─── BLOG VIEW ───
+   396→function BlogView() {
+   397→  return (
+   398→    <div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Blog</h2>
+   399→    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">{BLOGS.map(b => (<Card key={b.id} className="overflow-hidden group hover:shadow-lg transition-shadow"><div className="aspect-video overflow-hidden"><ProductImage src={U(b.img, 400)} alt={b.title} seed={b.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300"/></div><div className="p-4 space-y-2"><p className="text-xs text-[#C5A028] font-medium">{b.date} &middot; {b.author}</p><h3 className="font-bold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{b.title}</h3><p className="text-xs text-muted-foreground line-clamp-3">{b.excerpt}</p></div></Card>))}</div></div>
+   400→  );
+   401→}
+   402→
+   403→// ─── NOT FOUND VIEW ───
+   404→function NotFoundView({ navigate }: { navigate: (h: string) => void }) {
+   405→  return <div className="text-center py-20 animate-fadeUp"><div className="text-6xl mb-4">&#128533;</div><h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-poppins)' }}>Page Not Found</h2><p className="text-muted-foreground mb-6">The page you are looking for doesn&apos;t exist</p><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makeHash(''))}>Go Home</Button></div>;
+   406→}
+   407→
+   408→// ─── ADMIN VIEW ───
+   409→function AdminView() {
+
+[showing lines 210-409 of 761; use offset=410 with limit to continue reading]

@@ -6,8 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-poppins);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -118,40 +118,40 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-body), 'DM Sans', system-ui, -apple-system, sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-poppins), var(--font-inter), system-ui, -apple-system, sans-serif;
-    font-weight: 700;
+    font-family: var(--font-heading), 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
     letter-spacing: -0.01em;
   }
 }
 
 /* ===== Bachat Bazar — Pakistani Theme ===== */
 
-/* Glassmorphism - Pakistani Green tint - cleaner header */
+/* Glassmorphism - Clean Pakistani Green header */
 .glass {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(0, 98, 51, 0.08);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(0, 98, 51, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 .dark .glass {
-  background: rgba(14, 20, 16, 0.92);
-  border-bottom: 1px solid rgba(0, 166, 81, 0.1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  background: rgba(14, 20, 16, 0.95);
+  border-bottom: 1px solid rgba(0, 166, 81, 0.12);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(0, 98, 51, 0.06);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 .dark .glass-card {
-  background: rgba(30, 40, 34, 0.7);
+  background: rgba(30, 40, 34, 0.75);
   border: 1px solid rgba(0, 166, 81, 0.06);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
@@ -160,7 +160,6 @@
 .product-card {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   will-change: transform;
-  /* Prevent text mixing during scroll */
   transform: translateZ(0);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -187,6 +186,24 @@
   opacity: 0;
   transform: translateY(8px);
   transition: all 0.25s ease;
+}
+
+/* Category Card - clear, visible, beautiful */
+.category-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+.category-card:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.category-card:hover .cat-img {
+  transform: scale(1.08);
+}
+.category-card .cat-img {
+  transition: transform 0.35s ease;
 }
 
 /* Shimmer / Skeleton */
@@ -218,7 +235,7 @@
   animation-play-state: paused;
 }
 
-/* Fade Up Animation — opacity only (no transform to avoid scroll/sticky conflicts) */
+/* Fade Up Animation */
 @keyframes fadeUp {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -226,11 +243,10 @@
 .animate-fadeUp {
   animation: fadeUp 0.4s ease-out forwards;
   will-change: opacity;
-  /* Force GPU layer for clean rendering */
   transform: translateZ(0);
 }
 
-/* Card Fade Up — includes small transform for cards */
+/* Card Fade Up */
 @keyframes cardFadeUp {
   from { opacity: 0; transform: translateY(10px) translateZ(0); }
   to { opacity: 1; transform: translateY(0) translateZ(0); }
@@ -260,7 +276,7 @@
   will-change: transform, opacity;
 }
 
-/* Pulse glow — Pakistani green */
+/* Pulse glow - Pakistani green */
 @keyframes pulseGlow {
   0%, 100% { box-shadow: 0 0 8px rgba(0, 98, 51, 0.3); }
   50% { box-shadow: 0 0 20px rgba(0, 166, 81, 0.6); }
@@ -291,7 +307,7 @@
   background: rgba(0, 166, 81, 0.3);
 }
 
-/* Range Slider — Pakistani green */
+/* Range Slider - Pakistani green */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -321,7 +337,7 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-/* Gradient text — Pakistani green + gold */
+/* Gradient text - Pakistani green + gold */
 .gradient-text {
   background: linear-gradient(135deg, #006233, #C5A028);
   -webkit-background-clip: text;
@@ -357,7 +373,7 @@ input[type="range"]::-moz-range-thumb {
   position: relative;
 }
 .pk-badge::after {
-  content: '\u262A';
+  content: '\262A';
   position: absolute;
   top: -4px;
   right: -4px;
@@ -418,4 +434,21 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea, label {
   height: 2px;
   background: linear-gradient(to right, #006233, #00A651);
   border-radius: 1px;
+}
+
+/* Image upload drop zone */
+.upload-zone {
+  border: 2px dashed rgba(0, 98, 51, 0.3);
+  transition: all 0.2s ease;
+}
+.upload-zone:hover {
+  border-color: rgba(0, 98, 51, 0.6);
+  background: rgba(0, 98, 51, 0.03);
+}
+.dark .upload-zone {
+  border-color: rgba(0, 166, 81, 0.3);
+}
+.dark .upload-zone:hover {
+  border-color: rgba(0, 166, 81, 0.6);
+  background: rgba(0, 166, 81, 0.05);
 }

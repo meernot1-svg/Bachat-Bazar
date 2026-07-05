@@ -1,0 +1,202 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+     4→     4→import { useStore } from '@/lib/store';
+     5→     5→import { PRODUCTS, CATEGORIES, COUPONS, TESTIMONIALS, BLOGS, HERO_SLIDES, SHIPPING_METHODS, PAYMENTS, U, type Product, type BannerData, type SaleData } from '@/lib/data';
+     6→     6→import { Button } from '@/components/ui/button';
+     7→     7→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+     8→     8→import { Badge } from '@/components/ui/badge';
+     9→     9→import { Input } from '@/components/ui/input';
+    10→    10→import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetDescription } from '@/components/ui/sheet';
+    11→    11→import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+    12→    12→import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+    13→    13→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+    14→    14→import { Separator } from '@/components/ui/separator';
+    15→    15→import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+    16→    16→import { Textarea } from '@/components/ui/textarea';
+    17→    17→import { Label } from '@/components/ui/label';
+    18→    18→import { Switch } from '@/components/ui/switch';
+    19→    19→import {
+    20→    20→  Heart, ShoppingCart, Search, Star, User, Menu, X, Minus, Plus, Trash2,
+    21→    21→  ChevronRight, ChevronLeft, Eye, GitCompare, Moon, Sun, ArrowUp,
+    22→    22→  Phone, Mail, MapPin, Facebook, Twitter, Instagram, Youtube,
+    23→    23→  Truck, Shield, RotateCcw, Headphones, Tag, Clock, Flame,
+    24→    24→  Check, AlertCircle, Copy, Share2, ZoomIn, ChevronDown,
+    25→    25→  CreditCard, Wallet, Building2, Banknote, Gift, Package,
+    26→    26→  Settings, BarChart3, BoxIcon, ClipboardList, Lock, LogOut,
+    27→    27→  Bell, Cookie, Sparkles, Tv, Smartphone, Shirt, Sofa, Watch, Baby,
+    28→    28→  Home, Store, Zap, TrendingUp, Award, ThumbsUp, Info, HelpCircle, BookOpen,
+    29→    29→  Users, ArrowRight, Image as ImageIcon, ShieldCheck,
+    30→    30→  Upload, Megaphone, Percent, Edit, Save, PlusCircle, Trash, TableProperties
+    31→    31→} from 'lucide-react';
+    32→    32→import { useToast } from '@/hooks/use-toast';
+    33→    33→
+    34→    34→// ─── HELPERS ───
+    35→    35→const ICON_MAP: Record<string, React.ElementType> = { Sparkles, ShoppingCart, Tv, Smartphone, Shirt, Sofa, Watch, Baby, Tag };
+    36→    36→function getCatIcon(n: string) { return ICON_MAP[n] || Tag; }
+    37→    37→function imgFallback(e: React.SyntheticEvent<HTMLImageElement>, seed?: string) { const t = e.currentTarget; t.onerror = null; t.src = `https://picsum.photos/seed/${seed || 'bb' + Math.random().toString(36).slice(2, 6)}/400/400`; }
+    38→    38→
+    39→    39→const ADMIN_PWD = 'BA56CR7VK18';
+    40→    40→
+    41→    41→function CountdownTimer({ targetDate }: { targetDate: Date }) {
+    42→    42→  const [diff, setDiff] = useState(Math.max(0, targetDate.getTime() - Date.now()));
+    43→    43→  useEffect(() => { const id = setInterval(() => setDiff(Math.max(0, targetDate.getTime() - Date.now())), 1000); return () => clearInterval(id); }, [targetDate]);
+    44→    44→  const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000);
+    45→    45→  return <span className="font-mono font-bold tracking-wider">{String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')}</span>;
+    46→    46→}
+    47→    47→
+    48→    48→function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
+    49→    49→  return <span className="inline-flex gap-0.5">{[1,2,3,4,5].map(i => <Star key={i} size={size} className={i <= Math.round(rating) ? 'fill-[#C5A028] text-[#C5A028]' : 'text-gray-300 dark:text-gray-600'} />)}</span>;
+    50→    50→}
+    51→    51→
+    52→    52→function ProductImage({ src, alt, seed, className = '' }: { src: string; alt: string; seed?: string; className?: string }) {
+    53→    53→  return <img src={src} alt={alt} className={className} onError={(e) => imgFallback(e, seed)} loading="lazy" draggable={false} />;
+    54→    54→}
+    55→    55→
+    56→    56→function PriceDisplay({ price, oldPrice }: { price: number; oldPrice: number }) {
+    57→    57→  const s = useStore();
+    58→    58→  return <span className="flex items-center gap-2"><span className="font-bold text-lg text-[#006233] dark:text-[#00A651]" style={{ fontFamily: 'var(--font-poppins)' }}>{s.money(price)}</span>{oldPrice > price && <span className="text-sm text-muted-foreground line-through">{s.money(oldPrice)}</span>}</span>;
+    59→    59→}
+    60→    60→
+    61→    61→// ─── ROUTER ───
+    62→    62→interface RouteInfo { view: string; id: string; query: Record<string, string>; }
+    63→    63→function parseHash(hash: string): RouteInfo { const h = hash.replace(/^#\/?/, '') || ''; const [path, qs] = h.split('?'); const parts = path.split('/').filter(Boolean); const query: Record<string, string> = {}; if (qs) qs.split('&').forEach(p => { const [k, v] = p.split('='); if (k) query[decodeURIComponent(k)] = decodeURIComponent(v || ''); }); return { view: parts[0] || '', id: parts[1] || '', query }; }
+    64→    64→function makeHash(view: string, id?: string, query?: Record<string, string>) { let h = '#/' + view; if (id) h += '/' + id; if (query && Object.keys(query).length) h += '?' + Object.entries(query).map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&'); return h; }
+    65→    65→
+    66→    66→// ─── PRODUCT CARD ───
+    67→    67→function ProductCard({ product, onQuickView }: { product: Product; onQuickView: (p: Product) => void }) {
+    68→    68→  const s = useStore(); const { toast } = useToast(); const inWish = s.inWishlist(product.id); const inComp = s.inCompare(product.id);
+    69→    69→  const handleCart = (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); if (s.addToCart(product.id)) { toast({ title: 'Added to cart', description: product.name.slice(0, 40) }); } else { toast({ title: 'Out of stock', variant: 'destructive' }); } };
+    70→    70→  return (
+    71→    71→    <div className="product-card animate-cardFadeUp group bg-card rounded-xl border overflow-hidden cursor-pointer" onClick={() => { window.location.hash = makeHash('product', String(product.id)); }}>
+    72→    72→      <div className="relative aspect-square overflow-hidden bg-muted">
+    73→    73→        <ProductImage src={product.images[0]} alt={product.name} seed={product.imageId} className="product-img w-full h-full object-cover" />
+    74→    74→        {product.badge && <span className="absolute top-2 left-2 bg-gradient-to-r from-[#006233] to-[#00A651] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow">{product.badge}</span>}
+    75→    75→        {product.isNew && <span className="absolute top-2 right-2 bg-[#C5A028] text-white text-xs font-bold px-2 py-0.5 rounded-full shadow">NEW</span>}
+    76→    76→        <div className="absolute bottom-2 left-2 right-2"><button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(product); }} className="quick-view-btn w-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur text-xs font-semibold py-1.5 rounded-lg hover:bg-[#006233] hover:text-white transition flex items-center justify-center gap-1 shadow"><Eye size={14}/>Quick View</button></div>
+    77→    77→        <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+    78→    78→          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const a = s.toggleWishlist(product.id); toast({ title: a ? 'Added to wishlist' : 'Removed' }); }} className={`p-1.5 rounded-full shadow ${inWish ? 'bg-pink-500 text-white' : 'bg-white/90 dark:bg-zinc-800/90'} hover:scale-110 transition`}><Heart size={14} fill={inWish ? 'currentColor' : 'none'}/></button>
+    79→    79→          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const ok = s.toggleCompare(product.id); toast({ title: ok ? 'Added to compare' : 'Removed / Max 4' }); }} className={`p-1.5 rounded-full shadow ${inComp ? 'bg-[#006233] text-white' : 'bg-white/90 dark:bg-zinc-800/90'} hover:scale-110 transition`}><GitCompare size={14}/></button>
+    80→    80→        </div>
+    81→    81→      </div>
+    82→    82→      <div className="p-3 space-y-1.5">
+    83→    83→        <p className="text-xs text-[#C5A028] font-semibold truncate" style={{ fontFamily: 'var(--font-poppins)' }}>{product.brand}</p>
+    84→    84→        <p className="text-sm font-medium line-clamp-2 leading-snug min-h-[2.5rem] text-slate-800 dark:text-slate-100">{product.name}</p>
+    85→    85→        <div className="flex items-center gap-1.5"><StarRating rating={product.rating} size={12}/><span className="text-xs text-muted-foreground">({product.reviews})</span></div>
+    86→    86→        <PriceDisplay price={product.price} oldPrice={product.oldPrice}/>
+    87→    87→        <Button size="sm" className="w-full mt-1 bg-gradient-to-r from-[#006233] to-[#00A651] hover:from-[#004D25] hover:to-[#006233] text-white border-0 font-semibold" onClick={handleCart}><ShoppingCart size={14} className="mr-1"/> Add to Cart</Button>
+    88→    88→      </div>
+    89→    89→    </div>
+    90→    90→  );
+    91→    91→}
+    92→    92→
+    93→    93→// ─── HOME VIEW ───
+    94→    94→function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+    95→    95→  const s = useStore(); const [heroIdx, setHeroIdx] = useState(0);
+    96→    96→  const allProducts = s.allProducts(); const featured = allProducts.filter(p => p.featured).slice(0, 8); const trending = allProducts.filter(p => p.trending).slice(0, 8); const newArrivals = allProducts.filter(p => p.isNew).slice(0, 8); const bestSellers = allProducts.filter(p => p.bestSeller).slice(0, 8);
+    97→    97→  const flashSaleEnd = useMemo(() => new Date(Date.now() + 6 * 3600000), []); const flashItems = allProducts.filter(p => p.oldPrice > p.price).slice(0, 6);
+    98→    98→  const activeSales = s.sales.filter(sale => sale.active); const activeBanners = s.banners.filter(b => b.active).sort((a, b) => a.order - b.order);
+    99→    99→  useEffect(() => { const id = setInterval(() => setHeroIdx(i => (i + 1) % HERO_SLIDES.length), 5000); return () => clearInterval(id); }, []);
+   100→   100→
+   101→   101→  return (
+   102→   102→    <div className="animate-fadeUp">
+   103→   103→      {/* Hero Slider - Pakistani Gradient Style */}
+   104→   104→      <div className="relative overflow-hidden rounded-2xl mb-8 shadow-2xl" style={{ minHeight: 380 }}>
+   105→   105→        {HERO_SLIDES.map((slide, i) => (
+   106→   106→          <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === heroIdx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+   107→   107→            <div className={`absolute inset-0 ${slide.bg}`}/>
+   108→   108→            <div className="absolute inset-0 pk-pattern"/>
+   109→   109→            <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/5"/>
+   110→   110→            <div className="absolute -left-10 -bottom-10 w-48 h-48 rounded-full bg-white/5"/>
+   111→   111→            <div className="absolute right-8 top-6 text-white/10 text-7xl select-none" style={{ fontFamily: 'serif' }}>&#9734;</div>
+   112→   112→            <div className="absolute left-1/2 bottom-10 text-white/5 text-9xl select-none" style={{ fontFamily: 'serif' }}>&#9734;</div>
+   113→   113→            <div className="absolute inset-0 flex items-center p-6 md:p-14">
+   114→   114→              <div className="max-w-xl text-white space-y-5 animate-heroTextReveal">
+   115→   115→                <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium border border-white/20"><span className="text-[#FFD700] text-lg">&#9734;</span> Bachat Bazar Pakistan</div>
+   116→   116→                <h2 className="text-3xl md:text-5xl font-extrabold drop-shadow-lg leading-tight" style={{ fontFamily: 'var(--font-poppins)' }}>{slide.title}</h2>
+   117→   117→                <p className="text-base md:text-xl opacity-95 drop-shadow font-medium leading-relaxed">{slide.sub}</p>
+   118→   118→                <Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold px-8 py-3 shadow-lg text-base rounded-xl" onClick={() => navigate(slide.route)}>{slide.cta} <ChevronRight size={18} className="ml-1"/></Button>
+   119→   119→              </div>
+   120→   120→            </div>
+   121→   121→          </div>
+   122→   122→        ))}
+   123→   123→        <button onClick={() => setHeroIdx(i => (i - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur rounded-full p-3 text-white hover:bg-white/40 transition shadow z-20"><ChevronLeft size={20}/></button>
+   124→   124→        <button onClick={() => setHeroIdx(i => (i + 1) % HERO_SLIDES.length)} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur rounded-full p-3 text-white hover:bg-white/40 transition shadow z-20"><ChevronRight size={20}/></button>
+   125→   125→        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">{HERO_SLIDES.map((_, i) => <button key={i} onClick={() => setHeroIdx(i)} className={`w-3 h-3 rounded-full transition shadow backdrop-blur ${i === heroIdx ? 'bg-[#FFD700] scale-125' : 'bg-white/40'}`}/>)}</div>
+   126→   126→      </div>
+   127→   127→
+   128→   128→      {/* Active Sales */}
+   129→   129→      {activeSales.length > 0 && (<div className="mb-8 flex gap-3 overflow-x-auto no-scrollbar pb-1">{activeSales.map(sale => (<button key={sale.id} onClick={() => navigate(makeHash('shop', undefined, { category: sale.categoryId }))} className="shrink-0 flex items-center gap-3 px-5 py-3 rounded-xl text-white shadow-lg hover:scale-[1.02] transition-transform" style={{ background: `linear-gradient(135deg, ${sale.bannerColor}, ${sale.bannerColor}dd)` }}><Percent size={18} className="text-white/80"/><div className="text-left"><p className="font-bold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{sale.name}</p><p className="text-xs opacity-90">{sale.discountPercent}% off — {sale.description}</p></div><ArrowRight size={16} className="ml-2 opacity-70"/></button>))}</div>)}
+   130→   130→
+   131→   131→      {/* Active Banners */}
+   132→   132→      {activeBanners.length > 0 && (<div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">{activeBanners.slice(0, 4).map(banner => (<button key={banner.id} onClick={() => navigate(banner.ctaLink)} className={`relative overflow-hidden rounded-xl p-5 md:p-6 text-white text-left shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-r ${banner.gradient} min-h-[120px]`}><div className="absolute right-4 top-3 text-5xl opacity-10 select-none" style={{ fontFamily: 'serif' }}>&#9734;</div><p className="text-xs font-medium opacity-80 mb-1">Featured</p><h4 className="text-lg md:text-xl font-bold mb-1" style={{ fontFamily: 'var(--font-poppins)' }}>{banner.title}</h4><p className="text-sm opacity-90 mb-3">{banner.subtitle}</p><span className="inline-flex items-center gap-1 text-xs font-semibold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">{banner.cta} <ArrowRight size={12}/></span></button>))}</div>)}
+   133→   133→
+   134→   134→      {/* Promo Strip */}
+   135→   135→      <div className="mb-8 bg-gradient-to-r from-[#006233] via-[#00A651] to-[#006233] rounded-xl p-4 flex items-center justify-between text-white shadow-lg">
+   136→   136→        <div className="flex items-center gap-3"><span className="text-2xl">&#127477;&#127472;</span><div><p className="font-bold text-sm md:text-base" style={{ fontFamily: 'var(--font-poppins)' }}>Pakistan Zindabad! Free Delivery Nationwide</p><p className="text-xs opacity-80">On orders above Rs 25,000 — Cash on Delivery Available</p></div></div>
+   137→   137→        <Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold text-sm shrink-0 shadow" onClick={() => navigate(makeHash('shop'))}>Shop Now</Button>
+   138→   138→      </div>
+   139→   139→
+   140→   140→      {/* Categories */}
+   141→   141→      <section className="mb-10"><h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><Store size={22} className="text-[#006233]"/> Shop by Category</h3>
+   142→   142→        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{s.categories().map(cat => { const Icon = getCatIcon(cat.icon); return (<button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className="group relative rounded-xl overflow-hidden aspect-[4/3] cursor-pointer bg-slate-200 dark:bg-slate-700 shadow-md hover:shadow-xl transition-shadow"><ProductImage src={U(cat.img, 400)} alt={cat.name} seed={cat.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" /><div className={`absolute inset-0 bg-gradient-to-t ${cat.color} opacity-60 group-hover:opacity-75 transition`}/><div className="absolute inset-0 flex flex-col items-center justify-center text-white p-2"><div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 shadow"><Icon size={24} className="drop-shadow"/></div><span className="text-sm font-bold text-center drop-shadow-lg" style={{ fontFamily: 'var(--font-poppins)' }}>{cat.name}</span></div></button>); })}</div>
+   143→   143→      </section>
+   144→   144→
+   145→   145→      {/* Flash Sale */}{flashItems.length > 0 && (<section className="mb-10"><div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><Flame size={22} className="text-red-500"/> Flash Sale</h3><div className="flex items-center gap-2 text-sm bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full"><Clock size={16} className="text-red-500"/> Ends in <CountdownTimer targetDate={flashSaleEnd}/></div></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">{flashItems.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+   146→   146→      {/* Featured */}{featured.length > 0 && (<section className="mb-10"><div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><Award size={22} className="text-[#C5A028]"/> Featured</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { featured: 'true' }))} className="text-[#006233] dark:text-[#00A651]">View All <ChevronRight size={14}/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{featured.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+   147→   147→      {/* Eid Banner */}<div className="mb-10 rounded-xl bg-gradient-to-r from-[#006233] to-[#004D25] p-6 md:p-10 text-white flex flex-col md:flex-row items-center gap-6 shadow-xl pk-pattern relative overflow-hidden"><div className="absolute top-4 right-4 text-6xl opacity-10" style={{ fontFamily: 'serif' }}>&#9734;</div><div className="flex-1 space-y-2"><p className="text-[#FFD700] text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-poppins)' }}>Limited Time Offer</p><h3 className="text-2xl md:text-3xl font-extrabold" style={{ fontFamily: 'var(--font-poppins)' }}>Eid Mubarak Sale — 25% Off!</h3><p className="opacity-90 font-medium">Use code <span className="font-mono bg-[#C5A028] px-2 py-0.5 rounded text-white">EID25</span> on orders above Rs 50,000</p></div><Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold shrink-0 shadow-lg" onClick={() => navigate(makeHash('deals'))}>Shop Deals <ArrowRight size={16}/></Button></div>
+   148→   148→      {/* Trending */}{trending.length > 0 && (<section className="mb-10"><div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><TrendingUp size={22} className="text-[#00A651]"/> Trending Now</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { trending: 'true' }))} className="text-[#006233] dark:text-[#00A651]">View All <ChevronRight size={14}/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{trending.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+   149→   149→      {/* New Arrivals */}{newArrivals.length > 0 && (<section className="mb-10"><div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><Zap size={22} className="text-[#C5A028]"/> New Arrivals</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('new'))} className="text-[#006233] dark:text-[#00A651]">View All <ChevronRight size={14}/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{newArrivals.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+   150→   150→      {/* Best Sellers */}{bestSellers.length > 0 && (<section className="mb-10"><div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><ThumbsUp size={22} className="text-[#006233]"/> Best Sellers</h3></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{bestSellers.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+   151→   151→      {/* Testimonials */}<section className="mb-10"><h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><Users size={22} className="text-[#006233]"/> What Our Customers Say</h3><div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">{TESTIMONIALS.map((t, i) => (<Card key={i} className="p-4 border-t-2 border-t-[#C5A028]"><div className="flex items-center gap-3 mb-3"><img src={U(t.avatar, 80)} alt={t.name} className="w-10 h-10 rounded-full object-cover" onError={(e) => imgFallback(e, t.name)}/><div><p className="font-semibold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{t.name}</p><p className="text-xs text-[#C5A028]">{t.role}</p></div></div><StarRating rating={t.rating} size={12}/><p className="mt-2 text-sm text-muted-foreground">&ldquo;{t.text}&rdquo;</p></Card>))}</div></section>
+   152→   152→      {/* Blog */}<section className="mb-10"><div className="flex items-center justify-between mb-4"><h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}><BookOpen size={22} className="text-[#006233]"/> From the Blog</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('blog'))} className="text-[#006233] dark:text-[#00A651]">All Posts <ChevronRight size={14}/></Button></div><div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">{BLOGS.map((b) => (<Card key={b.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"><div className="aspect-video overflow-hidden"><ProductImage src={U(b.img, 400)} alt={b.title} seed={b.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" /></div><div className="p-3 space-y-1"><p className="text-xs text-[#C5A028] font-medium">{b.date} &middot; {b.author}</p><p className="font-semibold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{b.title}</p><p className="text-xs text-muted-foreground line-clamp-2">{b.excerpt}</p></div></Card>))}</div></section>
+   153→   153→      {/* Brands */}<section className="mb-10"><h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Top Brands</h3><div className="overflow-hidden"><div className="marquee-track flex gap-8 whitespace-nowrap">{[...Array(2)].map((_, si) => (<React.Fragment key={si}>{s.allProducts().slice(0, 20).map((p, i) => <span key={`${si}-${i}`} className="text-lg font-bold text-[#006233]/20 dark:text-[#00A651]/20 px-4" style={{ fontFamily: 'var(--font-poppins)' }}>{p.brand}</span>)}</React.Fragment>))}</div></div></section>
+   154→   154→      {/* Features */}<section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">{[{ icon: Truck, title: 'Free Shipping', desc: 'Orders over Rs 25,000' },{ icon: ShieldCheck, title: 'Genuine Products', desc: '100% authentic items' },{ icon: RotateCcw, title: '7-Day Returns', desc: 'Easy return policy' },{ icon: Banknote, title: 'Cash on Delivery', desc: 'Pay when you receive' }].map((f, i) => (<div key={i} className="flex flex-col items-center text-center p-4 rounded-xl bg-gradient-to-b from-[#006233]/5 to-transparent dark:from-[#00A651]/10 border border-[#006233]/10"><div className="w-12 h-12 rounded-full bg-[#006233]/10 dark:bg-[#00A651]/20 flex items-center justify-center mb-2"><f.icon size={22} className="text-[#006233] dark:text-[#00A651]"/></div><p className="font-semibold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{f.title}</p><p className="text-xs text-muted-foreground">{f.desc}</p></div>))}</section>
+   155→   155→    </div>
+   156→   156→  );
+   157→   157→}
+   158→   158→
+   159→   159→// ─── SHOP VIEW ───
+   160→   160→function ShopView({ query, onQuickView, navigate }: { query: Record<string, string>; onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   161→   161→  const s = useStore();
+   162→   162→  const [search, setSearch] = useState(query.search || '');
+   163→   163→  const [cat, setCat] = useState(query.category || 'all');
+   164→   164→  const [sort, setSort] = useState('featured');
+   165→   165→  const [page, setPage] = useState(1);
+   166→   166→  const [priceMax, setPriceMax] = useState(200000);
+   167→   167→  const perPage = 12;
+   168→   168→
+   169→   169→  const activeCat = query.category || cat;
+   170→   170→  const activeSearch = query.search || search;
+   171→   171→
+   172→   172→  const filtered = useMemo(() => {
+   173→   173→    let list = s.allProducts();
+   174→   174→    if (activeCat !== 'all') list = list.filter(p => p.category === activeCat);
+   175→   175→    if (activeSearch) { const q = activeSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)); }
+   176→   176→    if (query.featured === 'true') list = list.filter(p => p.featured);
+   177→   177→    if (query.trending === 'true') list = list.filter(p => p.trending);
+   178→   178→    list = list.filter(p => p.price <= priceMax);
+   179→   179→    switch (sort) {
+   180→   180→      case 'price-low': list.sort((a, b) => a.price - b.price); break;
+   181→   181→      case 'price-high': list.sort((a, b) => b.price - a.price); break;
+   182→   182→      case 'rating': list.sort((a, b) => b.rating - a.rating); break;
+   183→   183→      case 'newest': list.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0)); break;
+   184→   184→      default: list.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+   185→   185→    }
+   186→   186→    return list;
+   187→   187→  }, [s, activeCat, activeSearch, sort, priceMax, query.featured, query.trending]);
+   188→   188→
+   189→   189→  const totalPages = Math.ceil(filtered.length / perPage);
+   190→   190→  const pageItems = filtered.slice((page - 1) * perPage, page * perPage);
+   191→   191→
+   192→   192→  return (
+   193→   193→    <div className="animate-fadeUp space-y-6">
+   194→   194→      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+   195→   195→        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={{ fontFamily: 'var(--font-poppins)' }}>Shop{activeCat !== 'all' ? ` — ${s.categories().find(c => c.id === activeCat)?.name || activeCat}` : ''}</h2>
+   196→   196→        <div className="flex items-center gap-2 flex-wrap">
+   197→   197→          <div className="relative flex-1 min-w-[200px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input placeholder="Search products..." value={activeSearch} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-9"/></div>
+   198→   198→          <Select value={activeCat} onValueChange={v => { setCat(v); setPage(1); }}><SelectTrigger className="w-[180px]"><SelectValue placeholder="Category"/></SelectTrigger><SelectContent><SelectItem value="all">All Categories</SelectItem>{s.categories().map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+   199→   199→          <Select value={sort} onValueChange={setSort}><SelectTrigger className="w-[150px]"><SelectValue placeholder="Sort by"/></SelectTrigger><SelectContent><SelectItem value="featured">Featured</SelectItem><SelectItem value="price-low">Price: Low to High</SelectItem><SelectItem value="price-high">Price: High to Low</SelectItem><SelectItem value="rating">Top Rated</SelectItem><SelectItem value="newest">Newest</SelectItem></SelectContent></Select>
+   200→   200→        </div>
+
+[showing lines 1-200 of 761; use offset=201 with limit to continue reading]

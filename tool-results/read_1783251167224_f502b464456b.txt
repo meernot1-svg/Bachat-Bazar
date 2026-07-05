@@ -1,0 +1,262 @@
+   500→      {/* ORDERS */}
+   501→      {tab === 'orders' && (<div className="space-y-4"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Orders ({s.orders.length})</h3>
+   502→      {s.orders.length === 0 && <p className="text-muted-foreground text-sm">No orders yet</p>}
+   503→      <div className="space-y-3">{s.orders.map(o => (<Card key={o.id} className="p-4 space-y-3"><div className="flex items-center justify-between flex-wrap gap-2"><div><span className="font-bold">#{o.id}</span><span className="text-xs text-muted-foreground ml-2">{new Date(o.date).toLocaleDateString()}</span><span className="text-xs text-muted-foreground ml-2">{o.payment}</span></div><div className="flex items-center gap-2"><Badge className={`${orderStatusColors[o.status] || 'bg-gray-500'} text-white`}>{o.status}</Badge><Select value={o.status} onValueChange={v => { s.updateOrderStatus(o.id, v); toast({ title: 'Status updated' }); }}><SelectTrigger className="w-[140px] h-7 text-xs"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Confirmed">Confirmed</SelectItem><SelectItem value="Processing">Processing</SelectItem><SelectItem value="Shipped">Shipped</SelectItem><SelectItem value="Delivered">Delivered</SelectItem><SelectItem value="Cancelled">Cancelled</SelectItem></SelectContent></Select></div></div><div className="space-y-1">{o.items.map((it, i) => <div key={i} className="flex justify-between text-sm"><span className="text-muted-foreground">{it.name?.slice(0, 40)} x{it.qty}</span><span>{s.money((it.price || 0) * it.qty)}</span></div>)}</div><div className="flex justify-between font-bold text-sm pt-1 border-t"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{o.totals.totalDisplay}</span></div></Card>))}</div></div>)}
+   504→
+   505→      {/* BANNERS */}
+   506→      {tab === 'banners' && (<div className="space-y-4"><div className="flex items-center justify-between"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Banners ({s.banners.length})</h3><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => openBanDialog()}><PlusCircle size={14} className="mr-1"/>Add Banner</Button></div>
+   507→      <div className="space-y-3">{s.banners.map(b => (<Card key={b.id} className="p-4"><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-3"><div className={`w-24 h-14 rounded-lg bg-gradient-to-r ${b.gradient} flex items-center justify-center`}><span className="text-white/40 text-2xl" style={{ fontFamily: 'serif' }}>&#9734;</span></div><div><p className="font-medium text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{b.title}</p><p className="text-xs text-muted-foreground">{b.subtitle} &middot; Order: {b.order}</p></div></div><div className="flex items-center gap-2"><Switch checked={b.active} onCheckedChange={() => { s.toggleBanner(b.id); toast({ title: b.active ? 'Banner disabled' : 'Banner enabled' }); }}/><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openBanDialog(b)}><Edit size={14}/></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => { s.deleteBanner(b.id); toast({ title: 'Banner deleted' }); }}><Trash2 size={14}/></Button></div></div></Card>))}</div></div>)}
+   508→
+   509→      {/* SALES */}
+   510→      {tab === 'sales' && (<div className="space-y-4"><div className="flex items-center justify-between"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Sales ({s.sales.length})</h3><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => openSaleDialog()}><PlusCircle size={14} className="mr-1"/>Add Sale</Button></div>
+   511→      <div className="space-y-3">{s.sales.map(sale => (<Card key={sale.id} className="p-4"><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-3"><div className="w-24 h-14 rounded-lg flex items-center justify-center text-white font-bold text-lg" style={{ background: `linear-gradient(135deg, ${sale.bannerColor}, ${sale.bannerColor}cc)` }}>{sale.discountPercent}%</div><div><p className="font-medium text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{sale.name}</p><p className="text-xs text-muted-foreground">{sale.description}</p><p className="text-xs text-muted-foreground">{sale.startDate} → {sale.endDate}</p></div></div><div className="flex items-center gap-2"><Switch checked={sale.active} onCheckedChange={() => { s.toggleSale(sale.id); toast({ title: sale.active ? 'Sale disabled' : 'Sale enabled' }); }}/><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openSaleDialog(sale)}><Edit size={14}/></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => { s.deleteSale(sale.id); toast({ title: 'Sale deleted' }); }}><Trash2 size={14}/></Button></div></div></Card>))}</div></div>)}
+   512→
+   513→      {/* CATEGORIES */}
+   514→      {tab === 'categories' && (<div className="space-y-4"><div className="flex items-center justify-between"><h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Categories ({s.categories().length})</h3><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => openCatDialog()}><PlusCircle size={14} className="mr-1"/>Add Category</Button></div>
+   515→      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">{s.categories().map(c => { const Icon = getCatIcon(c.icon); return (<Card key={c.id} className="p-4"><div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${c.color} flex items-center justify-center`}><Icon size={18} className="text-white"/></div><div><p className="font-medium text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{c.name}</p><p className="text-xs text-muted-foreground">{c.id} &middot; {allProds.filter(p => p.category === c.id).length} products</p></div></div><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openCatDialog(c)}><Edit size={14}/></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => { s.deleteCategory(c.id); toast({ title: 'Category deleted' }); }}><Trash2 size={14}/></Button></div></div></Card>); })}</div></div>)}
+   516→
+   517→      {/* Product Dialog */}
+   518→      <Dialog open={prodDialog} onOpenChange={setProdDialog}><DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editProd ? 'Edit Product' : 'Add Product'}</DialogTitle><DialogDescription>Fill in the product details below.</DialogDescription></DialogHeader>
+   519→      <div className="space-y-3">
+   520→        <div><Label>Name</Label><Input value={pName} onChange={e => setPName(e.target.value)}/></div>
+   521→        <div className="grid grid-cols-2 gap-3"><div><Label>Brand</Label><Input value={pBrand} onChange={e => setPBrand(e.target.value)}/></div><div><Label>Category</Label><Select value={pCat} onValueChange={setPCat}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{s.categories().map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div></div>
+   522→        <div className="grid grid-cols-3 gap-3"><div><Label>Price (Rs)</Label><Input type="number" value={pPrice} onChange={e => setPPrice(Number(e.target.value))}/></div><div><Label>Old Price</Label><Input type="number" value={pOldPrice} onChange={e => setPOldPrice(Number(e.target.value))}/></div><div><Label>Stock</Label><Input type="number" value={pStock} onChange={e => setPStock(Number(e.target.value))}/></div></div>
+   523→        <div><Label>Image URL</Label><Input value={pImg} onChange={e => setPImg(e.target.value)} placeholder="https://..."/></div>
+   524→        <div><Label>Description</Label><Textarea value={pDesc} onChange={e => setPDesc(e.target.value)} rows={2}/></div>
+   525→        <div className="flex flex-wrap gap-4"><div className="flex items-center gap-2"><Switch checked={pFeatured} onCheckedChange={setPFeatured}/><Label className="text-xs">Featured</Label></div><div className="flex items-center gap-2"><Switch checked={pNew} onCheckedChange={setPNew}/><Label className="text-xs">New</Label></div><div className="flex items-center gap-2"><Switch checked={pTrending} onCheckedChange={setPTrending}/><Label className="text-xs">Trending</Label></div><div className="flex items-center gap-2"><Switch checked={pBestSeller} onCheckedChange={setPBestSeller}/><Label className="text-xs">Best Seller</Label></div></div>
+   526→      </div>
+   527→      <DialogFooter><Button variant="outline" onClick={() => setProdDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={saveProduct}><Save size={14} className="mr-1"/>Save</Button></DialogFooter></DialogContent></Dialog>
+   528→
+   529→      {/* Banner Dialog */}
+   530→      <Dialog open={banDialog} onOpenChange={setBanDialog}><DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editBan ? 'Edit Banner' : 'Add Banner'}</DialogTitle><DialogDescription>Configure the banner settings.</DialogDescription></DialogHeader>
+   531→      <div className="space-y-3">
+   532→        <div><Label>Title</Label><Input value={bTitle} onChange={e => setBTitle(e.target.value)}/></div>
+   533→        <div><Label>Subtitle</Label><Input value={bSub} onChange={e => setBSub(e.target.value)}/></div>
+   534→        <div className="grid grid-cols-2 gap-3"><div><Label>CTA Text</Label><Input value={bCta} onChange={e => setBCta(e.target.value)}/></div><div><Label>CTA Link</Label><Input value={bLink} onChange={e => setBLink(e.target.value)}/></div></div>
+   535→        <div><Label>Gradient Class</Label><Input value={bGrad} onChange={e => setBGrad(e.target.value)} placeholder="from-[#006233] to-[#00A651]"/></div>
+   536→        <div><Label>Image (optional)</Label><Input value={bImg} onChange={e => setBImg(e.target.value)} placeholder="Image ID or URL"/></div>
+   537→        <div className="grid grid-cols-2 gap-3"><div className="flex items-center gap-2"><Switch checked={bActive} onCheckedChange={setBActive}/><Label>Active</Label></div><div><Label>Order</Label><Input type="number" value={bOrder} onChange={e => setBOrder(Number(e.target.value))}/></div></div>
+   538→        <div className="rounded-lg p-4 bg-gradient-to-r text-white" style={{ minHeight: 60 }}><div className={`w-full h-full rounded-lg bg-gradient-to-r ${bGrad} p-3`}><p className="font-bold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{bTitle || 'Banner Preview'}</p><p className="text-xs opacity-80">{bSub || 'Subtitle'}</p></div></div>
+   539→      </div>
+   540→      <DialogFooter><Button variant="outline" onClick={() => setBanDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={saveBanner}><Save size={14} className="mr-1"/>Save</Button></DialogFooter></DialogContent></Dialog>
+   541→
+   542→      {/* Sale Dialog */}
+   543→      <Dialog open={saleDialog} onOpenChange={setSaleDialog}><DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editSale ? 'Edit Sale' : 'Add Sale'}</DialogTitle><DialogDescription>Configure the sale event.</DialogDescription></DialogHeader>
+   544→      <div className="space-y-3">
+   545→        <div><Label>Name</Label><Input value={sName} onChange={e => setSName(e.target.value)}/></div>
+   546→        <div><Label>Description</Label><Input value={sDesc} onChange={e => setSDesc(e.target.value)}/></div>
+   547→        <div className="grid grid-cols-2 gap-3"><div><Label>Discount %</Label><Input type="number" value={sDisc} onChange={e => setSDisc(Number(e.target.value))}/></div><div><Label>Category</Label><Select value={sCat || 'all'} onValueChange={setSCat}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">All Categories</SelectItem>{s.categories().map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div></div>
+   548→        <div className="grid grid-cols-2 gap-3"><div><Label>Start Date</Label><Input type="date" value={sStart} onChange={e => setSStart(e.target.value)}/></div><div><Label>End Date</Label><Input type="date" value={sEnd} onChange={e => setSEnd(e.target.value)}/></div></div>
+   549→        <div className="grid grid-cols-2 gap-3"><div><Label>Banner Color</Label><div className="flex gap-2"><input type="color" value={sColor} onChange={e => setSColor(e.target.value)} className="w-10 h-9 rounded border cursor-pointer"/><Input value={sColor} onChange={e => setSColor(e.target.value)} className="flex-1"/></div></div><div className="flex items-center gap-2 pt-5"><Switch checked={sActive} onCheckedChange={setSActive}/><Label>Active</Label></div></div>
+   550→      </div>
+   551→      <DialogFooter><Button variant="outline" onClick={() => setSaleDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={saveSale}><Save size={14} className="mr-1"/>Save</Button></DialogFooter></DialogContent></Dialog>
+   552→
+   553→      {/* Category Dialog */}
+   554→      <Dialog open={catDialog} onOpenChange={setCatDialog}><DialogContent><DialogHeader><DialogTitle>{editCatId ? 'Edit Category' : 'Add Category'}</DialogTitle><DialogDescription>Category details.</DialogDescription></DialogHeader>
+   555→      <div className="space-y-3">
+   556→        <div><Label>Name</Label><Input value={cName} onChange={e => setCName(e.target.value)}/></div>
+   557→        <div className="grid grid-cols-2 gap-3"><div><Label>Icon</Label><Select value={cIcon} onValueChange={setCIcon}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{Object.keys(ICON_MAP).map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent></Select></div><div><Label>Gradient</Label><Input value={cColor} onChange={e => setCColor(e.target.value)} placeholder="from-slate-500 to-slate-700"/></div></div>
+   558→        <div><Label>Image ID</Label><Input value={cImg} onChange={e => setCImg(e.target.value)} placeholder="Unsplash photo ID"/></div>
+   559→      </div>
+   560→      <DialogFooter><Button variant="outline" onClick={() => setCatDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={saveCat}><Save size={14} className="mr-1"/>Save</Button></DialogFooter></DialogContent></Dialog>
+   561→    </div>
+   562→  );
+   563→}
+   564→
+   565→// ─── MAIN APP COMPONENT ───
+   566→export default function BachatBazarApp() {
+   567→  const s = useStore(); const { toast } = useToast();
+   568→  const [route, setRoute] = useState<RouteInfo>(() => parseHash(typeof window !== 'undefined' ? window.location.hash : ''));
+   569→  const [searchOpen, setSearchOpen] = useState(false); const [searchQ, setSearchQ] = useState('');
+   570→  const [mobileMenu, setMobileMenu] = useState(false);
+   571→  const [cartOpen, setCartOpen] = useState(false);
+   572→  const [wishOpen, setWishOpen] = useState(false);
+   573→  const [quickView, setQuickView] = useState<Product | null>(null);
+   574→  const [authOpen, setAuthOpen] = useState(false); const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+   575→  const [authEmail, setAuthEmail] = useState(''); const [authName, setAuthName] = useState('');
+   576→  const [showBackTop, setShowBackTop] = useState(false);
+   577→  const [cookieConsent, setCookieConsent] = useState(() => { if (typeof window !== 'undefined' && localStorage.getItem('bb_cookies') === '1') return true; return false; });
+   578→  const [notifOpen, setNotifOpen] = useState(false);
+   579→
+   580→  // Theme sync
+   581→  useEffect(() => { if (typeof document !== 'undefined') { document.documentElement.classList.toggle('dark', s.theme === 'dark'); } }, [s.theme]);
+   582→  // Cookie consent - initialized from localStorage via useState initializer
+   583→  // Route listener
+   584→  useEffect(() => { const handler = () => { const newRoute = parseHash(window.location.hash); setRoute(newRoute); window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }; window.addEventListener('hashchange', handler); return () => window.removeEventListener('hashchange', handler); }, []);
+   585→  // Scroll listener
+   586→  useEffect(() => { const handler = () => setShowBackTop(window.scrollY > 400); window.addEventListener('scroll', handler, { passive: true }); return () => window.removeEventListener('scroll', handler); }, []);
+   587→
+   588→  const navigate = useCallback((hash: string) => { window.location.hash = hash; }, []);
+   589→  const cartCount = s.cartCount();
+   590→  const wishCount = s.wishlist.length;
+   591→
+   592→  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQ.trim()) { navigate(makeHash('shop', undefined, { search: searchQ.trim() })); setSearchOpen(false); setSearchQ(''); } };
+   593→
+   594→  const handleAuth = () => {
+   595→    if (authMode === 'login') { s.login(authEmail); toast({ title: 'Welcome back!' }); }
+   596→    else { s.register(authName, authEmail); toast({ title: 'Account created!' }); }
+   597→    setAuthOpen(false); setAuthEmail(''); setAuthName('');
+   598→  };
+   599→
+   600→  const currentView = route.view || '';
+   601→  const renderView = () => {
+   602→    switch (currentView) {
+   603→      case '': case 'home': return <HomeView onQuickView={setQuickView} navigate={navigate}/>;
+   604→      case 'shop': return <ShopView query={route.query} onQuickView={setQuickView} navigate={navigate}/>;
+   605→      case 'product': return <ProductDetailView id={route.id} onQuickView={setQuickView} navigate={navigate}/>;
+   606→      case 'cart': return <CartView navigate={navigate}/>;
+   607→      case 'checkout': return <CheckoutView navigate={navigate}/>;
+   608→      case 'wishlist': return <WishlistView onQuickView={setQuickView} navigate={navigate}/>;
+   609→      case 'compare': return <CompareView navigate={navigate}/>;
+   610→      case 'orders': return <OrdersView/>;
+   611→      case 'account': return <AccountView/>;
+   612→      case 'deals': return <DealsView onQuickView={setQuickView} navigate={navigate}/>;
+   613→      case 'new': return <NewArrivalsView onQuickView={setQuickView}/>;
+   614→      case 'about': return <AboutView/>;
+   615→      case 'contact': return <ContactView/>;
+   616→      case 'faq': return <FAQView/>;
+   617→      case 'blog': return <BlogView/>;
+   618→      case 'admin': return <AdminView/>;
+   619→      default: return <NotFoundView navigate={navigate}/>;
+   620→    }
+   621→  };
+   622→
+   623→  const navLinks = [
+   624→    { href: makeHash(''), label: 'Home' },
+   625→    { href: makeHash('shop'), label: 'Shop' },
+   626→    { href: makeHash('deals'), label: 'Deals' },
+   627→    { href: makeHash('new'), label: 'New' },
+   628→    { href: makeHash('about'), label: 'About' },
+   629→    { href: makeHash('contact'), label: 'Contact' },
+   630→  ];
+   631→
+   632→  const cartProducts = s.cart.map(i => ({ ...i, product: s.getProduct(i.id) })).filter(x => x.product);
+   633→
+   634→  return (
+   635→    <div className="min-h-screen flex flex-col bg-background">
+   636→      {/* Promo Bar */}
+   637→      <div className="bg-gradient-to-r from-[#004D25] to-[#006233] text-white text-center py-1.5 px-4 text-xs font-medium">
+   638→        <div className="flex items-center justify-center gap-3 flex-wrap">
+   639→          <span>&#127477;&#127472; Free Delivery on Rs 25,000+</span>
+   640→          <span className="opacity-30">|</span>
+   641→          <span>Cash on Delivery</span>
+   642→          <span className="opacity-30">|</span>
+   643→          <span>7-Day Returns</span>
+   644→          <span className="opacity-30">|</span>
+   645→          <span>100% Genuine Products</span>
+   646→        </div>
+   647→      </div>
+   648→
+   649→      {/* Navbar */}
+   650→      <header className="glass sticky top-0 z-50">
+   651→        <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center gap-3">
+   652→          {/* Mobile menu button */}
+   653→          <button className="md:hidden p-1" onClick={() => setMobileMenu(true)}><Menu size={22}/></button>
+   654→
+   655→          {/* Logo */}
+   656→          <button onClick={() => navigate(makeHash(''))} className="flex items-center gap-2 shrink-0">
+   657→            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#006233] to-[#00A651] flex items-center justify-center text-white font-bold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>B</div>
+   658→            <span className="font-bold text-lg gradient-text hidden sm:inline" style={{ fontFamily: 'var(--font-poppins)' }}>Bachat Bazar</span>
+   659→          </button>
+   660→
+   661→          {/* Desktop nav */}
+   662→          <nav className="hidden md:flex items-center gap-1 ml-4">{navLinks.map(l => (<button key={l.href} onClick={() => navigate(l.href)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${('#/' + currentView) === l.href || (l.href === '#/' && !currentView) ? 'bg-[#006233]/10 text-[#006233] dark:text-[#00A651]' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>{l.label}</button>))}</nav>
+   663→
+   664→          {/* Search bar - desktop */}
+   665→          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4"><div className="relative w-full"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input className="pl-9 h-9" placeholder="Search products, brands..." value={searchQ} onChange={e => setSearchQ(e.target.value)}/></div></form>
+   666→
+   667→          {/* Right actions */}
+   668→          <div className="flex items-center gap-1 ml-auto">
+   669→            {/* Mobile search toggle */}
+   670→            <button className="md:hidden p-2" onClick={() => setSearchOpen(!searchOpen)}><Search size={18}/></button>
+   671→
+   672→            {/* Wishlist */}
+   673→            <button className="relative p-2" onClick={() => setWishOpen(true)}><Heart size={18}/>{wishCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-pink-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{wishCount}</span>}</button>
+   674→
+   675→            {/* Compare */}
+   676→            <button className="relative p-2" onClick={() => navigate(makeHash('compare'))}><GitCompare size={18}/>{s.compare.length > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#006233] text-white text-[10px] font-bold rounded-full flex items-center justify-center">{s.compare.length}</span>}</button>
+   677→
+   678→            {/* Cart */}
+   679→            <button className="relative p-2" onClick={() => setCartOpen(true)}><ShoppingCart size={18}/>{cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#C5A028] text-white text-[10px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>}</button>
+   680→
+   681→            {/* Admin Button */}
+   682→            <button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white rounded-lg px-3 h-8 text-xs font-bold flex items-center gap-1.5 admin-pulse" onClick={() => navigate(makeHash('admin'))}><Settings size={14}/>Admin</button>
+   683→
+   684→            {/* User */}
+   685→            <button className="p-2" onClick={() => { if (s.user) navigate(makeHash('account')); else setAuthOpen(true); }}><User size={18}/></button>
+   686→
+   687→            {/* Notifications */}
+   688→            <button className="relative p-2 hidden sm:block" onClick={() => setNotifOpen(!notifOpen)}><Bell size={18}/>{s.notifs.filter(n => !n.read).length > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{s.notifs.filter(n => !n.read).length}</span>}</button>
+   689→
+   690→            {/* Theme toggle */}
+   691→            <button className="p-2" onClick={() => s.toggleTheme()}>{s.theme === 'dark' ? <Sun size={18}/> : <Moon size={18}/>}</button>
+   692→          </div>
+   693→        </div>
+   694→
+   695→        {/* Mobile search bar */}
+   696→        {searchOpen && (<div className="md:hidden px-4 pb-3"><form onSubmit={handleSearch}><div className="relative"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input className="pl-9" placeholder="Search products..." value={searchQ} onChange={e => setSearchQ(e.target.value)} autoFocus/></div></form></div>)}
+   697→
+   698→        {/* Category bar */}
+   699→        <div className="border-t overflow-x-auto no-scrollbar hidden md:block">
+   700→          <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 py-1.5">{s.categories().map(cat => { const Icon = getCatIcon(cat.icon); return (<button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition ${route.query.category === cat.id ? 'bg-[#006233] text-white' : 'text-muted-foreground hover:bg-muted'}`}><Icon size={12}/>{cat.name}</button>); })}</div>
+   701→        </div>
+   702→      </header>
+   703→
+   704→      {/* Notification dropdown */}
+   705→      {notifOpen && (<div className="fixed top-16 right-4 z-50 w-80 max-h-96 overflow-y-auto custom-scrollbar bg-card border rounded-xl shadow-xl animate-scaleIn"><div className="p-3 border-b flex items-center justify-between"><h4 className="font-bold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>Notifications</h4><Button variant="ghost" size="sm" className="text-xs" onClick={() => { s.markAllRead(); toast({ title: 'All read' }); }}>Mark all read</Button></div>{s.notifs.length === 0 ? <p className="p-4 text-sm text-muted-foreground text-center">No notifications</p> : s.notifs.slice(0, 8).map(n => (<div key={n.id} className={`p-3 border-b last:border-0 ${n.read ? '' : 'bg-[#006233]/5'}`}><p className="text-sm font-medium">{n.title}</p><p className="text-xs text-muted-foreground">{n.text}</p><p className="text-xs text-muted-foreground mt-1">{new Date(n.time).toLocaleString()}</p></div>))}<div className="p-2 text-center"><button onClick={() => setNotifOpen(false)} className="text-xs text-muted-foreground hover:text-foreground">Close</button></div></div>)}
+   706→
+   707→      {/* Main content */}
+   708→      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">{renderView()}</main>
+   709→
+   710→      {/* Footer */}
+   711→      <footer className="bg-gradient-to-r from-[#004D25] to-[#002510] text-white mt-auto">
+   712→        <div className="max-w-7xl mx-auto px-4 py-10">
+   713→          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+   714→            <div><div className="flex items-center gap-2 mb-4"><div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white font-bold text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>B</div><span className="font-bold text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>Bachat Bazar</span></div><p className="text-sm opacity-80 leading-relaxed">Pakistan&apos;s #1 Online Marketplace. Quality products at the best prices with nationwide delivery.</p><div className="flex gap-3 mt-4"><a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Facebook size={14}/></a><a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Instagram size={14}/></a><a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Twitter size={14}/></a><a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Youtube size={14}/></a></div></div>
+   715→            <div><h4 className="font-bold mb-3" style={{ fontFamily: 'var(--font-poppins)' }}>Quick Links</h4><div className="space-y-2">{navLinks.map(l => <button key={l.href} onClick={() => navigate(l.href)} className="block text-sm opacity-80 hover:opacity-100 transition">{l.label}</button>)}<button onClick={() => navigate(makeHash('faq'))} className="block text-sm opacity-80 hover:opacity-100 transition">FAQ</button><button onClick={() => navigate(makeHash('blog'))} className="block text-sm opacity-80 hover:opacity-100 transition">Blog</button></div></div>
+   716→            <div><h4 className="font-bold mb-3" style={{ fontFamily: 'var(--font-poppins)' }}>Categories</h4><div className="space-y-2">{s.categories().map(c => <button key={c.id} onClick={() => navigate(makeHash('shop', undefined, { category: c.id }))} className="block text-sm opacity-80 hover:opacity-100 transition">{c.name}</button>)}</div></div>
+   717→            <div><h4 className="font-bold mb-3" style={{ fontFamily: 'var(--font-poppins)' }}>Contact</h4><div className="space-y-2 text-sm opacity-80"><div className="flex items-center gap-2"><Phone size={14}/>+92 42 3576 1234</div><div className="flex items-center gap-2"><Mail size={14}/>support@bachatbazar.pk</div><div className="flex items-center gap-2"><MapPin size={14}/>Gulberg III, Lahore</div></div><div className="mt-4"><h5 className="font-medium text-xs mb-2">We Accept</h5><div className="flex gap-2 flex-wrap">{['JazzCash','EasyPaisa','Visa','COD'].map(m => <span key={m} className="text-xs bg-white/10 px-2 py-1 rounded">{m}</span>)}</div></div></div>
+   718→          </div>
+   719→          <div className="border-t border-white/10 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs opacity-60"><p>&copy; 2026 Bachat Bazar. All rights reserved.</p><p>Made with &#10084;&#65039; in Pakistan</p></div>
+   720→        </div>
+   721→      </footer>
+   722→
+   723→      {/* ─── DRAWERS ─── */}
+   724→
+   725→      {/* Cart Drawer */}
+   726→      <Sheet open={cartOpen} onOpenChange={setCartOpen}><SheetContent className="w-full sm:max-w-md flex flex-col"><SheetHeader><SheetTitle style={{ fontFamily: 'var(--font-poppins)' }}>Cart ({cartCount})</SheetTitle><SheetDescription>Your shopping cart</SheetDescription></SheetHeader>
+   727→      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 py-4">{cartProducts.length === 0 ? <div className="text-center py-10 text-muted-foreground"><ShoppingCart size={40} className="mx-auto mb-2 opacity-30"/><p className="text-sm">Cart is empty</p></div> : cartProducts.map(({ id, qty, product: p }) => p && (<div key={id} className="flex gap-3 p-3 rounded-xl border"><div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-muted"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><p className="text-xs text-[#C5A028]">{p.brand}</p><div className="flex items-center justify-between mt-1"><PriceDisplay price={p.price} oldPrice={p.oldPrice}/><div className="flex items-center border rounded"><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => s.setQty(id, Math.max(1, qty - 1))}><Minus size={10}/></Button><span className="text-xs font-semibold w-6 text-center">{qty}</span><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => s.setQty(id, qty + 1)}><Plus size={10}/></Button></div></div></div><Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 shrink-0" onClick={() => { s.removeFromCart(id); toast({ title: 'Removed' }); }}><Trash2 size={12}/></Button></div>))}</div>
+   728→      {cartProducts.length > 0 && (<SheetFooter className="border-t pt-4 space-y-3"><div className="space-y-1 w-full"><div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-medium">{s.cartTotals().totalDisplay}</span></div><p className="text-xs text-muted-foreground">Shipping & tax calculated at checkout</p></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-3" onClick={() => { setCartOpen(false); navigate(makeHash('cart')); }}>View Cart</Button><Button variant="outline" className="w-full" onClick={() => { setCartOpen(false); navigate(makeHash('checkout')); }}>Checkout</Button></SheetFooter>)}</SheetContent></Sheet>
+   729→
+   730→      {/* Wishlist Drawer */}
+   731→      <Sheet open={wishOpen} onOpenChange={setWishOpen}><SheetContent className="w-full sm:max-w-md flex flex-col"><SheetHeader><SheetTitle style={{ fontFamily: 'var(--font-poppins)' }}>Wishlist ({wishCount})</SheetTitle><SheetDescription>Products you love</SheetDescription></SheetHeader>
+   732→      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 py-4">{s.wishlist.length === 0 ? <div className="text-center py-10 text-muted-foreground"><Heart size={40} className="mx-auto mb-2 opacity-30"/><p className="text-sm">Wishlist is empty</p></div> : s.wishlist.map(id => { const p = s.getProduct(id); return p ? (<div key={id} className="flex gap-3 p-3 rounded-xl border"><div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-muted"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><PriceDisplay price={p.price} oldPrice={p.oldPrice}/></div><Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 shrink-0" onClick={() => { s.toggleWishlist(id); toast({ title: 'Removed' }); }}><Trash2 size={12}/></Button></div>) : null; })}</div>
+   733→      {s.wishlist.length > 0 && <SheetFooter><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { setWishOpen(false); navigate(makeHash('wishlist')); }}>View All</Button></SheetFooter>}</SheetContent></Sheet>
+   734→
+   735→      {/* Mobile Menu Drawer */}
+   736→      <Sheet open={mobileMenu} onOpenChange={setMobileMenu}><SheetContent className="w-full sm:max-w-xs flex flex-col" side="left"><SheetHeader><SheetTitle style={{ fontFamily: 'var(--font-poppins)' }}><span className="gradient-text">Bachat Bazar</span></SheetTitle><SheetDescription>Pakistan&apos;s #1 Marketplace</SheetDescription></SheetHeader>
+   737→      <nav className="flex-1 overflow-y-auto custom-scrollbar space-y-1 py-4">{[...navLinks, { href: makeHash('faq'), label: 'FAQ' }, { href: makeHash('blog'), label: 'Blog' }].map(l => (<button key={l.href} onClick={() => { navigate(l.href); setMobileMenu(false); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted transition">{l.label}</button>))}
+   738→      <Separator className="my-3"/>
+   739→      <p className="px-3 text-xs text-muted-foreground font-medium mb-2">Categories</p>
+   740→      {s.categories().map(c => { const Icon = getCatIcon(c.icon); return (<button key={c.id} onClick={() => { navigate(makeHash('shop', undefined, { category: c.id })); setMobileMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted transition"><Icon size={14}/>{c.name}</button>); })}
+   741→      <Separator className="my-3"/>
+   742→      <button onClick={() => { navigate(makeHash('admin')); setMobileMenu(false); }} className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white rounded-lg px-3 py-2.5 text-sm font-bold flex items-center gap-2"><Settings size={14}/>Admin Panel</button>
+   743→      </nav></SheetContent></Sheet>
+   744→
+   745→      {/* Quick View Modal */}
+   746→      <Dialog open={!!quickView} onOpenChange={() => setQuickView(null)}><DialogContent className="max-w-2xl"><DialogHeader><DialogTitle className="sr-only">Quick View</DialogTitle><DialogDescription className="sr-only">Product quick view</DialogDescription></DialogHeader>
+   747→      {quickView && (<div className="flex flex-col md:flex-row gap-6"><div className="md:w-1/2 aspect-square rounded-xl overflow-hidden bg-muted"><ProductImage src={quickView.images[0]} alt={quickView.name} seed={quickView.imageId} className="w-full h-full object-cover"/></div><div className="md:w-1/2 space-y-3"><p className="text-sm text-[#C5A028] font-semibold" style={{ fontFamily: 'var(--font-poppins)' }}>{quickView.brand}</p><h3 className="text-xl font-bold" style={{ fontFamily: 'var(--font-poppins)' }}>{quickView.name}</h3><div className="flex items-center gap-2"><StarRating rating={quickView.rating}/><span className="text-xs text-muted-foreground">({quickView.reviews})</span></div><PriceDisplay price={quickView.price} oldPrice={quickView.oldPrice}/><p className="text-sm text-muted-foreground line-clamp-3">{quickView.description}</p><div className="flex gap-2 pt-2"><Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { s.addToCart(quickView.id); toast({ title: 'Added to cart' }); }}><ShoppingCart size={14} className="mr-1"/>Add to Cart</Button><Button variant="outline" onClick={() => { setQuickView(null); navigate(makeHash('product', String(quickView.id))); }}>View Details</Button></div></div></div>)}</DialogContent></Dialog>
+   748→
+   749→      {/* Auth Modal */}
+   750→      <Dialog open={authOpen} onOpenChange={setAuthOpen}><DialogContent className="max-w-sm"><DialogHeader><DialogTitle style={{ fontFamily: 'var(--font-poppins)' }}>{authMode === 'login' ? 'Sign In' : 'Create Account'}</DialogTitle><DialogDescription>{authMode === 'login' ? 'Welcome back to Bachat Bazar' : 'Join Bachat Bazar today'}</DialogDescription></DialogHeader>
+   751→      <div className="space-y-3">{authMode === 'register' && <div><Label>Name</Label><Input value={authName} onChange={e => setAuthName(e.target.value)} placeholder="Muhammad Ali"/></div>}<div><Label>Email</Label><Input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="you@example.com"/></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold" onClick={handleAuth}>{authMode === 'login' ? 'Sign In' : 'Create Account'}</Button><p className="text-center text-xs text-muted-foreground">{authMode === 'login' ? "Don't have an account? " : 'Already have an account? '}<button className="text-[#006233] dark:text-[#00A651] font-medium" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>{authMode === 'login' ? 'Sign Up' : 'Sign In'}</button></p></div></DialogContent></Dialog>
+   752→
+   753→      {/* Back to Top */}
+   754→      {showBackTop && (<button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="fixed bottom-6 right-6 z-40 w-10 h-10 rounded-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white shadow-lg flex items-center justify-center hover:scale-110 transition animate-scaleIn"><ArrowUp size={18}/></button>)}
+   755→
+   756→      {/* Cookie Consent */}
+   757→      {!cookieConsent && (<div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t p-4 shadow-lg animate-fadeUp"><div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap"><div className="flex items-center gap-3"><Cookie size={20} className="text-[#C5A028] shrink-0"/><p className="text-sm text-muted-foreground">We use cookies to enhance your experience. By continuing, you agree to our cookie policy.</p></div><div className="flex gap-2 shrink-0"><Button variant="outline" size="sm" onClick={() => { setCookieConsent(true); localStorage.setItem('bb_cookies', '1'); }}>Decline</Button><Button size="sm" className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { setCookieConsent(true); localStorage.setItem('bb_cookies', '1'); }}>Accept</Button></div></div></div>)}
+   758→    </div>
+   759→  );
+   760→}
+   761→

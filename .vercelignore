@@ -1,0 +1,9 @@
+tool-results/
+download/
+upload/
+skills/
+worklog.md
+db/
+*.log
+.claude/
+.z-ai-config/

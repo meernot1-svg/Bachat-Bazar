@@ -52,3 +52,11 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Dev / tool artifacts
+/tool-results/
+/download/
+/upload/
+/worklog.md
+/db/
+# Uploaded files (use cloud storage in production)
+/public/uploads/

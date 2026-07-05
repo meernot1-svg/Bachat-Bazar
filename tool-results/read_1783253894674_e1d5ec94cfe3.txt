@@ -1,0 +1,232 @@
+   700→  { href: '#/', label: 'Home' },
+   701→  { href: '#/shop', label: 'Shop' },
+   702→  { href: '#/deals', label: 'Deals' },
+   703→  { href: '#/new', label: 'New' },
+   704→  { href: '#/about', label: 'About' },
+   705→  { href: '#/contact', label: 'Contact' },
+   706→];
+   707→
+   708→export default function BachatBazarApp() {
+   709→  const s = useStore(); const { toast } = useToast();
+   710→  const [route, setRoute] = useState<RouteInfo>(() => { if (typeof window !== 'undefined') return parseHash(window.location.hash); return { view: '', id: '', query: {} }; });
+   711→  const [cartOpen, setCartOpen] = useState(false); const [wishOpen, setWishOpen] = useState(false);
+   712→  const [mobileMenu, setMobileMenu] = useState(false); const [authOpen, setAuthOpen] = useState(false);
+   713→  const [authMode, setAuthMode] = useState<'login'|'register'>('login');
+   714→  const [authEmail, setAuthEmail] = useState(''); const [authName, setAuthName] = useState('');
+   715→  const [quickView, setQuickView] = useState<Product | null>(null);
+   716→  const [notifOpen, setNotifOpen] = useState(false);
+   717→  const [cookieConsent, setCookieConsent] = useState(() => { if (typeof window !== 'undefined') return localStorage.getItem('bb_cookies') === '1'; return false; });
+   718→  const [showBackTop, setShowBackTop] = useState(false);
+   719→  const [searchQ, setSearchQ] = useState('');
+   720→  const mainRef = useRef<HTMLDivElement>(null);
+   721→
+   722→  useEffect(() => { const h = () => { setRoute(parseHash(window.location.hash)); window.scrollTo({ top: 0 }); }; window.addEventListener('hashchange', h); return () => window.removeEventListener('hashchange', h); }, []);
+   723→  useEffect(() => { if (s.theme === 'dark') document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [s.theme]);
+   724→  useEffect(() => { const h = () => setShowBackTop(window.scrollY > 400); window.addEventListener('scroll', h, { passive: true }); return () => window.removeEventListener('scroll', h); }, []);
+   725→
+   726→  const navigate = useCallback((hash: string) => { window.location.hash = hash; }, []);
+   727→  const cartCount = s.cartCount(); const wishCount = s.wishlist.length;
+   728→  const cartProducts = s.cart.map(i => ({ ...i, product: s.getProduct(i.id) }));
+   729→  const cartTotals = s.cartTotals();
+   730→
+   731→  const handleAuth = () => {
+   732→    if (authMode === 'login') { if (authEmail) { s.login(authEmail); setAuthOpen(false); toast({ title: 'Welcome back!' }); } }
+   733→    else { if (authName && authEmail) { s.register(authName, authEmail); setAuthOpen(false); toast({ title: 'Account created!' }); } }
+   734→  };
+   735→
+   736→  const renderView = () => {
+   737→    switch (route.view) {
+   738→      case '': case 'home': return <HomeView onQuickView={setQuickView} navigate={navigate}/>;
+   739→      case 'shop': return <ShopView query={route.query} onQuickView={setQuickView} navigate={navigate}/>;
+   740→      case 'product': return <ProductDetailView id={route.id} onQuickView={setQuickView} navigate={navigate}/>;
+   741→      case 'cart': return <CartView navigate={navigate}/>;
+   742→      case 'checkout': return <CheckoutView navigate={navigate}/>;
+   743→      case 'wishlist': return <WishlistView onQuickView={setQuickView} navigate={navigate}/>;
+   744→      case 'compare': return <CompareView navigate={navigate}/>;
+   745→      case 'orders': return <OrdersView navigate={navigate}/>;
+   746→      case 'account': return <AccountView navigate={navigate}/>;
+   747→      case 'deals': return <DealsView onQuickView={setQuickView} navigate={navigate}/>;
+   748→      case 'new': return <NewView onQuickView={setQuickView} navigate={navigate}/>;
+   749→      case 'admin': return <AdminView/>;
+   750→      case 'about': return <AboutView/>;
+   751→      case 'contact': return <ContactView/>;
+   752→      case 'faq': return <FAQView/>;
+   753→      case 'blog': return <BlogView navigate={navigate}/>;
+   754→      default: return <HomeView onQuickView={setQuickView} navigate={navigate}/>;
+   755→    }
+   756→  };
+   757→
+   758→  return (
+   759→    <div className="min-h-screen flex flex-col bg-background text-foreground">
+   760→      {/* ─── TOP BAR (Solid Green) ─── */}
+   761→      <div className="bg-[#006233] text-white text-xs py-1.5">
+   762→        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+   763→          <div className="flex items-center gap-4"><span className="flex items-center gap-1"><Phone size={12}/>+92 42 3576 1234</span><span className="hidden sm:flex items-center gap-1"><Mail size={12}/>support@bachatbazar.pk</span></div>
+   764→          <div className="flex items-center gap-3"><span className="hidden sm:inline">Free Delivery on Rs 25,000+</span><span>|</span><span>COD Available</span></div>
+   765→        </div>
+   766→      </div>
+   767→
+   768→      {/* ─── MAIN NAVBAR ─── */}
+   769→      <header className="glass sticky top-0 z-40">
+   770→        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+   771→          <button onClick={() => navigate('#/')} className="flex items-center gap-2 shrink-0"><div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#006233] to-[#00A651] flex items-center justify-center text-white font-bold text-sm shadow" style={FH}>B</div><span className="font-bold text-lg gradient-text hidden sm:inline" style={FH}>Bachat Bazar</span></button>
+   772→          <div className="flex-1 relative max-w-md"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input placeholder="Search products..." value={searchQ} onChange={e => setSearchQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && searchQ) { navigate(makeHash('shop', undefined, { search: searchQ })); setSearchQ(''); } }} className="pl-9 h-9"/></div>
+   773→          <div className="flex items-center gap-1">
+   774→            <Button variant="ghost" size="icon" className="relative" onClick={() => setCartOpen(true)}><ShoppingCart size={20}/>{cartCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#C5A028] text-white text-[10px] rounded-full flex items-center justify-center font-bold">{cartCount}</span>}</Button>
+   775→            <Button variant="ghost" size="icon" className="relative" onClick={() => setWishOpen(true)}><Heart size={20}/>{wishCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">{wishCount}</span>}</Button>
+   776→            <Button variant="ghost" size="icon" onClick={() => setNotifOpen(!notifOpen)}><Bell size={20}/>{s.notifs.filter(n => !n.read).length > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"/>}</Button>
+   777→            {/* ─── ADMIN BUTTON (VISIBLE) ─── */}
+   778→            <Button variant="ghost" size="icon" className="text-[#006233] dark:text-[#00A651] hover:bg-[#006233]/10" onClick={() => navigate(makeHash('admin'))} title="Admin Panel"><Settings size={20}/></Button>
+   779→            <Button variant="ghost" size="icon" onClick={s.toggleTheme}>{s.theme === 'dark' ? <Sun size={20}/> : <Moon size={20}/>}</Button>
+   780→            <Button variant="ghost" size="icon" onClick={() => s.user ? navigate(makeHash('account')) : setAuthOpen(true)}><User size={20}/></Button>
+   781→            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenu(true)}><Menu size={20}/></Button>
+   782→          </div>
+   783→        </div>
+   784→        {/* Desktop nav links */}
+   785→        <div className="hidden md:block border-t border-border/50">
+   786→          <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 py-1.5">{navLinks.map(l => (<button key={l.href} onClick={() => navigate(l.href)} className={`px-3 py-1 rounded-full text-sm font-medium transition ${('#/' + route.view === l.href) || (l.href === '#/' && route.view === '') ? 'bg-[#006233] text-white' : 'text-muted-foreground hover:bg-muted'}`}>{l.label}</button>))}<Separator orientation="vertical" className="h-4 mx-1"/>{s.categories().slice(0, 6).map(cat => { const Icon = getCatIcon(cat.icon); return (<button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition ${route.query.category === cat.id ? 'bg-[#006233] text-white' : 'text-muted-foreground hover:bg-muted'}`}><Icon size={12}/>{cat.name}</button>); })}</div>
+   787→        </div>
+   788→      </header>
+   789→
+   790→      {/* Notification dropdown */}
+   791→      {notifOpen && (<div className="fixed top-16 right-4 z-50 w-80 max-h-96 overflow-y-auto custom-scrollbar bg-card border rounded-xl shadow-xl animate-scaleIn"><div className="p-3 border-b flex items-center justify-between"><h4 className="font-bold text-sm" style={FB}>Notifications</h4><Button variant="ghost" size="sm" className="text-xs" onClick={() => { s.markAllRead(); toast({ title: 'All read' }); }}>Mark all read</Button></div>{s.notifs.length === 0 ? <p className="p-4 text-sm text-muted-foreground text-center">No notifications</p> : s.notifs.slice(0, 8).map(n => (<div key={n.id} className={`p-3 border-b last:border-0 ${n.read ? '' : 'bg-[#006233]/5'}`}><p className="text-sm font-medium">{n.title}</p><p className="text-xs text-muted-foreground">{n.text}</p><p className="text-xs text-muted-foreground mt-1">{new Date(n.time).toLocaleString()}</p></div>))}<div className="p-2 text-center"><button onClick={() => setNotifOpen(false)} className="text-xs text-muted-foreground hover:text-foreground">Close</button></div></div>)}
+   792→
+   793→      {/* Main content */}
+   794→      <main ref={mainRef} className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">{renderView()}</main>
+   795→
+   796→      {/* Footer */}
+   797→      <footer className="bg-gradient-to-r from-[#004D25] to-[#002510] text-white mt-auto">
+   798→        <div className="max-w-7xl mx-auto px-4 py-10">
+   799→          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+   800→            <div><div className="flex items-center gap-2 mb-4"><div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white font-bold text-sm" style={FH}>B</div><span className="font-bold text-lg" style={FH}>Bachat Bazar</span></div><p className="text-sm opacity-80 leading-relaxed">Pakistan&apos;s #1 Online Marketplace. Quality products at the best prices with nationwide delivery.</p><div className="flex gap-3 mt-4"><a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Facebook size={14}/></a><a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Instagram size={14}/></a><a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Twitter size={14}/></a><a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Youtube size={14}/></a></div></div>
+   801→            <div><h4 className="font-bold mb-3" style={FH}>Quick Links</h4><div className="space-y-2">{navLinks.map(l => <button key={l.href} onClick={() => navigate(l.href)} className="block text-sm opacity-80 hover:opacity-100 transition">{l.label}</button>)}<button onClick={() => navigate(makeHash('faq'))} className="block text-sm opacity-80 hover:opacity-100 transition">FAQ</button><button onClick={() => navigate(makeHash('blog'))} className="block text-sm opacity-80 hover:opacity-100 transition">Blog</button></div></div>
+   802→            <div><h4 className="font-bold mb-3" style={FH}>Categories</h4><div className="space-y-2">{s.categories().map(c => <button key={c.id} onClick={() => navigate(makeHash('shop', undefined, { category: c.id }))} className="block text-sm opacity-80 hover:opacity-100 transition">{c.name}</button>)}</div></div>
+   803→            <div><h4 className="font-bold mb-3" style={FH}>Contact</h4><div className="space-y-2 text-sm opacity-80"><div className="flex items-center gap-2"><Phone size={14}/>+92 42 3576 1234</div><div className="flex items-center gap-2"><Mail size={14}/>support@bachatbazar.pk</div><div className="flex items-center gap-2"><MapPin size={14}/>Gulberg III, Lahore</div></div><div className="mt-4"><h5 className="font-medium text-xs mb-2">We Accept</h5><div className="flex gap-2 flex-wrap">{['JazzCash','EasyPaisa','Visa','COD'].map(m => <span key={m} className="text-xs bg-white/10 px-2 py-1 rounded">{m}</span>)}</div></div></div>
+   804→          </div>
+   805→          <div className="border-t border-white/10 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs opacity-60"><p>&copy; 2026 Bachat Bazar. All rights reserved.</p><p>Made with &#10084;&#65039; in Pakistan</p></div>
+   806→        </div>
+   807→      </footer>
+   808→
+   809→      {/* ─── DRAWERS ─── */}
+   810→      <Sheet open={cartOpen} onOpenChange={setCartOpen}><SheetContent className="w-full sm:max-w-md flex flex-col"><SheetHeader><SheetTitle style={FH}>Cart ({cartCount})</SheetTitle><SheetDescription>Your shopping cart</SheetDescription></SheetHeader>
+   811→      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 py-4">{cartProducts.length === 0 ? <div className="text-center py-10 text-muted-foreground"><ShoppingCart size={40} className="mx-auto mb-2 opacity-30"/><p className="text-sm">Cart is empty</p></div> : cartProducts.map(({ id, qty, product: p }) => p && (<div key={id} className="flex gap-3 p-3 rounded-xl border"><div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-muted"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><p className="text-xs text-[#C5A028]">{p.brand}</p><div className="flex items-center justify-between mt-1"><PriceDisplay price={p.price} oldPrice={p.oldPrice}/><div className="flex items-center border rounded"><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => s.setQty(id, Math.max(1, qty - 1))}><Minus size={10}/></Button><span className="text-xs font-semibold w-6 text-center">{qty}</span><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => s.setQty(id, qty + 1)}><Plus size={10}/></Button></div></div></div><Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 shrink-0" onClick={() => { s.removeFromCart(id); toast({ title: 'Removed' }); }}><Trash2 size={12}/></Button></div>))}</div>
+   812→      {cartProducts.length > 0 && (<SheetFooter className="border-t pt-4 space-y-3"><div className="space-y-1 w-full"><div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-medium">{cartTotals.totalDisplay}</span></div><p className="text-xs text-muted-foreground">Shipping & tax calculated at checkout</p></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-3" onClick={() => { setCartOpen(false); navigate(makeHash('cart')); }}>View Cart</Button><Button variant="outline" className="w-full" onClick={() => { setCartOpen(false); navigate(makeHash('checkout')); }}>Checkout</Button></SheetFooter>)}</SheetContent></Sheet>
+   813→
+   814→      <Sheet open={wishOpen} onOpenChange={setWishOpen}><SheetContent className="w-full sm:max-w-md flex flex-col"><SheetHeader><SheetTitle style={FH}>Wishlist ({wishCount})</SheetTitle><SheetDescription>Products you love</SheetDescription></SheetHeader>
+   815→      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 py-4">{s.wishlist.length === 0 ? <div className="text-center py-10 text-muted-foreground"><Heart size={40} className="mx-auto mb-2 opacity-30"/><p className="text-sm">Wishlist is empty</p></div> : s.wishlist.map(id => { const p = s.getProduct(id); return p ? (<div key={id} className="flex gap-3 p-3 rounded-xl border"><div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-muted"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><PriceDisplay price={p.price} oldPrice={p.oldPrice}/></div><Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 shrink-0" onClick={() => { s.toggleWishlist(id); toast({ title: 'Removed' }); }}><Trash2 size={12}/></Button></div>) : null; })}</div>
+   816→      {s.wishlist.length > 0 && <SheetFooter><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { setWishOpen(false); navigate(makeHash('wishlist')); }}>View All</Button></SheetFooter>}</SheetContent></Sheet>
+   817→
+   818→      <Sheet open={mobileMenu} onOpenChange={setMobileMenu}><SheetContent className="w-full sm:max-w-xs flex flex-col" side="left"><SheetHeader><SheetTitle style={FH}><span className="gradient-text">Bachat Bazar</span></SheetTitle><SheetDescription>Pakistan&apos;s #1 Marketplace</SheetDescription></SheetHeader>
+   819→      <nav className="flex-1 overflow-y-auto custom-scrollbar space-y-1 py-4">{[...navLinks, { href: makeHash('faq'), label: 'FAQ' }, { href: makeHash('blog'), label: 'Blog' }].map(l => (<button key={l.href} onClick={() => { navigate(l.href); setMobileMenu(false); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted transition">{l.label}</button>))}
+   820→      <Separator className="my-3"/>
+   821→      <p className="px-3 text-xs text-muted-foreground font-medium mb-2">Categories</p>
+   822→      {s.categories().map(c => { const Icon = getCatIcon(c.icon); return (<button key={c.id} onClick={() => { navigate(makeHash('shop', undefined, { category: c.id })); setMobileMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted transition"><Icon size={14}/>{c.name}</button>); })}
+   823→      <Separator className="my-3"/>
+   824→      <button onClick={() => { navigate(makeHash('admin')); setMobileMenu(false); }} className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white rounded-lg px-3 py-2.5 text-sm font-bold flex items-center gap-2"><Settings size={14}/>Admin Panel</button>
+   825→      </nav></SheetContent></Sheet>
+   826→
+   827→      <Dialog open={!!quickView} onOpenChange={() => setQuickView(null)}><DialogContent className="max-w-2xl"><DialogHeader><DialogTitle className="sr-only">Quick View</DialogTitle><DialogDescription className="sr-only">Product quick view</DialogDescription></DialogHeader>
+   828→      {quickView && (<div className="flex flex-col md:flex-row gap-6"><div className="md:w-1/2 aspect-square rounded-xl overflow-hidden bg-muted"><ProductImage src={quickView.images[0]} alt={quickView.name} seed={quickView.imageId} className="w-full h-full object-cover"/></div><div className="md:w-1/2 space-y-3"><p className="text-sm text-[#C5A028] font-semibold" style={FB}>{quickView.brand}</p><h3 className="text-xl font-bold" style={FH}>{quickView.name}</h3><div className="flex items-center gap-2"><StarRating rating={quickView.rating}/><span className="text-xs text-muted-foreground">({quickView.reviews})</span></div><PriceDisplay price={quickView.price} oldPrice={quickView.oldPrice}/><p className="text-sm text-muted-foreground line-clamp-3">{quickView.description}</p><div className="flex gap-2 pt-2"><Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { s.addToCart(quickView.id); toast({ title: 'Added to cart' }); }}><ShoppingCart size={14} className="mr-1"/>Add to Cart</Button><Button variant="outline" onClick={() => { setQuickView(null); navigate(makeHash('product', String(quickView.id))); }}>View Details</Button></div></div></div>)}</DialogContent></Dialog>
+   829→
+   830→      <Dialog open={authOpen} onOpenChange={setAuthOpen}><DialogContent className="max-w-sm"><DialogHeader><DialogTitle style={FH}>{authMode === 'login' ? 'Sign In' : 'Create Account'}</DialogTitle><DialogDescription>{authMode === 'login' ? 'Welcome back to Bachat Bazar' : 'Join Bachat Bazar today'}</DialogDescription></DialogHeader>
+   831→      <div className="space-y-3">{authMode === 'register' && <div><Label>Name</Label><Input value={authName} onChange={e => setAuthName(e.target.value)} placeholder="Muhammad Ali"/></div>}<div><Label>Email</Label><Input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="you@example.com"/></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold" onClick={handleAuth}>{authMode === 'login' ? 'Sign In' : 'Create Account'}</Button><p className="text-center text-xs text-muted-foreground">{authMode === 'login' ? "Don't have an account? " : 'Already have an account? '}<button className="text-[#006233] dark:text-[#00A651] font-medium" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>{authMode === 'login' ? 'Sign Up' : 'Sign In'}</button></p></div></DialogContent></Dialog>
+   832→
+   833→      {showBackTop && (<button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="fixed bottom-6 right-6 z-40 w-10 h-10 rounded-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white shadow-lg flex items-center justify-center hover:scale-110 transition animate-scaleIn"><ArrowUp size={18}/></button>)}
+   834→
+   835→      {!cookieConsent && (<div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t p-4 shadow-lg animate-fadeUp"><div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap"><div className="flex items-center gap-3"><Cookie size={20} className="text-[#C5A028] shrink-0"/><p className="text-sm text-muted-foreground">We use cookies to enhance your experience. By continuing, you agree to our cookie policy.</p></div><div className="flex gap-2 shrink-0"><Button variant="outline" size="sm" onClick={() => { setCookieConsent(true); localStorage.setItem('bb_cookies', '1'); }}>Decline</Button><Button size="sm" className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { setCookieConsent(true); localStorage.setItem('bb_cookies', '1'); }}>Accept</Button></div></div></div>)}
+   836→    </div>
+   837→  );
+   838→}
+   839→
+   840→// ─── SIMPLER VIEW COMPONENTS ───
+   841→
+   842→function CartView({ navigate }: { navigate: (h: string) => void }) {
+   843→  const s = useStore(); const { toast } = useToast();
+   844→  const cartProducts = s.cart.map(i => ({ ...i, product: s.getProduct(i.id) }));
+   845→  const totals = s.cartTotals();
+   846→  return (
+   847→    <div className="animate-fadeUp space-y-6">
+   848→      <h2 className="text-2xl font-bold" style={FH}>Shopping Cart</h2>
+   849→      {cartProducts.length === 0 ? <div className="text-center py-20"><ShoppingCart size={48} className="mx-auto mb-4 opacity-30"/><p className="text-lg font-medium">Your cart is empty</p><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makeHash('shop'))}>Start Shopping</Button></div> :
+   850→      <div className="flex flex-col lg:flex-row gap-6">
+   851→        <div className="flex-1 space-y-3">{cartProducts.map(({ id, qty, product: p }) => p && (<Card key={id} className="p-4 flex gap-4"><div className="w-20 h-20 rounded-lg overflow-hidden bg-muted shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><div className="flex-1 space-y-1"><p className="font-medium" style={FB}>{p.name}</p><p className="text-xs text-[#C5A028]">{p.brand}</p><PriceDisplay price={p.price} oldPrice={p.oldPrice}/><div className="flex items-center gap-2 mt-1"><div className="flex items-center border rounded"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => s.setQty(id, Math.max(1, qty - 1))}><Minus size={12}/></Button><span className="w-8 text-center font-semibold text-sm">{qty}</span><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => s.setQty(id, qty + 1)}><Plus size={12}/></Button></div><Button variant="ghost" size="sm" className="text-red-500" onClick={() => { s.removeFromCart(id); toast({ title: 'Removed' }); }}><Trash2 size={14} className="mr-1"/>Remove</Button></div></div></Card>))}</div>
+   852→        <Card className="lg:w-80 p-6 space-y-4 h-fit"><h3 className="font-bold" style={FH}>Order Summary</h3><div className="space-y-2 text-sm"><div className="flex justify-between"><span>Subtotal</span><span>{totals.subDisplay}</span></div><div className="flex justify-between text-green-600"><span>Discount</span><span>-{totals.discountDisplay}</span></div><div className="flex justify-between"><span>Shipping</span><span>{totals.shipDisplay}</span></div><div className="flex justify-between"><span>Tax (8%)</span><span>{totals.taxDisplay}</span></div><Separator/><div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{totals.totalDisplay}</span></div></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-3" onClick={() => navigate(makeHash('checkout'))}>Proceed to Checkout</Button></Card>
+   853→      </div>}
+   854→    </div>
+   855→  );
+   856→}
+   857→
+   858→function CheckoutView({ navigate }: { navigate: (h: string) => void }) {
+   859→  const s = useStore(); const { toast } = useToast();
+   860→  const [payMethod, setPayMethod] = useState('cod'); const totals = s.cartTotals();
+   861→  const address = s.addresses[0];
+   862→  const handlePlace = () => { if (s.cart.length === 0) return; const order = s.placeOrder(payMethod, address || { id:1, label:'Home', name:'', line:'', city:'', state:'', zip:'', country:'Pakistan', phone:'', default:true }); toast({ title: 'Order placed!', description: `Order #${order.id}` }); navigate(makeHash('orders')); };
+   863→  return (
+   864→    <div className="animate-fadeUp space-y-6">
+   865→      <h2 className="text-2xl font-bold" style={FH}>Checkout</h2>
+   866→      {s.cart.length === 0 ? <p className="text-muted-foreground">Your cart is empty</p> :
+   867→      <div className="flex flex-col lg:flex-row gap-6">
+   868→        <div className="flex-1 space-y-4">
+   869→          <Card className="p-4 space-y-3"><h3 className="font-bold" style={FH}>Delivery Address</h3>{address ? <div className="text-sm space-y-1"><p className="font-medium">{address.name || 'Home'}</p><p>{address.line}, {address.city}, {address.state} {address.zip}</p><p>{address.phone}</p></div> : <p className="text-sm text-muted-foreground">No address set</p>}</Card>
+   870→          <Card className="p-4 space-y-3"><h3 className="font-bold" style={FH}>Payment Method</h3><div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{PAYMENTS.map(p => <button key={p.id} onClick={() => setPayMethod(p.id)} className={`flex items-center gap-3 p-3 rounded-xl border text-left transition ${payMethod === p.id ? 'border-[#006233] bg-[#006233]/5' : 'hover:bg-muted'}`}><CreditCard size={18} className="text-[#006233]"/><div><p className="text-sm font-medium" style={FB}>{p.name}</p></div></button>)}</div></Card>
+   871→        </div>
+   872→        <Card className="lg:w-80 p-6 space-y-4 h-fit"><h3 className="font-bold" style={FH}>Order Summary</h3><div className="space-y-1 text-sm">{s.cart.map(i => { const p = s.getProduct(i.id); return p ? <div key={i.id} className="flex justify-between"><span className="truncate mr-2">{p.name.slice(0,30)} x{i.qty}</span><span>{s.money(p.price * i.qty)}</span></div> : null; })}</div><Separator/><div className="space-y-2 text-sm"><div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-[#006233]">{totals.totalDisplay}</span></div></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-3" onClick={handlePlace}>Place Order</Button></Card>
+   873→      </div>}
+   874→    </div>
+   875→  );
+   876→}
+   877→
+   878→function WishlistView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   879→  const s = useStore();
+   880→  const products = s.wishlist.map(id => s.getProduct(id)).filter(Boolean) as Product[];
+   881→  return (<div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold" style={FH}>Wishlist ({products.length})</h2>{products.length === 0 ? <div className="text-center py-20"><Heart size={48} className="mx-auto mb-4 opacity-30"/><p className="text-lg font-medium">Your wishlist is empty</p></div> : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{products.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div>}</div>);
+   882→}
+   883→
+   884→function CompareView({ navigate }: { navigate: (h: string) => void }) {
+   885→  const s = useStore(); const products = s.compare.map(id => s.getProduct(id)).filter(Boolean) as Product[];
+   886→  return (<div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold" style={FH}>Compare ({products.length})</h2>{products.length < 2 ? <p className="text-muted-foreground">Add at least 2 products to compare</p> : <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr><th className="text-left p-2">Feature</th>{products.map(p => <th key={p.id} className="p-2 text-center">{p.name.slice(0,20)}</th>)}</tr></thead><tbody><tr><td className="p-2 font-medium">Price</td>{products.map(p => <td key={p.id} className="p-2 text-center text-[#006233] font-bold">{s.money(p.price)}</td>)}</tr><tr><td className="p-2 font-medium">Rating</td>{products.map(p => <td key={p.id} className="p-2 text-center"><StarRating rating={p.rating} size={12}/></td>)}</tr><tr><td className="p-2 font-medium">Brand</td>{products.map(p => <td key={p.id} className="p-2 text-center">{p.brand}</td>)}</tr></tbody></table></div>}</div>);
+   887→}
+   888→
+   889→function OrdersView({ navigate }: { navigate: (h: string) => void }) {
+   890→  const s = useStore();
+   891→  return (<div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold" style={FH}>My Orders</h2>{s.orders.length === 0 ? <div className="text-center py-20"><Package size={48} className="mx-auto mb-4 opacity-30"/><p className="text-lg font-medium">No orders yet</p><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makeHash('shop'))}>Start Shopping</Button></div> : <div className="space-y-3">{s.orders.map(o => (<Card key={o.id} className="p-4 space-y-2"><div className="flex items-center justify-between"><span className="font-bold">#{o.id}</span><Badge className={`${o.status === 'Delivered' ? 'bg-green-500' : o.status === 'Cancelled' ? 'bg-red-500' : 'bg-blue-500'} text-white`}>{o.status}</Badge></div><p className="text-xs text-muted-foreground">{new Date(o.date).toLocaleDateString()}</p><div className="space-y-1">{o.items.map((it,i) => <p key={i} className="text-sm">{it.name?.slice(0,40)} x{it.qty} — {s.money((it.price||0)*it.qty)}</p>)}</div><div className="flex justify-between font-bold pt-1 border-t"><span>Total</span><span className="text-[#006233]">{o.totals.totalDisplay}</span></div></Card>))}</div>}</div>);
+   892→}
+   893→
+   894→function AccountView({ navigate }: { navigate: (h: string) => void }) {
+   895→  const s = useStore(); if (!s.user) return <div className="text-center py-20"><p className="text-lg">Please sign in</p><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate('#/')}>Go Home</Button></div>;
+   896→  return (<div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold" style={FH}>My Account</h2><Card className="p-6 space-y-3"><div className="flex items-center gap-4"><div className="w-14 h-14 rounded-full bg-[#006233]/10 flex items-center justify-center"><User size={24} className="text-[#006233]"/></div><div><p className="font-bold text-lg" style={FB}>{s.user.name}</p><p className="text-sm text-muted-foreground">{s.user.email}</p><p className="text-xs text-muted-foreground">Joined {new Date(s.user.joined).toLocaleDateString()}</p></div></div><Separator/><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><div className="text-center"><p className="text-2xl font-bold text-[#006233]" style={FH}>{s.orders.length}</p><p className="text-xs text-muted-foreground">Orders</p></div><div className="text-center"><p className="text-2xl font-bold text-pink-500" style={FH}>{s.wishlist.length}</p><p className="text-xs text-muted-foreground">Wishlist</p></div><div className="text-center"><p className="text-2xl font-bold text-[#C5A028]" style={FH}>{s.rewards}</p><p className="text-xs text-muted-foreground">Rewards</p></div><div className="text-center"><p className="text-2xl font-bold text-green-500" style={FH}>{s.cartCount()}</p><p className="text-xs text-muted-foreground">In Cart</p></div></div></Card><Button variant="outline" onClick={() => { s.logout(); navigate('#/'); }}>Sign Out</Button></div>);
+   897→}
+   898→
+   899→function DealsView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   900→  const s = useStore(); const deals = s.allProducts().filter(p => p.oldPrice > p.price);
+   901→  return (<div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold" style={FH}>Deals & Offers</h2><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{deals.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></div>);
+   902→}
+   903→
+   904→function NewView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   905→  const s = useStore(); const prods = s.allProducts().filter(p => p.isNew);
+   906→  return (<div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold" style={FH}>New Arrivals</h2><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{prods.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></div>);
+   907→}
+   908→
+   909→function AboutView() {
+   910→  return (<div className="animate-fadeUp space-y-6 max-w-3xl mx-auto"><h2 className="text-2xl font-bold" style={FH}>About Bachat Bazar</h2><div className="prose dark:prose-invert max-w-none"><p className="leading-relaxed" style={FB}>Bachat Bazar is Pakistan&apos;s premier online marketplace, bringing you the best deals on Health & Beauty, Grocery, Electronics, Fashion, Home Appliances, and much more. Founded with a mission to make quality products accessible to every Pakistani household at unbeatable prices, we have grown to serve thousands of happy customers nationwide.</p><p className="leading-relaxed" style={FB}>With our Cash on Delivery option, free delivery on orders over Rs 25,000, and a 7-day return policy, shopping with Bachat Bazar is not just convenient — it&apos;s a promise of quality and trust. Our dedicated team works around the clock to ensure your orders reach you safely and on time.</p><p className="leading-relaxed" style={FB}>We believe in the spirit of &ldquo;Bachat&rdquo; — saving — and we pass every possible discount on to you. Whether you&apos;re shopping for daily groceries or the latest smartphones, Bachat Bazar is your one-stop destination for value and variety.</p></div></div>);
+   911→}
+   912→
+   913→function ContactView() {
+   914→  return (<div className="animate-fadeUp space-y-6 max-w-3xl mx-auto"><h2 className="text-2xl font-bold" style={FH}>Contact Us</h2><Card className="p-6 space-y-4"><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div className="flex items-center gap-3"><Phone size={20} className="text-[#006233]"/><div><p className="font-medium" style={FB}>Phone</p><p className="text-sm text-muted-foreground">+92 42 3576 1234</p></div></div><div className="flex items-center gap-3"><Mail size={20} className="text-[#006233]"/><div><p className="font-medium" style={FB}>Email</p><p className="text-sm text-muted-foreground">support@bachatbazar.pk</p></div></div><div className="flex items-center gap-3"><MapPin size={20} className="text-[#006233]"/><div><p className="font-medium" style={FB}>Address</p><p className="text-sm text-muted-foreground">Gulberg III, Lahore, Pakistan</p></div></div><div className="flex items-center gap-3"><Clock size={20} className="text-[#006233]"/><div><p className="font-medium" style={FB}>Hours</p><p className="text-sm text-muted-foreground">Mon-Sat: 9AM - 9PM</p></div></div></div></Card></div>);
+   915→}
+   916→
+   917→function FAQView() {
+   918→  const faqs = [
+   919→    { q: 'What is your return policy?', a: 'We offer a 7-day return policy on all products. Items must be in original packaging and unused condition.' },
+   920→    { q: 'Do you offer Cash on Delivery?', a: 'Yes! Cash on Delivery is available nationwide across Pakistan. No advance payment required.' },
+   921→    { q: 'How long does delivery take?', a: 'Standard delivery takes 3-5 business days. Express delivery (1-2 days) is available for Rs 250.' },
+   922→    { q: 'Is free shipping available?', a: 'Yes, free standard shipping on all orders above Rs 25,000.' },
+   923→    { q: 'Are all products genuine?', a: 'Absolutely! We guarantee 100% authentic products sourced directly from authorized distributors.' },
+   924→  ];
+   925→  return (<div className="animate-fadeUp space-y-6 max-w-3xl mx-auto"><h2 className="text-2xl font-bold" style={FH}>Frequently Asked Questions</h2><Accordion type="single" collapsible>{faqs.map((f, i) => <AccordionItem key={i} value={`q${i}`}><AccordionTrigger style={FB}>{f.q}</AccordionTrigger><AccordionContent className="text-muted-foreground" style={FB}>{f.a}</AccordionContent></AccordionItem>)}</Accordion></div>);
+   926→}
+   927→
+   928→function BlogView({ navigate }: { navigate: (h: string) => void }) {
+   929→  return (<div className="animate-fadeUp space-y-6"><h2 className="text-2xl font-bold" style={FH}>Blog</h2><div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">{BLOGS.map(b => (<Card key={b.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"><div className="aspect-video overflow-hidden"><ProductImage src={U(b.img, 400)} alt={b.title} seed={b.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300"/></div><div className="p-4 space-y-2"><p className="text-xs text-[#C5A028] font-medium">{b.date} &middot; {b.author}</p><h3 className="font-bold" style={FB}>{b.title}</h3><p className="text-sm text-muted-foreground line-clamp-3">{b.excerpt}</p></div></Card>))}</div></div>);
+   930→}
+   931→

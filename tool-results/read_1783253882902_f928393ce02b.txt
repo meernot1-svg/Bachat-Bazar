@@ -1,0 +1,302 @@
+   201→function ShopView({ query, onQuickView, navigate }: { query: Record<string, string>; onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   202→  const s = useStore();
+   203→  const [search, setSearch] = useState(query.search || '');
+   204→  const [cat, setCat] = useState(query.category || 'all');
+   205→  const [sort, setSort] = useState('featured');
+   206→  const [page, setPage] = useState(1);
+   207→  const [priceMax, setPriceMax] = useState(200000);
+   208→  const perPage = 12;
+   209→  const activeCat = query.category || cat;
+   210→  const activeSearch = query.search || search;
+   211→  const filtered = useMemo(() => {
+   212→    let list = s.allProducts();
+   213→    if (activeCat !== 'all') list = list.filter(p => p.category === activeCat);
+   214→    if (activeSearch) { const q = activeSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)); }
+   215→    if (query.featured === 'true') list = list.filter(p => p.featured);
+   216→    if (query.trending === 'true') list = list.filter(p => p.trending);
+   217→    list = list.filter(p => p.price <= priceMax);
+   218→    switch (sort) {
+   219→      case 'price-low': list.sort((a, b) => a.price - b.price); break;
+   220→      case 'price-high': list.sort((a, b) => b.price - a.price); break;
+   221→      case 'rating': list.sort((a, b) => b.rating - a.rating); break;
+   222→      case 'newest': list.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0)); break;
+   223→      default: list.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+   224→    }
+   225→    return list;
+   226→  }, [s, activeCat, activeSearch, sort, priceMax, query.featured, query.trending]);
+   227→  const totalPages = Math.ceil(filtered.length / perPage);
+   228→  const pageItems = filtered.slice((page - 1) * perPage, page * perPage);
+   229→  return (
+   230→    <div className="animate-fadeUp space-y-6">
+   231→      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+   232→        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50" style={FH}>Shop{activeCat !== 'all' ? ` — ${s.categories().find(c => c.id === activeCat)?.name || activeCat}` : ''}</h2>
+   233→        <div className="flex items-center gap-2 flex-wrap">
+   234→          <div className="relative flex-1 min-w-[200px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input placeholder="Search products..." value={activeSearch} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-9"/></div>
+   235→          <Select value={activeCat} onValueChange={v => { setCat(v); setPage(1); }}><SelectTrigger className="w-[180px]"><SelectValue placeholder="Category"/></SelectTrigger><SelectContent><SelectItem value="all">All Categories</SelectItem>{s.categories().map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+   236→          <Select value={sort} onValueChange={setSort}><SelectTrigger className="w-[150px]"><SelectValue placeholder="Sort by"/></SelectTrigger><SelectContent><SelectItem value="featured">Featured</SelectItem><SelectItem value="price-low">Price: Low to High</SelectItem><SelectItem value="price-high">Price: High to Low</SelectItem><SelectItem value="rating">Top Rated</SelectItem><SelectItem value="newest">Newest</SelectItem></SelectContent></Select>
+   237→        </div>
+   238→      </div>
+   239→      <p className="text-sm text-muted-foreground">{filtered.length} products found</p>
+   240→      {pageItems.length > 0 ? (<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{pageItems.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div>) : (<div className="text-center py-20 text-muted-foreground"><Package size={48} className="mx-auto mb-4 opacity-30"/><p className="text-lg font-medium">No products found</p><p className="text-sm">Try adjusting your filters</p></div>)}
+   241→      {totalPages > 1 && (<div className="flex items-center justify-center gap-2 pt-4">{Array.from({ length: totalPages }, (_, i) => <Button key={i} variant={page === i + 1 ? 'default' : 'outline'} size="sm" onClick={() => setPage(i + 1)} className={page === i + 1 ? 'bg-gradient-to-r from-[#006233] to-[#00A651] text-white border-0' : ''}>{i + 1}</Button>)}</div>)}
+   242→    </div>
+   243→  );
+   244→}
+   245→
+   246→// ─── PRODUCT DETAIL VIEW ───
+   247→function ProductDetailView({ id, onQuickView, navigate }: { id: string; onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   248→  const s = useStore(); const { toast } = useToast(); const [qty, setQty] = useState(1); const [tab, setTab] = useState('desc'); const [imgIdx, setImgIdx] = useState(0);
+   249→  const product = s.getProduct(Number(id));
+   250→  useEffect(() => { if (product) s.pushRecent(product.id); }, [product?.id]);
+   251→  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [id]);
+   252→  if (!product) return <div className="text-center py-20"><p className="text-lg">Product not found</p><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makeHash('shop'))}>Back to Shop</Button></div>;
+   253→  const inWish = s.inWishlist(product.id); const related = product.related.map(rid => s.getProduct(rid)).filter(Boolean) as Product[];
+   254→  return (
+   255→    <div className="animate-fadeUp">
+   256→      <button onClick={() => navigate(makeHash('shop'))} className="text-sm text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1"><ChevronLeft size={14}/>Back to Shop</button>
+   257→      <div className="flex flex-col md:flex-row gap-8">
+   258→        <div className="md:w-1/2 space-y-3">
+   259→          <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-lg"><ProductImage src={product.images[imgIdx] || product.images[0]} alt={product.name} seed={product.imageId} className="w-full h-full object-cover"/></div>
+   260→          {product.images.length > 1 && <div className="flex gap-2 overflow-x-auto no-scrollbar">{product.images.map((img, i) => <button key={i} onClick={() => setImgIdx(i)} className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${i === imgIdx ? 'border-[#006233]' : 'border-transparent opacity-60 hover:opacity-100'}`}><ProductImage src={img} alt="" className="w-full h-full object-cover"/></button>)}</div>}
+   261→        </div>
+   262→        <div className="md:w-1/2 space-y-4">
+   263→          <div className="flex items-center gap-2">{product.badge && <Badge className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white">{product.badge}</Badge>}{product.isNew && <Badge className="bg-[#C5A028] text-white">NEW</Badge>}</div>
+   264→          <p className="text-sm text-[#C5A028] font-semibold" style={FB}>{product.brand}</p>
+   265→          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-50" style={FH}>{product.name}</h1>
+   266→          <div className="flex items-center gap-2"><StarRating rating={product.rating}/><span className="text-sm text-muted-foreground">({product.reviews} reviews)</span></div>
+   267→          <PriceDisplay price={product.price} oldPrice={product.oldPrice}/>
+   268→          <p className="text-sm text-muted-foreground leading-relaxed" style={FB}>{product.description}</p>
+   269→          <div className="flex items-center gap-3">
+   270→            <div className="flex items-center border rounded-lg"><Button variant="ghost" size="icon" onClick={() => setQty(Math.max(1, qty - 1))}><Minus size={14}/></Button><span className="w-10 text-center font-semibold">{qty}</span><Button variant="ghost" size="icon" onClick={() => setQty(Math.min(product.stock, qty + 1))}><Plus size={14}/></Button></div>
+   271→            <Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-3" onClick={() => { s.addToCart(product.id, qty); toast({ title: 'Added to cart' }); }}><ShoppingCart size={16} className="mr-2"/>Add to Cart</Button>
+   272→            <Button variant="outline" size="icon" className={inWish ? 'bg-pink-50 border-pink-200 text-pink-500' : ''} onClick={() => { s.toggleWishlist(product.id); toast({ title: inWish ? 'Removed from wishlist' : 'Added to wishlist' }); }}><Heart size={18} fill={inWish ? 'currentColor' : 'none'}/></Button>
+   273→          </div>
+   274→          <div className="flex gap-4 text-xs text-muted-foreground pt-2"><span className="flex items-center gap-1"><Truck size={14}/> Free delivery 25K+</span><span className="flex items-center gap-1"><RotateCcw size={14}/> 7-day returns</span><span className="flex items-center gap-1"><ShieldCheck size={14}/> Genuine</span></div>
+   275→          <Separator/>
+   276→          <Tabs value={tab} onValueChange={setTab}><TabsList><TabsTrigger value="desc">Description</TabsTrigger><TabsTrigger value="specs">Specifications</TabsTrigger><TabsTrigger value="features">Features</TabsTrigger></TabsList>
+   277→          <TabsContent value="desc" className="text-sm text-muted-foreground leading-relaxed" style={FB}>{product.description}</TabsContent>
+   278→          <TabsContent value="specs"><div className="space-y-1">{Object.entries(product.specs).map(([k,v]) => <div key={k} className="flex justify-between text-sm py-1 border-b last:border-0"><span className="text-muted-foreground">{k}</span><span className="font-medium">{v}</span></div>)}</div></TabsContent>
+   279→          <TabsContent value="features"><ul className="space-y-1">{product.features.map((f,i) => <li key={i} className="flex items-center gap-2 text-sm"><Check size={14} className="text-[#006233]"/>{f}</li>)}</ul></TabsContent>
+   280→          </Tabs>
+   281→        </div>
+   282→      </div>
+   283→      {related.length > 0 && (<section className="mt-12"><h3 className="text-xl font-bold mb-4" style={FH}>Related Products</h3><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">{related.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+   284→    </div>
+   285→  );
+   286→}
+   287→
+   288→// ─── ADMIN VIEW (COMPREHENSIVE) ───
+   289→function AdminView() {
+   290→  const s = useStore(); const { toast } = useToast();
+   291→  const [authed, setAuthed] = useState(() => { if (typeof window !== 'undefined' && sessionStorage.getItem('bb_admin') === '1') return true; return false; }); const [pwd, setPwd] = useState('');
+   292→  const [tab, setTab] = useState('dashboard');
+   293→  // Product dialog
+   294→  const [prodDialog, setProdDialog] = useState(false); const [editProd, setEditProd] = useState<Product | null>(null);
+   295→  const [pName, setPName] = useState(''); const [pBrand, setPBrand] = useState(''); const [pCat, setPCat] = useState('beauty'); const [pPrice, setPPrice] = useState(0); const [pOldPrice, setPOldPrice] = useState(0); const [pStock, setPStock] = useState(0); const [pImg, setPImg] = useState(''); const [pDesc, setPDesc] = useState(''); const [pFeatured, setPFeatured] = useState(false); const [pNew, setPNew] = useState(false); const [pTrending, setPTrending] = useState(false); const [pBestSeller, setPBestSeller] = useState(false); const [pSearch, setPSearch] = useState('');
+   296→  const [pImgMode, setPImgMode] = useState<'upload' | 'url'>('upload'); const [pUploading, setPUploading] = useState(false);
+   297→  const pFileRef = useRef<HTMLInputElement>(null);
+   298→  // Banner dialog
+   299→  const [banDialog, setBanDialog] = useState(false); const [editBan, setEditBan] = useState<BannerData | null>(null);
+   300→  const [bTitle, setBTitle] = useState(''); const [bSub, setBSub] = useState(''); const [bCta, setBCta] = useState(''); const [bLink, setBLink] = useState(''); const [bGrad, setBGrad] = useState('from-[#006233] to-[#00A651]'); const [bImg, setBImg] = useState(''); const [bActive, setBActive] = useState(true); const [bOrder, setBOrder] = useState(1);
+   301→  const [bImgMode, setBImgMode] = useState<'upload' | 'url'>('upload'); const [bUploading, setBUploading] = useState(false);
+   302→  const bFileRef = useRef<HTMLInputElement>(null);
+   303→  // Sale dialog
+   304→  const [saleDialog, setSaleDialog] = useState(false); const [editSale, setEditSale] = useState<SaleData | null>(null);
+   305→  const [sName, setSName] = useState(''); const [sDesc, setSDesc] = useState(''); const [sDisc, setSDisc] = useState(10); const [sStart, setSStart] = useState(''); const [sEnd, setSEnd] = useState(''); const [sCat, setSCat] = useState(''); const [sActive, setSActive] = useState(true); const [sColor, setSColor] = useState('#006233');
+   306→  // Category dialog
+   307→  const [catDialog, setCatDialog] = useState(false); const [editCatId, setEditCatId] = useState<string | null>(null);
+   308→  const [cName, setCName] = useState(''); const [cIcon, setCIcon] = useState('Tag'); const [cColor, setCColor] = useState('from-slate-500 to-slate-700'); const [cImg, setCImg] = useState('');
+   309→  const [cImgMode, setCImgMode] = useState<'upload' | 'url'>('url'); const [cUploading, setCUploading] = useState(false);
+   310→  const cFileRef = useRef<HTMLInputElement>(null);
+   311→
+   312→  const orderStatusColors: Record<string, string> = { Confirmed:'bg-blue-500', Processing:'bg-yellow-500', Shipped:'bg-purple-500', Delivered:'bg-green-500', Cancelled:'bg-red-500' };
+   313→
+   314→  const filteredProducts = useMemo(() => { let list = s.allProducts(); if (pSearch) { const q = pSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)); } return list; }, [s, pSearch]);
+   315→
+   316→  // Product handlers
+   317→  const openProdDialog = (p?: Product) => {
+   318→    if (p) { setEditProd(p); setPName(p.name); setPBrand(p.brand); setPCat(p.category); setPPrice(p.price); setPOldPrice(p.oldPrice); setPStock(p.stock); setPImg(p.images[0] || ''); setPDesc(p.description); setPFeatured(p.featured); setPNew(p.isNew); setPTrending(p.trending); setPBestSeller(p.bestSeller); setPImgMode(p.images[0] && !p.images[0].includes('/uploads/') ? 'url' : 'upload'); }
+   319→    else { setEditProd(null); setPName(''); setPBrand(''); setPCat('beauty'); setPPrice(0); setPOldPrice(0); setPStock(0); setPImg(''); setPDesc(''); setPFeatured(false); setPNew(false); setPTrending(false); setPBestSeller(false); setPImgMode('upload'); }
+   320→    setProdDialog(true);
+   321→  };
+   322→  const saveProd = () => {
+   323→    const imgUrl = pImg || '';
+   324→    const d = { name: pName, brand: pBrand, category: pCat, price: pPrice, oldPrice: pOldPrice, stock: pStock, images: imgUrl ? [imgUrl] : [], imageId: imgUrl, description: pDesc, featured: pFeatured, isNew: pNew, trending: pTrending, bestSeller: pBestSeller };
+   325→    if (editProd) { s.updateProduct(editProd.id, d); toast({ title: 'Product updated' }); }
+   326→    else { s.addProduct(d); toast({ title: 'Product added' }); }
+   327→    setProdDialog(false);
+   328→  };
+   329→  const handleProdFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   330→    const file = e.target.files?.[0]; if (!file) return;
+   331→    setPUploading(true);
+   332→    const url = await uploadImage(file);
+   333→    setPUploading(false);
+   334→    if (url) { setPImg(url); toast({ title: 'Image uploaded!' }); }
+   335→    else { toast({ title: 'Upload failed', variant: 'destructive' }); }
+   336→  };
+   337→
+   338→  // Banner handlers
+   339→  const openBanDialog = (b?: BannerData) => {
+   340→    if (b) { setEditBan(b); setBTitle(b.title); setBSub(b.subtitle); setBCta(b.cta); setBLink(b.ctaLink); setBGrad(b.gradient); setBImg(b.image); setBActive(b.active); setBOrder(b.order); setBImgMode(b.image && !b.image.includes('/uploads/') ? 'url' : 'upload'); }
+   341→    else { setEditBan(null); setBTitle(''); setBSub(''); setBCta('Shop Now'); setBLink('#/shop'); setBGrad('from-[#006233] to-[#00A651]'); setBImg(''); setBActive(true); setBOrder(s.banners.length + 1); setBImgMode('upload'); }
+   342→    setBanDialog(true);
+   343→  };
+   344→  const saveBan = () => {
+   345→    const d = { title: bTitle, subtitle: bSub, cta: bCta, ctaLink: bLink, gradient: bGrad, image: bImg, active: bActive, order: bOrder };
+   346→    if (editBan) { s.updateBanner(editBan.id, d); toast({ title: 'Banner updated' }); }
+   347→    else { s.addBanner(d); toast({ title: 'Banner added — it will appear on homepage!' }); }
+   348→    setBanDialog(false);
+   349→  };
+   350→  const handleBanFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   351→    const file = e.target.files?.[0]; if (!file) return;
+   352→    setBUploading(true);
+   353→    const url = await uploadImage(file);
+   354→    setBUploading(false);
+   355→    if (url) { setBImg(url); toast({ title: 'Image uploaded!' }); }
+   356→    else { toast({ title: 'Upload failed', variant: 'destructive' }); }
+   357→  };
+   358→
+   359→  // Sale handlers
+   360→  const openSaleDialog = (sale?: SaleData) => {
+   361→    if (sale) { setEditSale(sale); setSName(sale.name); setSDesc(sale.description); setSDisc(sale.discountPercent); setSStart(sale.startDate); setSEnd(sale.endDate); setSCat(sale.categoryId); setSActive(sale.active); setSColor(sale.bannerColor); }
+   362→    else { setEditSale(null); setSName(''); setSDesc(''); setSDisc(10); setSStart(new Date().toISOString().split('T')[0]); setSEnd(new Date(Date.now() + 7*864e5).toISOString().split('T')[0]); setSCat(''); setSActive(true); setSColor('#006233'); }
+   363→    setSaleDialog(true);
+   364→  };
+   365→  const saveSale = () => {
+   366→    const d = { name: sName, description: sDesc, discountPercent: sDisc, startDate: sStart, endDate: sEnd, categoryId: sCat, active: sActive, bannerColor: sColor };
+   367→    if (editSale) { s.updateSale(editSale.id, d); toast({ title: 'Sale updated' }); }
+   368→    else { s.addSale(d); toast({ title: 'Sale added' }); }
+   369→    setSaleDialog(false);
+   370→  };
+   371→
+   372→  // Category handlers
+   373→  const catIcons = ['Tag','Sparkles','ShoppingCart','Tv','Smartphone','Shirt','Sofa','Watch','Baby'];
+   374→  const catColors = ['from-emerald-600 to-teal-500','from-amber-500 to-orange-500','from-sky-600 to-blue-500','from-violet-600 to-purple-500','from-slate-600 to-zinc-700','from-rose-500 to-pink-500','from-yellow-500 to-amber-600','from-pink-400 to-rose-500','from-red-500 to-rose-600','from-cyan-500 to-blue-600'];
+   375→  const openCatDialog = (cat?: { id: string; name: string; icon: string; color: string; img: string }) => {
+   376→    if (cat) { setEditCatId(cat.id); setCName(cat.name); setCIcon(cat.icon); setCColor(cat.color); setCImg(cat.img); setCImgMode(cat.img && !cat.img.startsWith('/') && !cat.img.startsWith('http') ? 'url' : 'upload'); }
+   377→    else { setEditCatId(null); setCName(''); setCIcon('Tag'); setCColor('from-slate-500 to-slate-700'); setCImg(''); setCImgMode('url'); }
+   378→    setCatDialog(true);
+   379→  };
+   380→  const saveCat = () => {
+   381→    if (editCatId) { s.updateCategory(editCatId, { name: cName, icon: cIcon, color: cColor, img: cImg }); toast({ title: 'Category updated' }); }
+   382→    else { const result = s.addCategory({ name: cName, icon: cIcon, color: cColor, img: cImg }); if (result) { toast({ title: 'Category added!' }); } else { toast({ title: 'Category already exists', variant: 'destructive' }); return; } }
+   383→    setCatDialog(false);
+   384→  };
+   385→  const handleCatFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   386→    const file = e.target.files?.[0]; if (!file) return;
+   387→    setCUploading(true);
+   388→    const url = await uploadImage(file);
+   389→    setCUploading(false);
+   390→    if (url) { setCImg(url); toast({ title: 'Image uploaded!' }); }
+   391→    else { toast({ title: 'Upload failed', variant: 'destructive' }); }
+   392→  };
+   393→
+   394→  if (!authed) return (
+   395→    <div className="max-w-sm mx-auto mt-20 animate-fadeUp"><Card className="p-6 space-y-4"><div className="text-center"><Lock size={40} className="mx-auto mb-2 text-[#006233]"/><h2 className="text-xl font-bold" style={FH}>Admin Panel</h2><p className="text-sm text-muted-foreground">Enter admin password</p></div><Input type="password" placeholder="Password" value={pwd} onChange={e => setPwd(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && pwd === ADMIN_PWD) { setAuthed(true); sessionStorage.setItem('bb_admin', '1'); } }}/><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold" onClick={() => { if (pwd === ADMIN_PWD) { setAuthed(true); sessionStorage.setItem('bb_admin', '1'); } else { toast({ title: 'Wrong password', variant: 'destructive' }); } }}>Unlock</Button></Card></div>
+   396→  );
+   397→
+   398→  return (
+   399→    <div className="animate-fadeUp space-y-6">
+   400→      <div className="flex items-center justify-between"><h2 className="text-2xl font-bold" style={FH}>Admin Panel</h2><Button variant="outline" size="sm" onClick={() => { setAuthed(false); sessionStorage.removeItem('bb_admin'); }}><LogOut size={14} className="mr-1"/>Logout</Button></div>
+   401→      
+   402→      <Tabs value={tab} onValueChange={setTab}>
+   403→        <TabsList className="flex-wrap h-auto gap-1">
+   404→          <TabsTrigger value="dashboard" className="gap-1"><BarChart3 size={14}/>Dashboard</TabsTrigger>
+   405→          <TabsTrigger value="banners" className="gap-1"><Megaphone size={14}/>Banners</TabsTrigger>
+   406→          <TabsTrigger value="sales" className="gap-1"><Percent size={14}/>Sales</TabsTrigger>
+   407→          <TabsTrigger value="products" className="gap-1"><BoxIcon size={14}/>Products</TabsTrigger>
+   408→          <TabsTrigger value="orders" className="gap-1"><ClipboardList size={14}/>Orders</TabsTrigger>
+   409→          <TabsTrigger value="categories" className="gap-1"><Tag size={14}/>Categories</TabsTrigger>
+   410→        </TabsList>
+   411→
+   412→        {/* DASHBOARD */}
+   413→        <TabsContent value="dashboard" className="space-y-4">
+   414→          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+   415→            <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-[#006233]/10 flex items-center justify-center"><BoxIcon size={18} className="text-[#006233]"/></div><div><p className="text-2xl font-bold" style={FH}>{s.allProducts().length}</p><p className="text-xs text-muted-foreground">Products</p></div></div></Card>
+   416→            <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-[#C5A028]/10 flex items-center justify-center"><Megaphone size={18} className="text-[#C5A028]"/></div><div><p className="text-2xl font-bold" style={FH}>{s.banners.length}</p><p className="text-xs text-muted-foreground">Banners</p></div></div></Card>
+   417→            <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center"><Percent size={18} className="text-red-500"/></div><div><p className="text-2xl font-bold" style={FH}>{s.sales.filter(x => x.active).length}</p><p className="text-xs text-muted-foreground">Active Sales</p></div></div></Card>
+   418→            <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center"><ClipboardList size={18} className="text-blue-500"/></div><div><p className="text-2xl font-bold" style={FH}>{s.orders.length}</p><p className="text-xs text-muted-foreground">Orders</p></div></div></Card>
+   419→            <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center"><Tag size={18} className="text-purple-500"/></div><div><p className="text-2xl font-bold" style={FH}>{s.categories().length}</p><p className="text-xs text-muted-foreground">Categories</p></div></div></Card>
+   420→          </div>
+   421→          <Card className="p-4"><h4 className="font-bold mb-2" style={FH}>Quick Actions</h4><div className="flex flex-wrap gap-2"><Button size="sm" onClick={() => openBanDialog()} className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white"><PlusCircle size={14} className="mr-1"/>Add Banner</Button><Button size="sm" onClick={() => openSaleDialog()} className="bg-[#C5A028] text-white"><PlusCircle size={14} className="mr-1"/>Add Sale</Button><Button size="sm" onClick={() => openProdDialog()} variant="outline"><PlusCircle size={14} className="mr-1"/>Add Product</Button><Button size="sm" onClick={() => openCatDialog()} variant="outline"><PlusCircle size={14} className="mr-1"/>Add Category</Button></div></Card>
+   422→        </TabsContent>
+   423→
+   424→        {/* ─── BANNERS (HERO SLIDER MANAGEMENT) ─── */}
+   425→        <TabsContent value="banners" className="space-y-4">
+   426→          <div className="flex items-center justify-between"><h3 className="font-bold" style={FH}>Homepage Banners ({s.banners.length})</h3><Button size="sm" onClick={() => openBanDialog()} className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white"><PlusCircle size={14} className="mr-1"/>Add Banner</Button></div>
+   427→          <p className="text-xs text-muted-foreground bg-[#C5A028]/10 p-2 rounded-lg">These banners control the main hero slider on the homepage. Add, edit, or reorder them to change what appears on the front page.</p>
+   428→          <div className="space-y-3">
+   429→            {s.banners.sort((a,b) => a.order - b.order).map(b => (
+   430→              <Card key={b.id} className="p-4">
+   431→                <div className="flex flex-col sm:flex-row gap-4">
+   432→                  {/* Preview */}
+   433→                  <div className={`w-full sm:w-48 h-24 rounded-lg bg-gradient-to-r ${b.gradient} flex items-center justify-center text-white p-3 overflow-hidden relative`}>
+   434→                    {b.image && <ProductImage src={resolveImg(b.image, 300)} alt={b.title} className="absolute inset-0 w-full h-full object-cover opacity-30" />}
+   435→                    <div className="relative z-10 text-center"><p className="font-bold text-sm" style={FB}>{b.title}</p><p className="text-xs opacity-80">{b.subtitle}</p></div>
+   436→                  </div>
+   437→                  <div className="flex-1 space-y-1">
+   438→                    <div className="flex items-center gap-2"><h4 className="font-bold" style={FB}>{b.title}</h4><Badge variant={b.active ? 'default' : 'secondary'} className={b.active ? 'bg-green-500 text-white' : ''}>{b.active ? 'Active' : 'Inactive'}</Badge></div>
+   439→                    <p className="text-sm text-muted-foreground">{b.subtitle}</p>
+   440→                    <p className="text-xs text-muted-foreground">Order: {b.order} | CTA: {b.cta} | Link: {b.ctaLink}</p>
+   441→                  </div>
+   442→                  <div className="flex sm:flex-col gap-2">
+   443→                    <Button size="sm" variant="outline" onClick={() => openBanDialog(b)}><Edit size={14}/></Button>
+   444→                    <Button size="sm" variant="outline" onClick={() => { s.toggleBanner(b.id); toast({ title: b.active ? 'Banner deactivated' : 'Banner activated' }); }}>{b.active ? <EyeOff size={14}/> : <Eye size={14}/>}</Button>
+   445→                    <Button size="sm" variant="outline" className="text-red-500" onClick={() => { s.deleteBanner(b.id); toast({ title: 'Banner deleted' }); }}><Trash2 size={14}/></Button>
+   446→                  </div>
+   447→                </div>
+   448→              </Card>
+   449→            ))}
+   450→            {s.banners.length === 0 && <p className="text-center py-8 text-muted-foreground">No banners yet. Add one to control the homepage hero slider!</p>}
+   451→          </div>
+   452→        </TabsContent>
+   453→
+   454→        {/* ─── SALES ─── */}
+   455→        <TabsContent value="sales" className="space-y-4">
+   456→          <div className="flex items-center justify-between"><h3 className="font-bold" style={FH}>Sales & Promotions ({s.sales.length})</h3><Button size="sm" onClick={() => openSaleDialog()} className="bg-[#C5A028] text-white"><PlusCircle size={14} className="mr-1"/>Add Sale</Button></div>
+   457→          <div className="space-y-3">
+   458→            {s.sales.map(sale => (
+   459→              <Card key={sale.id} className="p-4 flex flex-col sm:flex-row gap-4 items-start">
+   460→                <div className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0" style={{ background: sale.bannerColor }}>{sale.discountPercent}%</div>
+   461→                <div className="flex-1 space-y-1">
+   462→                  <div className="flex items-center gap-2"><h4 className="font-bold" style={FB}>{sale.name}</h4><Badge variant={sale.active ? 'default' : 'secondary'} className={sale.active ? 'bg-green-500 text-white' : ''}>{sale.active ? 'Active' : 'Inactive'}</Badge></div>
+   463→                  <p className="text-sm text-muted-foreground">{sale.description}</p>
+   464→                  <p className="text-xs text-muted-foreground">{sale.startDate} to {sale.endDate} | Category: {sale.categoryId || 'All'}</p>
+   465→                </div>
+   466→                <div className="flex sm:flex-col gap-2">
+   467→                  <Button size="sm" variant="outline" onClick={() => openSaleDialog(sale)}><Edit size={14}/></Button>
+   468→                  <Button size="sm" variant="outline" onClick={() => { s.toggleSale(sale.id); toast({ title: sale.active ? 'Sale deactivated' : 'Sale activated' }); }}>{sale.active ? <EyeOff size={14}/> : <Eye size={14}/>}</Button>
+   469→                  <Button size="sm" variant="outline" className="text-red-500" onClick={() => { s.deleteSale(sale.id); toast({ title: 'Sale deleted' }); }}><Trash2 size={14}/></Button>
+   470→                </div>
+   471→              </Card>
+   472→            ))}
+   473→          </div>
+   474→        </TabsContent>
+   475→
+   476→        {/* ─── PRODUCTS (WITH IMAGE UPLOAD) ─── */}
+   477→        <TabsContent value="products" className="space-y-4">
+   478→          <div className="flex items-center justify-between"><h3 className="font-bold" style={FH}>Products ({s.allProducts().length})</h3><Button size="sm" onClick={() => openProdDialog()} className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white"><PlusCircle size={14} className="mr-1"/>Add Product</Button></div>
+   479→          <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input placeholder="Search products..." value={pSearch} onChange={e => setPSearch(e.target.value)} className="pl-9"/></div>
+   480→          <div className="space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar">
+   481→            {filteredProducts.map(p => (
+   482→              <div key={p.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition">
+   483→                <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div>
+   484→                <div className="flex-1 min-w-0">
+   485→                  <p className="font-medium text-sm truncate" style={FB}>{p.name}</p>
+   486→                  <p className="text-xs text-muted-foreground">{p.brand} | {s.categories().find(c => c.id === p.category)?.name || p.category} | Rs {p.price.toLocaleString()}</p>
+   487→                  <div className="flex gap-1 mt-1">{p.featured && <Badge className="text-[10px] px-1 py-0 bg-[#C5A028] text-white">Featured</Badge>}{p.isNew && <Badge className="text-[10px] px-1 py-0 bg-blue-500 text-white">New</Badge>}{p.trending && <Badge className="text-[10px] px-1 py-0 bg-green-500 text-white">Trending</Badge>}{p.bestSeller && <Badge className="text-[10px] px-1 py-0 bg-purple-500 text-white">Best Seller</Badge>}</div>
+   488→                </div>
+   489→                <div className="flex gap-1 shrink-0">
+   490→                  <Button size="sm" variant="ghost" onClick={() => openProdDialog(p)}><Edit size={14}/></Button>
+   491→                  <Button size="sm" variant="ghost" className="text-red-500" onClick={() => { s.deleteProduct(p.id); toast({ title: 'Product deleted' }); }}><Trash2 size={14}/></Button>
+   492→                </div>
+   493→              </div>
+   494→            ))}
+   495→          </div>
+   496→        </TabsContent>
+   497→
+   498→        {/* ─── ORDERS ─── */}
+   499→        <TabsContent value="orders" className="space-y-4">
+   500→          <h3 className="font-bold" style={FH}>Orders ({s.orders.length})</h3>
+
+[showing lines 201-500 of 931; use offset=501 with limit to continue reading]

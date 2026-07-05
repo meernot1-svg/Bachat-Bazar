@@ -1,0 +1,302 @@
+   500→          <h3 className="font-bold" style={FH}>Orders ({s.orders.length})</h3>
+   501→          {s.orders.length === 0 && <p className="text-muted-foreground text-sm">No orders yet</p>}
+   502→          <div className="space-y-3">
+   503→            {s.orders.map(o => (
+   504→              <Card key={o.id} className="p-4 space-y-3">
+   505→                <div className="flex items-center justify-between flex-wrap gap-2">
+   506→                  <div><span className="font-bold">#{o.id}</span><span className="text-xs text-muted-foreground ml-2">{new Date(o.date).toLocaleDateString()}</span><span className="text-xs text-muted-foreground ml-2">{o.payment}</span></div>
+   507→                  <div className="flex items-center gap-2"><Badge className={`${orderStatusColors[o.status] || 'bg-gray-500'} text-white`}>{o.status}</Badge><Select value={o.status} onValueChange={v => { s.updateOrderStatus(o.id, v); toast({ title: 'Status updated' }); }}><SelectTrigger className="w-[140px] h-7 text-xs"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Confirmed">Confirmed</SelectItem><SelectItem value="Processing">Processing</SelectItem><SelectItem value="Shipped">Shipped</SelectItem><SelectItem value="Delivered">Delivered</SelectItem><SelectItem value="Cancelled">Cancelled</SelectItem></SelectContent></Select></div>
+   508→                </div>
+   509→                <div className="space-y-1">{o.items.map((it, i) => <div key={i} className="flex justify-between text-sm"><span className="text-muted-foreground">{it.name?.slice(0, 40)} x{it.qty}</span><span>{s.money((it.price || 0) * it.qty)}</span></div>)}</div>
+   510→                <div className="flex justify-between font-bold text-sm pt-1 border-t"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{o.totals.totalDisplay}</span></div>
+   511→              </Card>
+   512→            ))}
+   513→          </div>
+   514→        </TabsContent>
+   515→
+   516→        {/* ─── CATEGORIES MANAGEMENT ─── */}
+   517→        <TabsContent value="categories" className="space-y-4">
+   518→          <div className="flex items-center justify-between"><h3 className="font-bold" style={FH}>Categories ({s.categories().length})</h3><Button size="sm" onClick={() => openCatDialog()} className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white"><PlusCircle size={14} className="mr-1"/>Add Category</Button></div>
+   519→          <p className="text-xs text-muted-foreground bg-blue-500/10 p-2 rounded-lg">Add, edit, or delete product categories. New categories will appear in the navigation and shop filters.</p>
+   520→          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+   521→            {s.categories().map(cat => {
+   522→              const Icon = getCatIcon(cat.icon);
+   523→              return (
+   524→                <Card key={cat.id} className="p-4 space-y-3">
+   525→                  <div className="flex items-center gap-3">
+   526→                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${cat.color} flex items-center justify-center text-white shadow`}><Icon size={22}/></div>
+   527→                    <div className="flex-1 min-w-0">
+   528→                      <p className="font-bold text-sm" style={FB}>{cat.name}</p>
+   529→                      <p className="text-xs text-muted-foreground">ID: {cat.id} | Icon: {cat.icon}</p>
+   530→                    </div>
+   531→                  </div>
+   532→                  {cat.img && <div className="w-full h-16 rounded-lg overflow-hidden bg-muted"><ProductImage src={resolveImg(cat.img, 300)} alt={cat.name} className="w-full h-full object-cover"/></div>}
+   533→                  <div className="flex gap-2">
+   534→                    <Button size="sm" variant="outline" className="flex-1" onClick={() => openCatDialog(cat)}><Edit size={14} className="mr-1"/>Edit</Button>
+   535→                    <Button size="sm" variant="outline" className="text-red-500" onClick={() => { s.deleteCategory(cat.id); toast({ title: 'Category deleted' }); }}><Trash2 size={14}/></Button>
+   536→                  </div>
+   537→                </Card>
+   538→              );
+   539→            })}
+   540→          </div>
+   541→        </TabsContent>
+   542→      </Tabs>
+   543→
+   544→      {/* ─── PRODUCT DIALOG (WITH IMAGE UPLOAD) ─── */}
+   545→      <Dialog open={prodDialog} onOpenChange={setProdDialog}>
+   546→        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+   547→          <DialogHeader><DialogTitle style={FH}>{editProd ? 'Edit Product' : 'Add Product'}</DialogTitle><DialogDescription>Fill in product details. You can upload an image or paste a link.</DialogDescription></DialogHeader>
+   548→          <div className="space-y-3">
+   549→            <div><Label style={FB}>Product Name *</Label><Input value={pName} onChange={e => setPName(e.target.value)} placeholder="Product name"/></div>
+   550→            <div className="grid grid-cols-2 gap-3">
+   551→              <div><Label style={FB}>Brand</Label><Input value={pBrand} onChange={e => setPBrand(e.target.value)} placeholder="Brand name"/></div>
+   552→              <div><Label style={FB}>Category</Label><Select value={pCat} onValueChange={setPCat}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{s.categories().map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+   553→            </div>
+   554→            <div className="grid grid-cols-3 gap-3">
+   555→              <div><Label style={FB}>Price (PKR)</Label><Input type="number" value={pPrice} onChange={e => setPPrice(Number(e.target.value))}/></div>
+   556→              <div><Label style={FB}>Old Price</Label><Input type="number" value={pOldPrice} onChange={e => setPOldPrice(Number(e.target.value))}/></div>
+   557→              <div><Label style={FB}>Stock</Label><Input type="number" value={pStock} onChange={e => setPStock(Number(e.target.value))}/></div>
+   558→            </div>
+   559→            <div><Label style={FB}>Description</Label><Textarea value={pDesc} onChange={e => setPDesc(e.target.value)} placeholder="Product description" rows={2}/></div>
+   560→            
+   561→            {/* IMAGE: Upload OR URL */}
+   562→            <div className="space-y-2">
+   563→              <Label style={FB} className="text-sm font-semibold">Product Image *</Label>
+   564→              <div className="flex gap-2 mb-2">
+   565→                <Button size="sm" variant={pImgMode === 'upload' ? 'default' : 'outline'} onClick={() => setPImgMode('upload')} className={pImgMode === 'upload' ? 'bg-[#006233] text-white' : ''}><Upload size={14} className="mr-1"/>Upload File</Button>
+   566→                <Button size="sm" variant={pImgMode === 'url' ? 'default' : 'outline'} onClick={() => setPImgMode('url')} className={pImgMode === 'url' ? 'bg-[#006233] text-white' : ''}><Link size={14} className="mr-1"/>Image URL</Button>
+   567→              </div>
+   568→              {pImgMode === 'upload' ? (
+   569→                <div>
+   570→                  <input type="file" ref={pFileRef} accept="image/*" onChange={handleProdFileUpload} className="hidden"/>
+   571→                  <div className="upload-zone rounded-xl p-6 text-center cursor-pointer" onClick={() => pFileRef.current?.click()}>
+   572→                    {pUploading ? <RefreshCw size={24} className="mx-auto animate-spin text-[#006233]"/> : <><FileImage size={24} className="mx-auto mb-2 text-muted-foreground"/><p className="text-sm text-muted-foreground">Click to upload image</p><p className="text-xs text-muted-foreground">JPEG, PNG, WebP — Max 5MB</p></>}
+   573→                  </div>
+   574→                </div>
+   575→              ) : (
+   576→                <Input value={pImg} onChange={e => setPImg(e.target.value)} placeholder="https://example.com/image.jpg or Unsplash ID"/>
+   577→              )}
+   578→              {pImg && <div className="mt-2 w-full h-32 rounded-lg overflow-hidden border bg-muted"><ProductImage src={resolveImg(pImg, 400)} alt="Preview" className="w-full h-full object-cover"/></div>}
+   579→            </div>
+   580→
+   581→            <div className="flex flex-wrap gap-3">
+   582→              <div className="flex items-center gap-2"><Switch checked={pFeatured} onCheckedChange={setPFeatured}/><Label style={FB}>Featured</Label></div>
+   583→              <div className="flex items-center gap-2"><Switch checked={pNew} onCheckedChange={setPNew}/><Label style={FB}>New</Label></div>
+   584→              <div className="flex items-center gap-2"><Switch checked={pTrending} onCheckedChange={setPTrending}/><Label style={FB}>Trending</Label></div>
+   585→              <div className="flex items-center gap-2"><Switch checked={pBestSeller} onCheckedChange={setPBestSeller}/><Label style={FB}>Best Seller</Label></div>
+   586→            </div>
+   587→          </div>
+   588→          <DialogFooter><Button variant="outline" onClick={() => setProdDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold" onClick={saveProd} disabled={!pName || !pImg}><Save size={14} className="mr-1"/>{editProd ? 'Update' : 'Add'} Product</Button></DialogFooter>
+   589→        </DialogContent>
+   590→      </Dialog>
+   591→
+   592→      {/* ─── BANNER DIALOG (WITH IMAGE UPLOAD) ─── */}
+   593→      <Dialog open={banDialog} onOpenChange={setBanDialog}>
+   594→        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+   595→          <DialogHeader><DialogTitle style={FH}>{editBan ? 'Edit Banner' : 'Add Banner'}</DialogTitle><DialogDescription>This banner will appear in the homepage hero slider.</DialogDescription></DialogHeader>
+   596→          <div className="space-y-3">
+   597→            <div><Label style={FB}>Title *</Label><Input value={bTitle} onChange={e => setBTitle(e.target.value)} placeholder="Banner title"/></div>
+   598→            <div><Label style={FB}>Subtitle</Label><Input value={bSub} onChange={e => setBSub(e.target.value)} placeholder="Banner subtitle"/></div>
+   599→            <div className="grid grid-cols-2 gap-3">
+   600→              <div><Label style={FB}>CTA Text</Label><Input value={bCta} onChange={e => setBCta(e.target.value)} placeholder="Shop Now"/></div>
+   601→              <div><Label style={FB}>CTA Link</Label><Input value={bLink} onChange={e => setBLink(e.target.value)} placeholder="#/shop"/></div>
+   602→            </div>
+   603→            <div className="grid grid-cols-2 gap-3">
+   604→              <div><Label style={FB}>Gradient</Label><Select value={bGrad} onValueChange={setBGrad}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="from-[#006233] to-[#00A651]">Green</SelectItem><SelectItem value="from-[#004D25] to-[#006233]">Dark Green</SelectItem><SelectItem value="from-[#1A4D8F] to-[#2E6BC6]">Blue</SelectItem><SelectItem value="from-[#8B1A1A] to-[#C41E3A]">Red</SelectItem><SelectItem value="from-[#006233] to-[#C5A028]">Green-Gold</SelectItem><SelectItem value="from-[#1A4D8F] to-[#00A651]">Blue-Green</SelectItem></SelectContent></Select></div>
+   605→              <div><Label style={FB}>Order</Label><Input type="number" value={bOrder} onChange={e => setBOrder(Number(e.target.value))}/></div>
+   606→            </div>
+   607→            
+   608→            {/* BANNER IMAGE: Upload OR URL */}
+   609→            <div className="space-y-2">
+   610→              <Label style={FB} className="text-sm font-semibold">Banner Image</Label>
+   611→              <div className="flex gap-2 mb-2">
+   612→                <Button size="sm" variant={bImgMode === 'upload' ? 'default' : 'outline'} onClick={() => setBImgMode('upload')} className={bImgMode === 'upload' ? 'bg-[#006233] text-white' : ''}><Upload size={14} className="mr-1"/>Upload File</Button>
+   613→                <Button size="sm" variant={bImgMode === 'url' ? 'default' : 'outline'} onClick={() => setBImgMode('url')} className={bImgMode === 'url' ? 'bg-[#006233] text-white' : ''}><Link size={14} className="mr-1"/>Image URL</Button>
+   614→              </div>
+   615→              {bImgMode === 'upload' ? (
+   616→                <div>
+   617→                  <input type="file" ref={bFileRef} accept="image/*" onChange={handleBanFileUpload} className="hidden"/>
+   618→                  <div className="upload-zone rounded-xl p-6 text-center cursor-pointer" onClick={() => bFileRef.current?.click()}>
+   619→                    {bUploading ? <RefreshCw size={24} className="mx-auto animate-spin text-[#006233]"/> : <><FileImage size={24} className="mx-auto mb-2 text-muted-foreground"/><p className="text-sm text-muted-foreground">Click to upload banner image</p><p className="text-xs text-muted-foreground">Recommended: 1200x400px</p></>}
+   620→                  </div>
+   621→                </div>
+   622→              ) : (
+   623→                <Input value={bImg} onChange={e => setBImg(e.target.value)} placeholder="https://example.com/banner.jpg or Unsplash ID"/>
+   624→              )}
+   625→              {/* Banner Preview */}
+   626→              <div className={`w-full h-28 rounded-xl bg-gradient-to-r ${bGrad} overflow-hidden relative flex items-center p-4`}>
+   627→                {bImg && <ProductImage src={resolveImg(bImg, 600)} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-30"/>}
+   628→                <div className="relative z-10 text-white"><p className="font-bold" style={FB}>{bTitle || 'Banner Title'}</p><p className="text-xs opacity-80">{bSub || 'Subtitle'}</p>{bCta && <span className="inline-block mt-1 text-xs bg-white/20 px-2 py-0.5 rounded">{bCta}</span>}</div>
+   629→              </div>
+   630→            </div>
+   631→            <div className="flex items-center gap-2"><Switch checked={bActive} onCheckedChange={setBActive}/><Label style={FB}>Active (show on homepage)</Label></div>
+   632→          </div>
+   633→          <DialogFooter><Button variant="outline" onClick={() => setBanDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold" onClick={saveBan} disabled={!bTitle}><Save size={14} className="mr-1"/>{editBan ? 'Update' : 'Add'} Banner</Button></DialogFooter>
+   634→        </DialogContent>
+   635→      </Dialog>
+   636→
+   637→      {/* ─── SALE DIALOG ─── */}
+   638→      <Dialog open={saleDialog} onOpenChange={setSaleDialog}>
+   639→        <DialogContent className="max-w-lg">
+   640→          <DialogHeader><DialogTitle style={FH}>{editSale ? 'Edit Sale' : 'Add Sale'}</DialogTitle><DialogDescription>Configure a sale or promotion</DialogDescription></DialogHeader>
+   641→          <div className="space-y-3">
+   642→            <div><Label style={FB}>Sale Name *</Label><Input value={sName} onChange={e => setSName(e.target.value)} placeholder="Eid Sale"/></div>
+   643→            <div><Label style={FB}>Description</Label><Input value={sDesc} onChange={e => setSDesc(e.target.value)} placeholder="25% off on beauty"/></div>
+   644→            <div className="grid grid-cols-2 gap-3">
+   645→              <div><Label style={FB}>Discount %</Label><Input type="number" value={sDisc} onChange={e => setSDisc(Number(e.target.value))}/></div>
+   646→              <div><Label style={FB}>Category</Label><Select value={sCat} onValueChange={setSCat}><SelectTrigger><SelectValue placeholder="All"/></SelectTrigger><SelectContent><SelectItem value="">All Categories</SelectItem>{s.categories().map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+   647→            </div>
+   648→            <div className="grid grid-cols-2 gap-3">
+   649→              <div><Label style={FB}>Start Date</Label><Input type="date" value={sStart} onChange={e => setSStart(e.target.value)}/></div>
+   650→              <div><Label style={FB}>End Date</Label><Input type="date" value={sEnd} onChange={e => setSEnd(e.target.value)}/></div>
+   651→            </div>
+   652→            <div><Label style={FB}>Banner Color</Label><div className="flex gap-2 items-center"><input type="color" value={sColor} onChange={e => setSColor(e.target.value)} className="w-10 h-8 rounded border cursor-pointer"/><Input value={sColor} onChange={e => setSColor(e.target.value)} className="flex-1"/></div></div>
+   653→            <div className="flex items-center gap-2"><Switch checked={sActive} onCheckedChange={setSActive}/><Label style={FB}>Active</Label></div>
+   654→          </div>
+   655→          <DialogFooter><Button variant="outline" onClick={() => setSaleDialog(false)}>Cancel</Button><Button className="bg-[#C5A028] text-white font-bold" onClick={saveSale} disabled={!sName}><Save size={14} className="mr-1"/>{editSale ? 'Update' : 'Add'} Sale</Button></DialogFooter>
+   656→        </DialogContent>
+   657→      </Dialog>
+   658→
+   659→      {/* ─── CATEGORY DIALOG (WITH IMAGE UPLOAD) ─── */}
+   660→      <Dialog open={catDialog} onOpenChange={setCatDialog}>
+   661→        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+   662→          <DialogHeader><DialogTitle style={FH}>{editCatId ? 'Edit Category' : 'Add Category'}</DialogTitle><DialogDescription>Create a new product category for your store</DialogDescription></DialogHeader>
+   663→          <div className="space-y-3">
+   664→            <div><Label style={FB}>Category Name *</Label><Input value={cName} onChange={e => setCName(e.target.value)} placeholder="e.g. Sports & Outdoor"/></div>
+   665→            <div className="grid grid-cols-2 gap-3">
+   666→              <div><Label style={FB}>Icon</Label><Select value={cIcon} onValueChange={setCIcon}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{catIcons.map(ic => { const Ic = getCatIcon(ic); return <SelectItem key={ic} value={ic}><span className="flex items-center gap-1"><Ic size={14}/>{ic}</span></SelectItem>; })}</SelectContent></Select></div>
+   667→              <div><Label style={FB}>Gradient Color</Label><Select value={cColor} onValueChange={setCColor}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{catColors.map(c => <SelectItem key={c} value={c}><div className={`w-4 h-4 rounded bg-gradient-to-r ${c} inline-block mr-1`}/>{c.replace(/from-|to-/g,'').replace(/\s/g,' → ')}</SelectItem>)}</SelectContent></Select></div>
+   668→            </div>
+   669→            {/* Category Image */}
+   670→            <div className="space-y-2">
+   671→              <Label style={FB} className="text-sm font-semibold">Category Image</Label>
+   672→              <div className="flex gap-2 mb-2">
+   673→                <Button size="sm" variant={cImgMode === 'upload' ? 'default' : 'outline'} onClick={() => setCImgMode('upload')} className={cImgMode === 'upload' ? 'bg-[#006233] text-white' : ''}><Upload size={14} className="mr-1"/>Upload</Button>
+   674→                <Button size="sm" variant={cImgMode === 'url' ? 'default' : 'outline'} onClick={() => setCImgMode('url')} className={cImgMode === 'url' ? 'bg-[#006233] text-white' : ''}><Link size={14} className="mr-1"/>URL / Unsplash ID</Button>
+   675→              </div>
+   676→              {cImgMode === 'upload' ? (
+   677→                <div>
+   678→                  <input type="file" ref={cFileRef} accept="image/*" onChange={handleCatFileUpload} className="hidden"/>
+   679→                  <div className="upload-zone rounded-xl p-6 text-center cursor-pointer" onClick={() => cFileRef.current?.click()}>
+   680→                    {cUploading ? <RefreshCw size={24} className="mx-auto animate-spin text-[#006233]"/> : <><FileImage size={24} className="mx-auto mb-2 text-muted-foreground"/><p className="text-sm text-muted-foreground">Click to upload category image</p><p className="text-xs text-muted-foreground">Recommended: 600x400px</p></>}
+   681→                  </div>
+   682→                </div>
+   683→              ) : (
+   684→                <Input value={cImg} onChange={e => setCImg(e.target.value)} placeholder="Unsplash photo ID or full URL"/>
+   685→              )}
+   686→              {cImg && <div className="mt-2 w-full h-24 rounded-lg overflow-hidden border bg-muted"><ProductImage src={resolveImg(cImg, 400)} alt="Preview" className="w-full h-full object-cover"/></div>}
+   687→            </div>
+   688→            {/* Preview */}
+   689→            {cName && <div className="flex items-center gap-3 p-3 rounded-xl border bg-muted/50"><div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${cColor} flex items-center justify-center text-white shadow`}>{React.createElement(getCatIcon(cIcon), { size: 22 })}</div><span className="font-bold" style={FB}>{cName}</span></div>}
+   690→          </div>
+   691→          <DialogFooter><Button variant="outline" onClick={() => setCatDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold" onClick={saveCat} disabled={!cName}><Save size={14} className="mr-1"/>{editCatId ? 'Update' : 'Add'} Category</Button></DialogFooter>
+   692→        </DialogContent>
+   693→      </Dialog>
+   694→    </div>
+   695→  );
+   696→}
+   697→
+   698→// ─── MAIN APP ───
+   699→const navLinks = [
+   700→  { href: '#/', label: 'Home' },
+   701→  { href: '#/shop', label: 'Shop' },
+   702→  { href: '#/deals', label: 'Deals' },
+   703→  { href: '#/new', label: 'New' },
+   704→  { href: '#/about', label: 'About' },
+   705→  { href: '#/contact', label: 'Contact' },
+   706→];
+   707→
+   708→export default function BachatBazarApp() {
+   709→  const s = useStore(); const { toast } = useToast();
+   710→  const [route, setRoute] = useState<RouteInfo>(() => { if (typeof window !== 'undefined') return parseHash(window.location.hash); return { view: '', id: '', query: {} }; });
+   711→  const [cartOpen, setCartOpen] = useState(false); const [wishOpen, setWishOpen] = useState(false);
+   712→  const [mobileMenu, setMobileMenu] = useState(false); const [authOpen, setAuthOpen] = useState(false);
+   713→  const [authMode, setAuthMode] = useState<'login'|'register'>('login');
+   714→  const [authEmail, setAuthEmail] = useState(''); const [authName, setAuthName] = useState('');
+   715→  const [quickView, setQuickView] = useState<Product | null>(null);
+   716→  const [notifOpen, setNotifOpen] = useState(false);
+   717→  const [cookieConsent, setCookieConsent] = useState(() => { if (typeof window !== 'undefined') return localStorage.getItem('bb_cookies') === '1'; return false; });
+   718→  const [showBackTop, setShowBackTop] = useState(false);
+   719→  const [searchQ, setSearchQ] = useState('');
+   720→  const mainRef = useRef<HTMLDivElement>(null);
+   721→
+   722→  useEffect(() => { const h = () => { setRoute(parseHash(window.location.hash)); window.scrollTo({ top: 0 }); }; window.addEventListener('hashchange', h); return () => window.removeEventListener('hashchange', h); }, []);
+   723→  useEffect(() => { if (s.theme === 'dark') document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [s.theme]);
+   724→  useEffect(() => { const h = () => setShowBackTop(window.scrollY > 400); window.addEventListener('scroll', h, { passive: true }); return () => window.removeEventListener('scroll', h); }, []);
+   725→
+   726→  const navigate = useCallback((hash: string) => { window.location.hash = hash; }, []);
+   727→  const cartCount = s.cartCount(); const wishCount = s.wishlist.length;
+   728→  const cartProducts = s.cart.map(i => ({ ...i, product: s.getProduct(i.id) }));
+   729→  const cartTotals = s.cartTotals();
+   730→
+   731→  const handleAuth = () => {
+   732→    if (authMode === 'login') { if (authEmail) { s.login(authEmail); setAuthOpen(false); toast({ title: 'Welcome back!' }); } }
+   733→    else { if (authName && authEmail) { s.register(authName, authEmail); setAuthOpen(false); toast({ title: 'Account created!' }); } }
+   734→  };
+   735→
+   736→  const renderView = () => {
+   737→    switch (route.view) {
+   738→      case '': case 'home': return <HomeView onQuickView={setQuickView} navigate={navigate}/>;
+   739→      case 'shop': return <ShopView query={route.query} onQuickView={setQuickView} navigate={navigate}/>;
+   740→      case 'product': return <ProductDetailView id={route.id} onQuickView={setQuickView} navigate={navigate}/>;
+   741→      case 'cart': return <CartView navigate={navigate}/>;
+   742→      case 'checkout': return <CheckoutView navigate={navigate}/>;
+   743→      case 'wishlist': return <WishlistView onQuickView={setQuickView} navigate={navigate}/>;
+   744→      case 'compare': return <CompareView navigate={navigate}/>;
+   745→      case 'orders': return <OrdersView navigate={navigate}/>;
+   746→      case 'account': return <AccountView navigate={navigate}/>;
+   747→      case 'deals': return <DealsView onQuickView={setQuickView} navigate={navigate}/>;
+   748→      case 'new': return <NewView onQuickView={setQuickView} navigate={navigate}/>;
+   749→      case 'admin': return <AdminView/>;
+   750→      case 'about': return <AboutView/>;
+   751→      case 'contact': return <ContactView/>;
+   752→      case 'faq': return <FAQView/>;
+   753→      case 'blog': return <BlogView navigate={navigate}/>;
+   754→      default: return <HomeView onQuickView={setQuickView} navigate={navigate}/>;
+   755→    }
+   756→  };
+   757→
+   758→  return (
+   759→    <div className="min-h-screen flex flex-col bg-background text-foreground">
+   760→      {/* ─── TOP BAR (Solid Green) ─── */}
+   761→      <div className="bg-[#006233] text-white text-xs py-1.5">
+   762→        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+   763→          <div className="flex items-center gap-4"><span className="flex items-center gap-1"><Phone size={12}/>+92 42 3576 1234</span><span className="hidden sm:flex items-center gap-1"><Mail size={12}/>support@bachatbazar.pk</span></div>
+   764→          <div className="flex items-center gap-3"><span className="hidden sm:inline">Free Delivery on Rs 25,000+</span><span>|</span><span>COD Available</span></div>
+   765→        </div>
+   766→      </div>
+   767→
+   768→      {/* ─── MAIN NAVBAR ─── */}
+   769→      <header className="glass sticky top-0 z-40">
+   770→        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+   771→          <button onClick={() => navigate('#/')} className="flex items-center gap-2 shrink-0"><div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#006233] to-[#00A651] flex items-center justify-center text-white font-bold text-sm shadow" style={FH}>B</div><span className="font-bold text-lg gradient-text hidden sm:inline" style={FH}>Bachat Bazar</span></button>
+   772→          <div className="flex-1 relative max-w-md"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input placeholder="Search products..." value={searchQ} onChange={e => setSearchQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && searchQ) { navigate(makeHash('shop', undefined, { search: searchQ })); setSearchQ(''); } }} className="pl-9 h-9"/></div>
+   773→          <div className="flex items-center gap-1">
+   774→            <Button variant="ghost" size="icon" className="relative" onClick={() => setCartOpen(true)}><ShoppingCart size={20}/>{cartCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#C5A028] text-white text-[10px] rounded-full flex items-center justify-center font-bold">{cartCount}</span>}</Button>
+   775→            <Button variant="ghost" size="icon" className="relative" onClick={() => setWishOpen(true)}><Heart size={20}/>{wishCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">{wishCount}</span>}</Button>
+   776→            <Button variant="ghost" size="icon" onClick={() => setNotifOpen(!notifOpen)}><Bell size={20}/>{s.notifs.filter(n => !n.read).length > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"/>}</Button>
+   777→            {/* ─── ADMIN BUTTON (VISIBLE) ─── */}
+   778→            <Button variant="ghost" size="icon" className="text-[#006233] dark:text-[#00A651] hover:bg-[#006233]/10" onClick={() => navigate(makeHash('admin'))} title="Admin Panel"><Settings size={20}/></Button>
+   779→            <Button variant="ghost" size="icon" onClick={s.toggleTheme}>{s.theme === 'dark' ? <Sun size={20}/> : <Moon size={20}/>}</Button>
+   780→            <Button variant="ghost" size="icon" onClick={() => s.user ? navigate(makeHash('account')) : setAuthOpen(true)}><User size={20}/></Button>
+   781→            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenu(true)}><Menu size={20}/></Button>
+   782→          </div>
+   783→        </div>
+   784→        {/* Desktop nav links */}
+   785→        <div className="hidden md:block border-t border-border/50">
+   786→          <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 py-1.5">{navLinks.map(l => (<button key={l.href} onClick={() => navigate(l.href)} className={`px-3 py-1 rounded-full text-sm font-medium transition ${('#/' + route.view === l.href) || (l.href === '#/' && route.view === '') ? 'bg-[#006233] text-white' : 'text-muted-foreground hover:bg-muted'}`}>{l.label}</button>))}<Separator orientation="vertical" className="h-4 mx-1"/>{s.categories().slice(0, 6).map(cat => { const Icon = getCatIcon(cat.icon); return (<button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition ${route.query.category === cat.id ? 'bg-[#006233] text-white' : 'text-muted-foreground hover:bg-muted'}`}><Icon size={12}/>{cat.name}</button>); })}</div>
+   787→        </div>
+   788→      </header>
+   789→
+   790→      {/* Notification dropdown */}
+   791→      {notifOpen && (<div className="fixed top-16 right-4 z-50 w-80 max-h-96 overflow-y-auto custom-scrollbar bg-card border rounded-xl shadow-xl animate-scaleIn"><div className="p-3 border-b flex items-center justify-between"><h4 className="font-bold text-sm" style={FB}>Notifications</h4><Button variant="ghost" size="sm" className="text-xs" onClick={() => { s.markAllRead(); toast({ title: 'All read' }); }}>Mark all read</Button></div>{s.notifs.length === 0 ? <p className="p-4 text-sm text-muted-foreground text-center">No notifications</p> : s.notifs.slice(0, 8).map(n => (<div key={n.id} className={`p-3 border-b last:border-0 ${n.read ? '' : 'bg-[#006233]/5'}`}><p className="text-sm font-medium">{n.title}</p><p className="text-xs text-muted-foreground">{n.text}</p><p className="text-xs text-muted-foreground mt-1">{new Date(n.time).toLocaleString()}</p></div>))}<div className="p-2 text-center"><button onClick={() => setNotifOpen(false)} className="text-xs text-muted-foreground hover:text-foreground">Close</button></div></div>)}
+   792→
+   793→      {/* Main content */}
+   794→      <main ref={mainRef} className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">{renderView()}</main>
+   795→
+   796→      {/* Footer */}
+   797→      <footer className="bg-gradient-to-r from-[#004D25] to-[#002510] text-white mt-auto">
+   798→        <div className="max-w-7xl mx-auto px-4 py-10">
+   799→          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+
+[showing lines 500-799 of 931; use offset=800 with limit to continue reading]

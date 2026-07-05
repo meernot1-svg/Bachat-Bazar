@@ -1,0 +1,502 @@
+     1→     1→     1→'use client';
+     2→     2→     2→
+     3→     3→     3→import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+     4→     4→     4→import { useStore } from '@/lib/store';
+     5→     5→     5→import { PRODUCTS, CATEGORIES, COUPONS, TESTIMONIALS, BLOGS, HERO_SLIDES, SHIPPING_METHODS, PAYMENTS, U, type Product } from '@/lib/data';
+     6→     6→     6→import { Button } from '@/components/ui/button';
+     7→     7→     7→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+     8→     8→     8→import { Badge } from '@/components/ui/badge';
+     9→     9→     9→import { Input } from '@/components/ui/input';
+    10→    10→    10→import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetDescription } from '@/components/ui/sheet';
+    11→    11→    11→import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+    12→    12→    12→import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+    13→    13→    13→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+    14→    14→    14→import { Separator } from '@/components/ui/separator';
+    15→    15→    15→import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+    16→    16→    16→import { Textarea } from '@/components/ui/textarea';
+    17→    17→    17→import { Label } from '@/components/ui/label';
+    18→    18→    18→import { Switch } from '@/components/ui/switch';
+    19→    19→    19→import {
+    20→    20→    20→  Heart, ShoppingCart, Search, Star, User, Menu, X, Minus, Plus, Trash2,
+    21→    21→    21→  ChevronRight, ChevronLeft, Eye, GitCompare, Moon, Sun, ArrowUp,
+    22→    22→    22→  Phone, Mail, MapPin, Facebook, Twitter, Instagram, Youtube,
+    23→    23→    23→  Truck, Shield, RotateCcw, Headphones, Tag, Clock, Flame,
+    24→    24→    24→  Check, AlertCircle, Copy, Share2, ZoomIn, ChevronDown,
+    25→    25→    25→  CreditCard, Wallet, Building2, Banknote, Gift, Package,
+    26→    26→    26→  Settings, BarChart3, BoxIcon, ClipboardList, Lock, LogOut,
+    27→    27→    27→  Bell, Cookie, Sparkles, Tv, Smartphone, Shirt, Sofa, Watch, Baby,
+    28→    28→    28→  ShoppingCartIcon, Zap, TrendingUp, Award, ThumbsUp, ArrowRight,
+    29→    29→    29→  Home, Store, Info, HelpCircle, BookOpen, Users
+    30→    30→    30→} from 'lucide-react';
+    31→    31→    31→import { useToast } from '@/hooks/use-toast';
+    32→    32→    32→
+    33→    33→    33→// ──────────────────────────────────────────────────────────────
+    34→    34→    34→// HELPERS
+    35→    35→    35→// ──────────────────────────────────────────────────────────────
+    36→    36→    36→const ICON_MAP: Record<string, React.ElementType> = {
+    37→    37→    37→  Sparkles, ShoppingCart, Tv, Smartphone, Shirt, Sofa, Watch, Baby, Tag
+    38→    38→    38→};
+    39→    39→    39→
+    40→    40→    40→function getCatIcon(iconName: string) {
+    41→    41→    41→  return ICON_MAP[iconName] || Tag;
+    42→    42→    42→}
+    43→    43→    43→
+    44→    44→    44→function imgFallback(e: React.SyntheticEvent<HTMLImageElement>, seed?: string) {
+    45→    45→    45→  const target = e.currentTarget;
+    46→    46→    46→  target.onerror = null;
+    47→    47→    47→  target.src = `https://picsum.photos/seed/${seed || 'bb' + Math.random().toString(36).slice(2, 6)}/400/400`;
+    48→    48→    48→}
+    49→    49→    49→
+    50→    50→    50→function CountdownTimer({ targetDate }: { targetDate: Date }) {
+    51→    51→    51→  const [diff, setDiff] = useState(Math.max(0, targetDate.getTime() - Date.now()));
+    52→    52→    52→  useEffect(() => {
+    53→    53→    53→    const id = setInterval(() => setDiff(Math.max(0, targetDate.getTime() - Date.now())), 1000);
+    54→    54→    54→    return () => clearInterval(id);
+    55→    55→    55→  }, [targetDate]);
+    56→    56→    56→  const h = Math.floor(diff / 3600000);
+    57→    57→    57→  const m = Math.floor((diff % 3600000) / 60000);
+    58→    58→    58→  const s = Math.floor((diff % 60000) / 1000);
+    59→    59→    59→  return (
+    60→    60→    60→    <span className="font-mono font-bold tracking-wider">
+    61→    61→    61→      {String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')}
+    62→    62→    62→    </span>
+    63→    63→    63→  );
+    64→    64→    64→}
+    65→    65→    65→
+    66→    66→    66→function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
+    67→    67→    67→  return (
+    68→    68→    68→    <span className="inline-flex gap-0.5">
+    69→    69→    69→      {[1,2,3,4,5].map(i => (
+    70→    70→    70→        <Star key={i} size={size} className={i <= Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'} />
+    71→    71→    71→      ))}
+    72→    72→    72→    </span>
+    73→    73→    73→  );
+    74→    74→    74→}
+    75→    75→    75→
+    76→    76→    76→function ProductImage({ src, alt, seed, className = '' }: { src: string; alt: string; seed?: string; className?: string }) {
+    77→    77→    77→  return (
+    78→    78→    78→    <img
+    79→    79→    79→      src={src}
+    80→    80→    80→      alt={alt}
+    81→    81→    81→      className={className}
+    82→    82→    82→      onError={(e) => imgFallback(e, seed)}
+    83→    83→    83→      loading="lazy"
+    84→    84→    84→    />
+    85→    85→    85→  );
+    86→    86→    86→}
+    87→    87→    87→
+    88→    88→    88→function PriceDisplay({ price, oldPrice }: { price: number; oldPrice: number }) {
+    89→    89→    89→  const s = useStore();
+    90→    90→    90→  return (
+    91→    91→    91→    <span className="flex items-center gap-2">
+    92→    92→    92→      <span className="font-bold text-lg">{s.money(price)}</span>
+    93→    93→    93→      {oldPrice > price && <span className="text-sm text-muted-foreground line-through">{s.money(oldPrice)}</span>}
+    94→    94→    94→    </span>
+    95→    95→    95→  );
+    96→    96→    96→}
+    97→    97→    97→
+    98→    98→    98→// ──────────────────────────────────────────────────────────────
+    99→    99→    99→// ROUTER
+   100→   100→   100→// ──────────────────────────────────────────────────────────────
+   101→   101→   101→interface RouteInfo {
+   102→   102→   102→  view: string;
+   103→   103→   103→  id: string;
+   104→   104→   104→  query: Record<string, string>;
+   105→   105→   105→}
+   106→   106→   106→
+   107→   107→   107→function parseHash(hash: string): RouteInfo {
+   108→   108→   108→  const h = hash.replace(/^#\/?/, '') || '';
+   109→   109→   109→  const [path, qs] = h.split('?');
+   110→   110→   110→  const parts = path.split('/').filter(Boolean);
+   111→   111→   111→  const query: Record<string, string> = {};
+   112→   112→   112→  if (qs) qs.split('&').forEach(p => { const [k, v] = p.split('='); if (k) query[decodeURIComponent(k)] = decodeURIComponent(v || ''); });
+   113→   113→   113→  const view = parts[0] || '';
+   114→   114→   114→  const id = parts[1] || '';
+   115→   115→   115→  return { view, id, query };
+   116→   116→   116→}
+   117→   117→   117→
+   118→   118→   118→function makeHash(view: string, id?: string, query?: Record<string, string>) {
+   119→   119→   119→  let h = '#/' + view;
+   120→   120→   120→  if (id) h += '/' + id;
+   121→   121→   121→  if (query && Object.keys(query).length) h += '?' + Object.entries(query).map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+   122→   122→   122→  return h;
+   123→   123→   123→}
+   124→   124→   124→
+   125→   125→   125→// ──────────────────────────────────────────────────────────────
+   126→   126→   126→// PRODUCT CARD
+   127→   127→   127→// ──────────────────────────────────────────────────────────────
+   128→   128→   128→function ProductCard({ product, onQuickView }: { product: Product; onQuickView: (p: Product) => void }) {
+   129→   129→   129→  const s = useStore();
+   130→   130→   130→  const { toast } = useToast();
+   131→   131→   131→  const inWish = s.inWishlist(product.id);
+   132→   132→   132→  const inComp = s.inCompare(product.id);
+   133→   133→   133→
+   134→   134→   134→  const handleCart = (e: React.MouseEvent) => {
+   135→   135→   135→    e.preventDefault(); e.stopPropagation();
+   136→   136→   136→    if (s.addToCart(product.id)) {
+   137→   137→   137→      toast({ title: 'Added to cart', description: product.name.slice(0, 40) });
+   138→   138→   138→      s.addNotif({ icon: 'ShoppingCart', title: 'Cart Updated', text: `${product.name.slice(0,30)} added` });
+   139→   139→   139→    } else {
+   140→   140→   140→      toast({ title: 'Out of stock', variant: 'destructive' });
+   141→   141→   141→    }
+   142→   142→   142→  };
+   143→   143→   143→
+   144→   144→   144→  return (
+   145→   145→   145→    <div className="product-card group bg-card rounded-xl border overflow-hidden cursor-pointer" onClick={() => { window.location.hash = makeHash('product', String(product.id)); }}>
+   146→   146→   146→      <div className="relative aspect-square overflow-hidden bg-muted">
+   147→   147→   147→        <ProductImage src={product.images[0]} alt={product.name} seed={product.imageId} className="product-img w-full h-full object-cover" />
+   148→   148→   148→        {product.badge && <span className="absolute top-2 left-2 bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{product.badge}</span>}
+   149→   149→   149→        {product.isNew && <span className="absolute top-2 right-2 bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">NEW</span>}
+   150→   150→   150→        <div className="absolute bottom-2 left-2 right-2 flex gap-1.5">
+   151→   151→   151→          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(product); }} className="quick-view-btn flex-1 bg-white/90 dark:bg-zinc-800/90 backdrop-blur text-xs font-medium py-1.5 rounded-lg hover:bg-indigo-500 hover:text-white transition flex items-center justify-center gap-1"><Eye size={14}/>Quick View</button>
+   152→   152→   152→        </div>
+   153→   153→   153→        <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+   154→   154→   154→          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const added = s.toggleWishlist(product.id); toast({ title: added ? 'Added to wishlist' : 'Removed from wishlist' }); }} className={`p-1.5 rounded-full ${inWish ? 'bg-pink-500 text-white' : 'bg-white/90 dark:bg-zinc-800/90'} hover:scale-110 transition`}><Heart size={14} fill={inWish ? 'currentColor' : 'none'}/></button>
+   155→   155→   155→          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const ok = s.toggleCompare(product.id); toast({ title: ok ? 'Added to compare' : 'Removed / Max 4', variant: ok ? 'default' : 'destructive' }); }} className={`p-1.5 rounded-full ${inComp ? 'bg-indigo-500 text-white' : 'bg-white/90 dark:bg-zinc-800/90'} hover:scale-110 transition`}><GitCompare size={14}/></button>
+   156→   156→   156→        </div>
+   157→   157→   157→      </div>
+   158→   158→   158→      <div className="p-3 space-y-1.5">
+   159→   159→   159→        <p className="text-xs text-muted-foreground truncate">{product.brand}</p>
+   160→   160→   160→        <p className="text-sm font-medium line-clamp-2 leading-snug min-h-[2.5rem]">{product.name}</p>
+   161→   161→   161→        <div className="flex items-center gap-1.5">
+   162→   162→   162→          <StarRating rating={product.rating} size={12}/>
+   163→   163→   163→          <span className="text-xs text-muted-foreground">({product.reviews})</span>
+   164→   164→   164→        </div>
+   165→   165→   165→        <div className="flex items-center justify-between pt-1">
+   166→   166→   166→          <PriceDisplay price={product.price} oldPrice={product.oldPrice}/>
+   167→   167→   167→        </div>
+   168→   168→   168→        <Button size="sm" className="w-full mt-1 bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white border-0" onClick={handleCart}>
+   169→   169→   169→          <ShoppingCart size={14} className="mr-1"/> Add to Cart
+   170→   170→   170→        </Button>
+   171→   171→   171→      </div>
+   172→   172→   172→    </div>
+   173→   173→   173→  );
+   174→   174→   174→}
+   175→   175→   175→
+   176→   176→   176→// ──────────────────────────────────────────────────────────────
+   177→   177→   177→// VIEWS
+   178→   178→   178→// ──────────────────────────────────────────────────────────────
+   179→   179→   179→
+   180→   180→   180→// HOME VIEW
+   181→   181→   181→function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   182→   182→   182→  const s = useStore();
+   183→   183→   183→  const [heroIdx, setHeroIdx] = useState(0);
+   184→   184→   184→  const allProducts = s.allProducts();
+   185→   185→   185→  const featured = allProducts.filter(p => p.featured).slice(0, 8);
+   186→   186→   186→  const trending = allProducts.filter(p => p.trending).slice(0, 8);
+   187→   187→   187→  const newArrivals = allProducts.filter(p => p.isNew).slice(0, 8);
+   188→   188→   188→  const bestSellers = allProducts.filter(p => p.bestSeller).slice(0, 8);
+   189→   189→   189→  const flashSaleEnd = useMemo(() => new Date(Date.now() + 6 * 3600000), []);
+   190→   190→   190→  const flashItems = allProducts.filter(p => p.oldPrice > p.price).slice(0, 6);
+   191→   191→   191→
+   192→   192→   192→  useEffect(() => {
+   193→   193→   193→    const id = setInterval(() => setHeroIdx(i => (i + 1) % HERO_SLIDES.length), 5000);
+   194→   194→   194→    return () => clearInterval(id);
+   195→   195→   195→  }, []);
+   196→   196→   196→
+   197→   197→   197→  return (
+   198→   198→   198→    <div className="animate-fadeUp">
+   199→   199→   199→      {/* Hero Slider */}
+   200→   200→   200→      <div className="relative overflow-hidden rounded-2xl mb-8" style={{ minHeight: 320 }}>
+   201→   201→   201→        {HERO_SLIDES.map((slide, i) => (
+   202→   202→   202→          <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === heroIdx ? 'opacity-100' : 'opacity-0'}`}>
+   203→   203→   203→            <div className={`absolute inset-0 bg-gradient-to-r ${slide.grad} opacity-90`}/>
+   204→   204→   204→            <ProductImage src={U(slide.img, 1200)} alt={slide.title} seed={slide.img} className="w-full h-full object-cover" />
+   205→   205→   205→            <div className="absolute inset-0 flex items-center p-6 md:p-12">
+   206→   206→   206→              <div className="max-w-lg text-white space-y-4">
+   207→   207→   207→                <h2 className="text-2xl md:text-4xl font-bold drop-shadow-lg">{slide.title}</h2>
+   208→   208→   208→                <p className="text-base md:text-lg opacity-90 drop-shadow">{slide.sub}</p>
+   209→   209→   209→                <Button className="bg-white text-gray-900 hover:bg-gray-100 font-semibold" onClick={() => navigate(slide.route)}>{slide.cta} <ChevronRight size={16}/></Button>
+   210→   210→   210→              </div>
+   211→   211→   211→            </div>
+   212→   212→   212→          </div>
+   213→   213→   213→        ))}
+   214→   214→   214→        <button onClick={() => setHeroIdx(i => (i - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur rounded-full p-2 text-white hover:bg-white/50 transition"><ChevronLeft size={20}/></button>
+   215→   215→   215→        <button onClick={() => setHeroIdx(i => (i + 1) % HERO_SLIDES.length)} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur rounded-full p-2 text-white hover:bg-white/50 transition"><ChevronRight size={20}/></button>
+   216→   216→   216→        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+   217→   217→   217→          {HERO_SLIDES.map((_, i) => <button key={i} onClick={() => setHeroIdx(i)} className={`w-2.5 h-2.5 rounded-full transition ${i === heroIdx ? 'bg-white' : 'bg-white/40'}`}/>)}
+   218→   218→   218→        </div>
+   219→   219→   219→      </div>
+   220→   220→   220→
+   221→   221→   221→      {/* Category Cards */}
+   222→   222→   222→      <section className="mb-10">
+   223→   223→   223→        <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Store size={22}/> Shop by Category</h3>
+   224→   224→   224→        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+   225→   225→   225→          {s.categories().map(cat => {
+   226→   226→   226→            const Icon = getCatIcon(cat.icon);
+   227→   227→   227→            return (
+   228→   228→   228→              <button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className="group relative rounded-xl overflow-hidden aspect-[4/3] cursor-pointer">
+   229→   229→   229→                <ProductImage src={U(cat.img, 400)} alt={cat.name} seed={cat.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+   230→   230→   230→                <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} opacity-60 group-hover:opacity-70 transition`}/>
+   231→   231→   231→                <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-2">
+   232→   232→   232→                  <Icon size={28} className="mb-1 drop-shadow"/>
+   233→   233→   233→                  <span className="text-sm font-semibold text-center drop-shadow">{cat.name}</span>
+   234→   234→   234→                </div>
+   235→   235→   235→              </button>
+   236→   236→   236→            );
+   237→   237→   237→          })}
+   238→   238→   238→        </div>
+   239→   239→   239→      </section>
+   240→   240→   240→
+   241→   241→   241→      {/* Flash Sale */}
+   242→   242→   242→      {flashItems.length > 0 && (
+   243→   243→   243→        <section className="mb-10">
+   244→   244→   244→          <div className="flex items-center justify-between mb-4">
+   245→   245→   245→            <h3 className="text-xl font-bold flex items-center gap-2"><Flame size={22} className="text-pink-500"/> Flash Sale</h3>
+   246→   246→   246→            <div className="flex items-center gap-2 text-sm"><Clock size={16}/> Ends in <CountdownTimer targetDate={flashSaleEnd}/></div>
+   247→   247→   247→          </div>
+   248→   248→   248→          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+   249→   249→   249→            {flashItems.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
+   250→   250→   250→          </div>
+   251→   251→   251→        </section>
+   252→   252→   252→      )}
+   253→   253→   253→
+   254→   254→   254→      {/* Featured Products */}
+   255→   255→   255→      {featured.length > 0 && (
+   256→   256→   256→        <section className="mb-10">
+   257→   257→   257→          <div className="flex items-center justify-between mb-4">
+   258→   258→   258→            <h3 className="text-xl font-bold flex items-center gap-2"><Award size={22} className="text-indigo-500"/> Featured</h3>
+   259→   259→   259→            <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { featured: 'true' }))}>View All <ChevronRight size={14}/></Button>
+   260→   260→   260→          </div>
+   261→   261→   261→          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+   262→   262→   262→            {featured.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
+   263→   263→   263→          </div>
+   264→   264→   264→        </section>
+   265→   265→   265→      )}
+   266→   266→   266→
+   267→   267→   267→      {/* Promo Banner */}
+   268→   268→   268→      <div className="mb-10 rounded-xl bg-gradient-to-r from-indigo-500 to-pink-500 p-6 md:p-10 text-white flex flex-col md:flex-row items-center gap-6">
+   269→   269→   269→        <div className="flex-1 space-y-2">
+   270→   270→   270→          <h3 className="text-2xl md:text-3xl font-bold">Get 25% Off This Eid!</h3>
+   271→   271→   271→          <p className="opacity-90">Use code <span className="font-mono bg-white/20 px-2 py-0.5 rounded">EID25</span> on orders above Rs 50,000</p>
+   272→   272→   272→        </div>
+   273→   273→   273→        <Button className="bg-white text-gray-900 hover:bg-gray-100 font-semibold shrink-0" onClick={() => navigate(makeHash('deals'))}>Shop Deals <ArrowRight size={16}/></Button>
+   274→   274→   274→      </div>
+   275→   275→   275→
+   276→   276→   276→      {/* Trending */}
+   277→   277→   277→      {trending.length > 0 && (
+   278→   278→   278→        <section className="mb-10">
+   279→   279→   279→          <div className="flex items-center justify-between mb-4">
+   280→   280→   280→            <h3 className="text-xl font-bold flex items-center gap-2"><TrendingUp size={22} className="text-emerald-500"/> Trending Now</h3>
+   281→   281→   281→            <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { trending: 'true' }))}>View All <ChevronRight size={14}/></Button>
+   282→   282→   282→          </div>
+   283→   283→   283→          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+   284→   284→   284→            {trending.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
+   285→   285→   285→          </div>
+   286→   286→   286→        </section>
+   287→   287→   287→      )}
+   288→   288→   288→
+   289→   289→   289→      {/* New Arrivals */}
+   290→   290→   290→      {newArrivals.length > 0 && (
+   291→   291→   291→        <section className="mb-10">
+   292→   292→   292→          <div className="flex items-center justify-between mb-4">
+   293→   293→   293→            <h3 className="text-xl font-bold flex items-center gap-2"><Zap size={22} className="text-amber-500"/> New Arrivals</h3>
+   294→   294→   294→            <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('new'))}>View All <ChevronRight size={14}/></Button>
+   295→   295→   295→          </div>
+   296→   296→   296→          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+   297→   297→   297→            {newArrivals.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
+   298→   298→   298→          </div>
+   299→   299→   299→        </section>
+   300→   300→   300→      )}
+   301→   301→   301→
+   302→   302→   302→      {/* Best Sellers */}
+   303→   303→   303→      {bestSellers.length > 0 && (
+   304→   304→   304→        <section className="mb-10">
+   305→   305→   305→          <div className="flex items-center justify-between mb-4">
+   306→   306→   306→            <h3 className="text-xl font-bold flex items-center gap-2"><ThumbsUp size={22} className="text-blue-500"/> Best Sellers</h3>
+   307→   307→   307→          </div>
+   308→   308→   308→          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+   309→   309→   309→            {bestSellers.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
+   310→   310→   310→          </div>
+   311→   311→   311→        </section>
+   312→   312→   312→      )}
+   313→   313→   313→
+   314→   314→   314→      {/* Testimonials */}
+   315→   315→   315→      <section className="mb-10">
+   316→   316→   316→        <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Users size={22}/> What Our Customers Say</h3>
+   317→   317→   317→        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+   318→   318→   318→          {TESTIMONIALS.map((t, i) => (
+   319→   319→   319→            <Card key={i} className="p-4">
+   320→   320→   320→              <div className="flex items-center gap-3 mb-3">
+   321→   321→   321→                <img src={U(t.avatar, 80)} alt={t.name} className="w-10 h-10 rounded-full object-cover" onError={(e) => imgFallback(e, t.name)}/>
+   322→   322→   322→                <div><p className="font-medium text-sm">{t.name}</p><p className="text-xs text-muted-foreground">{t.role}</p></div>
+   323→   323→   323→              </div>
+   324→   324→   324→              <StarRating rating={t.rating} size={12}/>
+   325→   325→   325→              <p className="mt-2 text-sm text-muted-foreground">&ldquo;{t.text}&rdquo;</p>
+   326→   326→   326→            </Card>
+   327→   327→   327→          ))}
+   328→   328→   328→        </div>
+   329→   329→   329→      </section>
+   330→   330→   330→
+   331→   331→   331→      {/* Blog Posts */}
+   332→   332→   332→      <section className="mb-10">
+   333→   333→   333→        <div className="flex items-center justify-between mb-4">
+   334→   334→   334→          <h3 className="text-xl font-bold flex items-center gap-2"><BookOpen size={22}/> From the Blog</h3>
+   335→   335→   335→          <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('blog'))}>All Posts <ChevronRight size={14}/></Button>
+   336→   336→   336→        </div>
+   337→   337→   337→        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+   338→   338→   338→          {BLOGS.map((b) => (
+   339→   339→   339→            <Card key={b.id} className="overflow-hidden group cursor-pointer">
+   340→   340→   340→              <div className="aspect-video overflow-hidden">
+   341→   341→   341→                <ProductImage src={U(b.img, 400)} alt={b.title} seed={b.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+   342→   342→   342→              </div>
+   343→   343→   343→              <div className="p-3 space-y-1">
+   344→   344→   344→                <p className="text-xs text-muted-foreground">{b.date} &middot; {b.author}</p>
+   345→   345→   345→                <p className="font-medium text-sm line-clamp-2">{b.title}</p>
+   346→   346→   346→                <p className="text-xs text-muted-foreground line-clamp-2">{b.excerpt}</p>
+   347→   347→   347→              </div>
+   348→   348→   348→            </Card>
+   349→   349→   349→          ))}
+   350→   350→   350→        </div>
+   351→   351→   351→      </section>
+   352→   352→   352→
+   353→   353→   353→      {/* Brands Marquee */}
+   354→   354→   354→      <section className="mb-10">
+   355→   355→   355→        <h3 className="text-xl font-bold mb-4">Top Brands</h3>
+   356→   356→   356→        <div className="overflow-hidden">
+   357→   357→   357→          <div className="marquee-track flex gap-8 whitespace-nowrap">
+   358→   358→   358→            {[...Array(2)].map((_, si) => (
+   359→   359→   359→              <React.Fragment key={si}>
+   360→   360→   360→                {s.allProducts().map((p, i) => `${si}-${i}`).filter((_, i) => i < 20).map((key, idx) => {
+   361→   361→   361→                  const p = s.allProducts()[idx];
+   362→   362→   362→                  return p ? <span key={key} className="text-lg font-bold text-muted-foreground/50 px-4">{p.brand}</span> : null;
+   363→   363→   363→                })}
+   364→   364→   364→              </React.Fragment>
+   365→   365→   365→            ))}
+   366→   366→   366→          </div>
+   367→   367→   367→        </div>
+   368→   368→   368→      </section>
+   369→   369→   369→
+   370→   370→   370→      {/* Features */}
+   371→   371→   371→      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+   372→   372→   372→        {[
+   373→   373→   373→          { icon: Truck, title: 'Free Shipping', desc: 'On orders over Rs 25,000' },
+   374→   374→   374→          { icon: Shield, title: 'Secure Payment', desc: '100% secure checkout' },
+   375→   375→   375→          { icon: RotateCcw, title: '7-Day Returns', desc: 'Easy return policy' },
+   376→   376→   376→          { icon: Headphones, title: '24/7 Support', desc: 'We are here to help' },
+   377→   377→   377→        ].map((f, i) => (
+   378→   378→   378→          <div key={i} className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/50">
+   379→   379→   379→            <f.icon size={28} className="text-indigo-500 mb-2"/>
+   380→   380→   380→            <p className="font-semibold text-sm">{f.title}</p>
+   381→   381→   381→            <p className="text-xs text-muted-foreground">{f.desc}</p>
+   382→   382→   382→          </div>
+   383→   383→   383→        ))}
+   384→   384→   384→      </section>
+   385→   385→   385→    </div>
+   386→   386→   386→  );
+   387→   387→   387→}
+   388→   388→   388→
+   389→   389→   389→// SHOP VIEW
+   390→   390→   390→function ShopView({ onQuickView, query }: { onQuickView: (p: Product) => void; query: Record<string, string> }) {
+   391→   391→   391→  const s = useStore();
+   392→   392→   392→  const [catFilter, setCatFilter] = useState(query.category || '');
+   393→   393→   393→  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200000]);
+   394→   394→   394→  const [brandFilter, setBrandFilter] = useState<string[]>([]);
+   395→   395→   395→  const [sortBy, setSortBy] = useState('featured');
+   396→   396→   396→  const [page, setPage] = useState(1);
+   397→   397→   397→  const perPage = 12;
+   398→   398→   398→  const [showFilters, setShowFilters] = useState(false);
+   399→   399→   399→  const resetPage = useCallback(() => setPage(1), []);
+   400→   400→   400→
+   401→   401→   401→  const allProducts = s.allProducts();
+   402→   402→   402→  const brands = useMemo(() => [...new Set(allProducts.map(p => p.brand))].sort(), [allProducts]);
+   403→   403→   403→
+   404→   404→   404→  const filtered = useMemo(() => {
+   405→   405→   405→    let items = [...allProducts];
+   406→   406→   406→    if (catFilter) items = items.filter(p => p.category === catFilter);
+   407→   407→   407→    if (query.featured) items = items.filter(p => p.featured);
+   408→   408→   408→    if (query.trending) items = items.filter(p => p.trending);
+   409→   409→   409→    items = items.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+   410→   410→   410→    if (brandFilter.length) items = items.filter(p => brandFilter.includes(p.brand));
+   411→   411→   411→    switch (sortBy) {
+   412→   412→   412→      case 'price-low': items.sort((a,b) => a.price - b.price); break;
+   413→   413→   413→      case 'price-high': items.sort((a,b) => b.price - a.price); break;
+   414→   414→   414→      case 'rating': items.sort((a,b) => b.rating - a.rating); break;
+   415→   415→   415→      case 'newest': items.sort((a,b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0)); break;
+   416→   416→   416→      default: items.sort((a,b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+   417→   417→   417→    }
+   418→   418→   418→    return items;
+   419→   419→   419→  }, [allProducts, catFilter, priceRange, brandFilter, sortBy, query]);
+   420→   420→   420→
+   421→   421→   421→  const totalPages = Math.ceil(filtered.length / perPage);
+   422→   422→   422→  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+   423→   423→   423→
+   424→   424→   424→  return (
+   425→   425→   425→    <div className="animate-fadeUp">
+   426→   426→   426→      <div className="flex items-center justify-between mb-6">
+   427→   427→   427→        <h2 className="text-2xl font-bold">Shop{catFilter ? ` — ${s.categories().find(c=>c.id===catFilter)?.name || catFilter}` : ''}</h2>
+   428→   428→   428→        <span className="text-sm text-muted-foreground">{filtered.length} products</span>
+   429→   429→   429→      </div>
+   430→   430→   430→
+   431→   431→   431→      <div className="flex gap-6">
+   432→   432→   432→        {/* Filters - Desktop */}
+   433→   433→   433→        <aside className={`${showFilters ? 'block' : 'hidden'} md:block w-56 shrink-0 space-y-5`}>
+   434→   434→   434→          <div>
+   435→   435→   435→            <h4 className="font-semibold mb-2 text-sm">Category</h4>
+   436→   436→   436→            <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+   437→   437→   437→              <button onClick={() => { setCatFilter(''); resetPage(); }} className={`block w-full text-left text-sm px-2 py-1 rounded ${!catFilter ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium' : 'hover:bg-muted'}`}>All Categories</button>
+   438→   438→   438→              {s.categories().map(c => (
+   439→   439→   439→                <button key={c.id} onClick={() => { setCatFilter(c.id); resetPage(); }} className={`block w-full text-left text-sm px-2 py-1 rounded ${catFilter === c.id ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium' : 'hover:bg-muted'}`}>{c.name}</button>
+   440→   440→   440→              ))}
+   441→   441→   441→            </div>
+   442→   442→   442→          </div>
+   443→   443→   443→          <Separator/>
+   444→   444→   444→          <div>
+   445→   445→   445→            <h4 className="font-semibold mb-2 text-sm">Price Range</h4>
+   446→   446→   446→            <div className="flex gap-2 items-center text-xs">
+   447→   447→   447→              <Input type="number" value={priceRange[0]} onChange={e => { setPriceRange([Number(e.target.value), priceRange[1]]); resetPage(); }} className="w-20 h-8 text-xs" placeholder="Min"/>
+   448→   448→   448→              <span>-</span>
+   449→   449→   449→              <Input type="number" value={priceRange[1]} onChange={e => { setPriceRange([priceRange[0], Number(e.target.value)]); resetPage(); }} className="w-20 h-8 text-xs" placeholder="Max"/>
+   450→   450→   450→            </div>
+   451→   451→   451→          </div>
+   452→   452→   452→          <Separator/>
+   453→   453→   453→          <div>
+   454→   454→   454→            <h4 className="font-semibold mb-2 text-sm">Brand</h4>
+   455→   455→   455→            <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+   456→   456→   456→              {brands.slice(0, 15).map(b => (
+   457→   457→   457→                <label key={b} className="flex items-center gap-2 text-sm cursor-pointer">
+   458→   458→   458→                  <input type="checkbox" checked={brandFilter.includes(b)} onChange={e => { setBrandFilter(prev => e.target.checked ? [...prev, b] : prev.filter(x => x !== b)); resetPage(); }} className="rounded border-gray-300"/>
+   459→   459→   459→                  <span className="truncate">{b}</span>
+   460→   460→   460→                </label>
+   461→   461→   461→              ))}
+   462→   462→   462→            </div>
+   463→   463→   463→          </div>
+   464→   464→   464→        </aside>
+   465→   465→   465→
+   466→   466→   466→        {/* Main Grid */}
+   467→   467→   467→        <div className="flex-1">
+   468→   468→   468→          <div className="flex items-center justify-between mb-4 gap-3">
+   469→   469→   469→            <Button variant="outline" size="sm" className="md:hidden" onClick={() => setShowFilters(f => !f)}><Menu size={14}/> Filters</Button>
+   470→   470→   470→            <Select value={sortBy} onValueChange={v => { setSortBy(v); resetPage(); }}>
+   471→   471→   471→              <SelectTrigger className="w-40 h-8 text-xs"><SelectValue placeholder="Sort by"/></SelectTrigger>
+   472→   472→   472→              <SelectContent>
+   473→   473→   473→                <SelectItem value="featured">Featured</SelectItem>
+   474→   474→   474→                <SelectItem value="price-low">Price: Low to High</SelectItem>
+   475→   475→   475→                <SelectItem value="price-high">Price: High to Low</SelectItem>
+   476→   476→   476→                <SelectItem value="rating">Highest Rated</SelectItem>
+   477→   477→   477→                <SelectItem value="newest">Newest</SelectItem>
+   478→   478→   478→              </SelectContent>
+   479→   479→   479→            </Select>
+   480→   480→   480→          </div>
+   481→   481→   481→
+   482→   482→   482→          {paged.length === 0 ? (
+   483→   483→   483→            <div className="text-center py-20 text-muted-foreground"><Package size={48} className="mx-auto mb-4 opacity-30"/><p>No products found</p></div>
+   484→   484→   484→          ) : (
+   485→   485→   485→            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+   486→   486→   486→              {paged.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
+   487→   487→   487→            </div>
+   488→   488→   488→          )}
+   489→   489→   489→
+   490→   490→   490→          {/* Pagination */}
+   491→   491→   491→          {totalPages > 1 && (
+   492→   492→   492→            <div className="flex items-center justify-center gap-2 mt-8">
+   493→   493→   493→              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}><ChevronLeft size={14}/></Button>
+   494→   494→   494→              {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), page + 2).map(n => (
+   495→   495→   495→                <Button key={n} variant={n === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(n)} className="w-8 h-8 p-0">{n}</Button>
+   496→   496→   496→              ))}
+   497→   497→   497→              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight size={14}/></Button>
+   498→   498→   498→            </div>
+   499→   499→   499→          )}
+   500→   500→   500→        </div>
+
+[showing lines 1-500 of 502; use offset=501 with limit to continue reading]

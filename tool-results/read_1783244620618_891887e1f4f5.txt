@@ -1,0 +1,469 @@
+  1300→          </Dialog>
+  1301→        </TabsContent>
+  1302→
+  1303→        <TabsContent value="orders">
+  1304→          <div className="space-y-3">
+  1305→            <h3 className="font-semibold">Orders ({s.orders.length})</h3>
+  1306→            {s.orders.length === 0 ? <p className="text-muted-foreground text-sm">No orders yet.</p> : (
+  1307→              s.orders.map(o => (
+  1308→                <Card key={o.id} className="p-3 flex items-center justify-between">
+  1309→                  <div><p className="font-medium text-sm">#{o.id}</p><p className="text-xs text-muted-foreground">{o.items.length} items &middot; {o.totals.totalDisplay}</p></div>
+  1310→                  <Badge variant={o.status === 'Cancelled' ? 'destructive' : 'default'}>{o.status}</Badge>
+  1311→                </Card>
+  1312→              ))
+  1313→            )}
+  1314→          </div>
+  1315→        </TabsContent>
+  1316→      </Tabs>
+  1317→    </div>
+  1318→  );
+  1319→}
+  1320→
+  1321→// ──────────────────────────────────────────────────────────────
+  1322→// MAIN APP COMPONENT
+  1323→// ──────────────────────────────────────────────────────────────
+  1324→export default function BachatBazarApp() {
+  1325→  const s = useStore();
+  1326→  const { toast } = useToast();
+  1327→
+  1328→  // Router
+  1329→  const [route, setRoute] = useState<RouteInfo>(() => parseHash(typeof window !== 'undefined' ? window.location.hash : ''));
+  1330→  const navigate = useCallback((hash: string) => { window.location.hash = hash; }, []);
+  1331→
+  1332→  useEffect(() => {
+  1333→    const handler = () => setRoute(parseHash(window.location.hash));
+  1334→    window.addEventListener('hashchange', handler);
+  1335→    return () => window.removeEventListener('hashchange', handler);
+  1336→  }, []);
+  1337→
+  1338→  // Theme sync
+  1339→  useEffect(() => {
+  1340→    document.documentElement.classList.toggle('dark', s.theme === 'dark');
+  1341→  }, [s.theme]);
+  1342→
+  1343→  // Search
+  1344→  const [searchQuery, setSearchQuery] = useState('');
+  1345→  const [searchOpen, setSearchOpen] = useState(false);
+  1346→  const searchResults = useMemo(() => {
+  1347→    if (!searchQuery.trim()) return [];
+  1348→    const q = searchQuery.toLowerCase();
+  1349→    return s.allProducts().filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)).slice(0, 6);
+  1350→  }, [searchQuery, s]);
+  1351→
+  1352→  // Drawers
+  1353→  const [cartOpen, setCartOpen] = useState(false);
+  1354→  const [wishlistOpen, setWishlistOpen] = useState(false);
+  1355→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  1356→
+  1357→  // Modals
+  1358→  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  1359→  const [authOpen, setAuthOpen] = useState(false);
+  1360→  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  1361→  const [authEmail, setAuthEmail] = useState('');
+  1362→  const [authName, setAuthName] = useState('');
+  1363→
+  1364→  // UI state
+  1365→  const [showBackToTop, setShowBackToTop] = useState(false);
+  1366→  const [cookieConsent, setCookieConsent] = useState(false);
+  1367→  const mainRef = useRef<HTMLDivElement>(null);
+  1368→
+  1369→  useEffect(() => {
+  1370→    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+  1371→    window.addEventListener('scroll', onScroll);
+  1372→    return () => window.removeEventListener('scroll', onScroll);
+  1373→  }, []);
+  1374→
+  1375→  useEffect(() => {
+  1376→    if (typeof window !== 'undefined') setCookieConsent(localStorage.getItem('bb_cookie') === '1');
+  1377→  }, []);
+  1378→
+  1379→  // Promo countdown
+  1380→  const promoEnd = useMemo(() => new Date(Date.now() + 24 * 3600000), []);
+  1381→
+  1382→  // Cart drawer content
+  1383→  const cartItems = s.cart;
+  1384→  const cartTotals = s.cartTotals();
+  1385→  const cartCount = s.cartCount();
+  1386→
+  1387→  // Handle auth
+  1388→  const handleAuth = () => {
+  1389→    if (authMode === 'login') {
+  1390→      if (authEmail) {
+  1391→        s.login(authEmail);
+  1392→        toast({ title: 'Welcome back!' });
+  1393→        setAuthOpen(false);
+  1394→        setAuthEmail('');
+  1395→      }
+  1396→    } else {
+  1397→      if (authName && authEmail) {
+  1398→        s.register(authName, authEmail);
+  1399→        toast({ title: 'Account created!' });
+  1400→        setAuthOpen(false);
+  1401→        setAuthName('');
+  1402→        setAuthEmail('');
+  1403→      }
+  1404→    }
+  1405→  };
+  1406→
+  1407→  // Render view
+  1408→  const renderView = () => {
+  1409→    const { view, id, query } = route;
+  1410→    switch (view) {
+  1411→      case '': case 'home': return <HomeView onQuickView={setQuickViewProduct} navigate={navigate}/>;
+  1412→      case 'shop': return <ShopView onQuickView={setQuickViewProduct} query={query}/>;
+  1413→      case 'product': return <ProductDetailView productId={id}/>;
+  1414→      case 'cart': return <CartView navigate={navigate}/>;
+  1415→      case 'checkout': return <CheckoutView navigate={navigate}/>;
+  1416→      case 'wishlist': return <WishlistView onQuickView={setQuickViewProduct} navigate={navigate}/>;
+  1417→      case 'compare': return <CompareView/>;
+  1418→      case 'orders': return <OrdersView/>;
+  1419→      case 'account': return <AccountView/>;
+  1420→      case 'deals': return <DealsView onQuickView={setQuickViewProduct}/>;
+  1421→      case 'new': return <NewArrivalsView onQuickView={setQuickViewProduct}/>;
+  1422→      case 'about': return <AboutView/>;
+  1423→      case 'contact': return <ContactView/>;
+  1424→      case 'faq': return <FAQView/>;
+  1425→      case 'blog': return <BlogView/>;
+  1426→      case 'admin': return <AdminView/>;
+  1427→      default: return <NotFoundView/>;
+  1428→    }
+  1429→  };
+  1430→
+  1431→  // Nav links
+  1432→  const navLinks = [
+  1433→    { label: 'Home', hash: '#/', icon: Home },
+  1434→    { label: 'Shop', hash: '#/shop', icon: Store },
+  1435→    { label: 'Deals', hash: '#/deals', icon: Flame },
+  1436→    { label: 'New', hash: '#/new', icon: Zap },
+  1437→  ];
+  1438→
+  1439→  return (
+  1440→    <div className="min-h-screen flex flex-col bg-background text-foreground">
+  1441→      {/* Top Promo Bar */}
+  1442→      <div className="bg-gradient-to-r from-indigo-600 to-pink-600 text-white text-xs sm:text-sm">
+  1443→        <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between">
+  1444→          <span className="flex items-center gap-1.5"><Truck size={14}/> Free shipping on orders over Rs 25,000</span>
+  1445→          <div className="flex items-center gap-3">
+  1446→            <span className="hidden sm:flex items-center gap-1"><Clock size={12}/> <CountdownTimer targetDate={promoEnd}/></span>
+  1447→            <Select value={s.currency} onValueChange={s.setCurrency}>
+  1448→              <SelectTrigger className="w-16 h-6 text-xs border-white/30 bg-white/10 text-white"><SelectValue/></SelectTrigger>
+  1449→              <SelectContent>
+  1450→                {['PKR','USD','EUR','GBP','INR','JPY'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+  1451→              </SelectContent>
+  1452→            </Select>
+  1453→          </div>
+  1454→        </div>
+  1455→      </div>
+  1456→
+  1457→      {/* Sticky Navbar */}
+  1458→      <header className="sticky top-0 z-40 glass border-b">
+  1459→        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+  1460→          {/* Mobile Menu Button */}
+  1461→          <Button variant="ghost" size="icon" className="md:hidden shrink-0" onClick={() => setMobileMenuOpen(true)}><Menu size={22}/></Button>
+  1462→
+  1463→          {/* Logo */}
+  1464→          <button onClick={() => navigate('#/')} className="flex items-center gap-2 shrink-0">
+  1465→            <img src="/logo.svg" alt="Bachat Bazar" className="h-8 w-8"/>
+  1466→            <span className="text-lg font-bold hidden sm:block gradient-text">Bachat Bazar</span>
+  1467→          </button>
+  1468→
+  1469→          {/* Search */}
+  1470→          <div className="flex-1 max-w-xl relative">
+  1471→            <div className="relative">
+  1472→              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/>
+  1473→              <Input
+  1474→                placeholder="Search products, brands..."
+  1475→                className="pl-9 h-9 text-sm w-full"
+  1476→                value={searchQuery}
+  1477→                onChange={e => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+  1478→                onFocus={() => setSearchOpen(true)}
+  1479→                onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
+  1480→                onKeyDown={e => { if (e.key === 'Enter' && searchQuery.trim()) { navigate(makeHash('shop', undefined, { q: searchQuery })); setSearchOpen(false); } }}
+  1481→              />
+  1482→            </div>
+  1483→            {searchOpen && searchResults.length > 0 && (
+  1484→              <div className="absolute top-full left-0 right-0 mt-1 bg-card border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto custom-scrollbar">
+  1485→                {searchResults.map(p => (
+  1486→                  <button key={p.id} className="flex items-center gap-3 p-2 hover:bg-muted w-full text-left" onMouseDown={() => { navigate(makeHash('product', String(p.id))); setSearchOpen(false); setSearchQuery(''); }}>
+  1487→                    <div className="w-10 h-10 rounded bg-muted overflow-hidden shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div>
+  1488→                    <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{p.name}</p><p className="text-xs text-muted-foreground">{p.brand} &middot; {s.money(p.price)}</p></div>
+  1489→                  </button>
+  1490→                ))}
+  1491→              </div>
+  1492→            )}
+  1493→          </div>
+  1494→
+  1495→          {/* Nav Links - Desktop */}
+  1496→          <nav className="hidden lg:flex items-center gap-1">
+  1497→            {navLinks.map(link => (
+  1498→              <Button key={link.hash} variant="ghost" size="sm" className="text-xs h-8" onClick={() => navigate(link.hash)}>{link.label}</Button>
+  1499→            ))}
+  1500→          </nav>
+  1501→
+  1502→          {/* Action Icons */}
+  1503→          <div className="flex items-center gap-1">
+  1504→            <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={() => navigate(makeHash('wishlist'))}>
+  1505→              <Heart size={18}/>{s.wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-pink-500 text-white text-[10px] flex items-center justify-center font-bold">{s.wishlist.length}</span>}
+  1506→            </Button>
+  1507→            <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={() => navigate(makeHash('compare'))}>
+  1508→              <GitCompare size={18}/>{s.compare.length > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[10px] flex items-center justify-center font-bold">{s.compare.length}</span>}
+  1509→            </Button>
+  1510→            <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={() => setCartOpen(true)}>
+  1511→              <ShoppingCart size={18}/>{cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-pink-500 text-white text-[10px] flex items-center justify-center font-bold">{cartCount}</span>}
+  1512→            </Button>
+  1513→            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => { if (s.user) navigate(makeHash('account')); else setAuthOpen(true); }}>
+  1514→              <User size={18}/>
+  1515→            </Button>
+  1516→            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={s.toggleTheme}>
+  1517→              {s.theme === 'dark' ? <Sun size={18}/> : <Moon size={18}/>}
+  1518→            </Button>
+  1519→          </div>
+  1520→        </div>
+  1521→      </header>
+  1522→
+  1523→      {/* Category Bar */}
+  1524→      <div className="border-b bg-card/50 overflow-x-auto no-scrollbar">
+  1525→        <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 py-1.5">
+  1526→          {s.categories().map(cat => (
+  1527→            <button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className={`whitespace-nowrap text-xs font-medium px-3 py-1.5 rounded-full transition ${route.query.category === cat.id ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'hover:bg-muted text-muted-foreground'}`}>{cat.name}</button>
+  1528→          ))}
+  1529→        </div>
+  1530→      </div>
+  1531→
+  1532→      {/* Main Content */}
+  1533→      <main ref={mainRef} className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+  1534→        {renderView()}
+  1535→      </main>
+  1536→
+  1537→      {/* Footer */}
+  1538→      <footer className="border-t bg-muted/30 mt-auto">
+  1539→        <div className="max-w-7xl mx-auto px-4 py-10">
+  1540→          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+  1541→            <div>
+  1542→              <div className="flex items-center gap-2 mb-3"><img src="/logo.svg" alt="Bachat Bazar" className="h-6 w-6"/><span className="font-bold gradient-text">Bachat Bazar</span></div>
+  1543→              <p className="text-sm text-muted-foreground mb-3">Pakistan&apos;s #1 online marketplace for quality products at the best prices.</p>
+  1544→              <div className="flex gap-2">
+  1545→                {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => <button key={i} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-indigo-500 hover:text-white transition"><Icon size={14}/></button>)}
+  1546→              </div>
+  1547→            </div>
+  1548→            <div>
+  1549→              <h4 className="font-semibold mb-3 text-sm">Quick Links</h4>
+  1550→              <div className="space-y-1.5 text-sm text-muted-foreground">
+  1551→                {navLinks.map(l => <button key={l.hash} onClick={() => navigate(l.hash)} className="block hover:text-foreground transition">{l.label}</button>)}
+  1552→              </div>
+  1553→            </div>
+  1554→            <div>
+  1555→              <h4 className="font-semibold mb-3 text-sm">Help</h4>
+  1556→              <div className="space-y-1.5 text-sm text-muted-foreground">
+  1557→                {[{ l: 'About Us', h: '#/about' }, { l: 'Contact', h: '#/contact' }, { l: 'FAQ', h: '#/faq' }, { l: 'Blog', h: '#/blog' }].map(item => (
+  1558→                  <button key={item.h} onClick={() => navigate(item.h)} className="block hover:text-foreground transition">{item.l}</button>
+  1559→                ))}
+  1560→              </div>
+  1561→            </div>
+  1562→            <div>
+  1563→              <h4 className="font-semibold mb-3 text-sm">Newsletter</h4>
+  1564→              <p className="text-sm text-muted-foreground mb-2">Get the latest deals in your inbox.</p>
+  1565→              <div className="flex gap-2">
+  1566→                <Input placeholder="Email address" className="h-8 text-xs"/>
+  1567→                <Button size="sm" className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white shrink-0">Subscribe</Button>
+  1568→              </div>
+  1569→            </div>
+  1570→          </div>
+  1571→          <Separator className="mb-4"/>
+  1572→          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+  1573→            <p>&copy; 2026 Bachat Bazar. All rights reserved.</p>
+  1574→            <div className="flex gap-4">
+  1575→              <button onClick={() => navigate(makeHash('admin'))} className="hover:text-foreground transition">Admin</button>
+  1576→              <span>Privacy Policy</span>
+  1577→              <span>Terms of Service</span>
+  1578→            </div>
+  1579→          </div>
+  1580→        </div>
+  1581→      </footer>
+  1582→
+  1583→      {/* ─── DRAWERS ─── */}
+  1584→
+  1585→      {/* Cart Drawer */}
+  1586→      <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+  1587→        <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
+  1588→          <SheetHeader className="p-4 border-b">
+  1589→            <SheetTitle className="flex items-center gap-2"><ShoppingCart size={18}/> Cart ({cartCount})</SheetTitle>
+  1590→          </SheetHeader>
+  1591→          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+  1592→            {cartItems.length === 0 ? (
+  1593→              <div className="text-center py-10 text-muted-foreground"><ShoppingCart size={40} className="mx-auto mb-3 opacity-30"/><p>Your cart is empty</p></div>
+  1594→            ) : cartItems.map(item => {
+  1595→              const p = s.getProduct(item.id);
+  1596→              if (!p) return null;
+  1597→              return (
+  1598→                <div key={item.id} className="flex gap-3 p-2 rounded-lg border">
+  1599→                  <div className="w-14 h-14 rounded bg-muted overflow-hidden shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div>
+  1600→                  <div className="flex-1 min-w-0">
+  1601→                    <p className="text-xs font-medium truncate">{p.name}</p>
+  1602→                    <p className="text-xs text-muted-foreground">{s.money(p.price)}</p>
+  1603→                    <div className="flex items-center gap-1.5 mt-1">
+  1604→                      <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => s.setQty(item.id, item.qty - 1)}><Minus size={10}/></Button>
+  1605→                      <span className="text-xs w-6 text-center">{item.qty}</span>
+  1606→                      <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => s.setQty(item.id, item.qty + 1)}><Plus size={10}/></Button>
+  1607→                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 ml-auto" onClick={() => { s.removeFromCart(item.id); toast({ title: 'Removed' }); }}><Trash2 size={10}/></Button>
+  1608→                    </div>
+  1609→                  </div>
+  1610→                </div>
+  1611→              );
+  1612→            })}
+  1613→          </div>
+  1614→          {cartItems.length > 0 && (
+  1615→            <SheetFooter className="p-4 border-t space-y-3">
+  1616→              <div className="space-y-1 text-sm w-full">
+  1617→                <div className="flex justify-between"><span>Subtotal</span><span>{cartTotals.subDisplay}</span></div>
+  1618→                <div className="flex justify-between font-bold"><span>Total</span><span>{cartTotals.totalDisplay}</span></div>
+  1619→              </div>
+  1620→              <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={() => { setCartOpen(false); navigate(makeHash('cart')); }}>View Cart</Button>
+  1621→              <Button className="w-full" variant="outline" onClick={() => { setCartOpen(false); navigate(makeHash('checkout')); }}>Checkout</Button>
+  1622→            </SheetFooter>
+  1623→          )}
+  1624→        </SheetContent>
+  1625→      </Sheet>
+  1626→
+  1627→      {/* Wishlist Drawer */}
+  1628→      <Sheet open={wishlistOpen} onOpenChange={setWishlistOpen}>
+  1629→        <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
+  1630→          <SheetHeader className="p-4 border-b">
+  1631→            <SheetTitle className="flex items-center gap-2"><Heart size={18}/> Wishlist ({s.wishlist.length})</SheetTitle>
+  1632→          </SheetHeader>
+  1633→          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+  1634→            {s.wishlist.length === 0 ? (
+  1635→              <div className="text-center py-10 text-muted-foreground"><Heart size={40} className="mx-auto mb-3 opacity-30"/><p>Your wishlist is empty</p></div>
+  1636→            ) : s.wishlist.map(id => {
+  1637→              const p = s.getProduct(id);
+  1638→              if (!p) return null;
+  1639→              return (
+  1640→                <div key={id} className="flex gap-3 p-2 rounded-lg border">
+  1641→                  <div className="w-14 h-14 rounded bg-muted overflow-hidden shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div>
+  1642→                  <div className="flex-1 min-w-0">
+  1643→                    <p className="text-xs font-medium truncate">{p.name}</p>
+  1644→                    <p className="text-xs text-muted-foreground">{s.money(p.price)}</p>
+  1645→                    <div className="flex gap-1.5 mt-1">
+  1646→                      <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => { s.addToCart(id); toast({ title: 'Added to cart' }); }}><ShoppingCart size={10} className="mr-1"/> Add</Button>
+  1647→                      <Button size="sm" variant="ghost" className="h-6 text-xs text-red-500 px-2" onClick={() => { s.toggleWishlist(id); toast({ title: 'Removed' }); }}><Trash2 size={10}/></Button>
+  1648→                    </div>
+  1649→                  </div>
+  1650→                </div>
+  1651→              );
+  1652→            })}
+  1653→          </div>
+  1654→          {s.wishlist.length > 0 && (
+  1655→            <SheetFooter className="p-4 border-t">
+  1656→              <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={() => { setWishlistOpen(false); navigate(makeHash('wishlist')); }}>View All</Button>
+  1657→            </SheetFooter>
+  1658→          )}
+  1659→        </SheetContent>
+  1660→      </Sheet>
+  1661→
+  1662→      {/* Mobile Menu */}
+  1663→      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+  1664→        <SheetContent side="left" className="w-72 p-0">
+  1665→          <SheetHeader className="p-4 border-b">
+  1666→            <SheetTitle className="flex items-center gap-2"><img src="/logo.svg" alt="" className="h-6 w-6"/> Bachat Bazar</SheetTitle>
+  1667→          </SheetHeader>
+  1668→          <nav className="p-4 space-y-1">
+  1669→            {navLinks.map(l => (
+  1670→              <button key={l.hash} onClick={() => { navigate(l.hash); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted transition text-sm font-medium">
+  1671→                <l.icon size={16} className="text-muted-foreground"/><span>{l.label}</span>
+  1672→              </button>
+  1673→            ))}
+  1674→            <Separator className="my-2"/>
+  1675→            {[{ l: 'Wishlist', h: makeHash('wishlist'), i: Heart }, { l: 'Compare', h: makeHash('compare'), i: GitCompare }, { l: 'Orders', h: makeHash('orders'), i: Package }, { l: 'Account', h: makeHash('account'), i: User }].map(item => (
+  1676→              <button key={item.h} onClick={() => { navigate(item.h); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted transition text-sm font-medium">
+  1677→                <item.i size={16} className="text-muted-foreground"/><span>{item.l}</span>
+  1678→              </button>
+  1679→            ))}
+  1680→            <Separator className="my-2"/>
+  1681→            {[{ l: 'About', h: makeHash('about'), i: Info }, { l: 'Contact', h: makeHash('contact'), i: Phone }, { l: 'FAQ', h: makeHash('faq'), i: HelpCircle }, { l: 'Blog', h: makeHash('blog'), i: BookOpen }].map(item => (
+  1682→              <button key={item.h} onClick={() => { navigate(item.h); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted transition text-sm font-medium">
+  1683→                <item.i size={16} className="text-muted-foreground"/><span>{item.l}</span>
+  1684→              </button>
+  1685→            ))}
+  1686→            <Separator className="my-2"/>
+  1687→            <button onClick={() => { navigate(makeHash('admin')); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted transition text-sm font-medium">
+  1688→              <Lock size={16} className="text-muted-foreground"/><span>Admin</span>
+  1689→            </button>
+  1690→          </nav>
+  1691→          <div className="p-4 border-t">
+  1692→            <div className="flex items-center justify-between">
+  1693→              <span className="text-sm">Dark Mode</span>
+  1694→              <Switch checked={s.theme === 'dark'} onCheckedChange={s.toggleTheme}/>
+  1695→            </div>
+  1696→          </div>
+  1697→        </SheetContent>
+  1698→      </Sheet>
+  1699→
+  1700→      {/* ─── MODALS ─── */}
+  1701→
+  1702→      {/* Quick View Modal */}
+  1703→      <Dialog open={!!quickViewProduct} onOpenChange={(open) => { if (!open) setQuickViewProduct(null); }}>
+  1704→        <DialogContent className="max-w-2xl">
+  1705→          {quickViewProduct && (
+  1706→            <div className="grid md:grid-cols-2 gap-6">
+  1707→              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+  1708→                <ProductImage src={quickViewProduct.images[0]} alt={quickViewProduct.name} seed={quickViewProduct.imageId} className="w-full h-full object-cover"/>
+  1709→              </div>
+  1710→              <div className="space-y-3">
+  1711→                <DialogHeader>
+  1712→                  <DialogTitle className="text-lg">{quickViewProduct.name}</DialogTitle>
+  1713→                  <DialogDescription>{quickViewProduct.brand}</DialogDescription>
+  1714→                </DialogHeader>
+  1715→                <div className="flex items-center gap-2"><StarRating rating={quickViewProduct.rating} size={14}/><span className="text-xs text-muted-foreground">({quickViewProduct.reviews})</span></div>
+  1716→                <PriceDisplay price={quickViewProduct.price} oldPrice={quickViewProduct.oldPrice}/>
+  1717→                <p className="text-sm text-muted-foreground line-clamp-3">{quickViewProduct.description}</p>
+  1718→                <div className="flex gap-2">
+  1719→                  <Button className="flex-1 bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={() => { s.addToCart(quickViewProduct.id); toast({ title: 'Added to cart' }); }}><ShoppingCart size={14} className="mr-1"/> Add to Cart</Button>
+  1720→                  <Button variant="outline" onClick={() => { setQuickViewProduct(null); navigate(makeHash('product', String(quickViewProduct.id))); }}>View Details</Button>
+  1721→                </div>
+  1722→              </div>
+  1723→            </div>
+  1724→          )}
+  1725→        </DialogContent>
+  1726→      </Dialog>
+  1727→
+  1728→      {/* Auth Modal */}
+  1729→      <Dialog open={authOpen} onOpenChange={setAuthOpen}>
+  1730→        <DialogContent className="max-w-sm">
+  1731→          <DialogHeader>
+  1732→            <DialogTitle>{authMode === 'login' ? 'Welcome Back' : 'Create Account'}</DialogTitle>
+  1733→            <DialogDescription>{authMode === 'login' ? 'Login to your Bachat Bazar account' : 'Join Bachat Bazar today'}</DialogDescription>
+  1734→          </DialogHeader>
+  1735→          <div className="space-y-3">
+  1736→            {authMode === 'register' && (
+  1737→              <div><Label className="text-xs">Full Name</Label><Input placeholder="Your name" value={authName} onChange={e => setAuthName(e.target.value)} className="h-9"/></div>
+  1738→            )}
+  1739→            <div><Label className="text-xs">Email</Label><Input type="email" placeholder="you@email.com" value={authEmail} onChange={e => setAuthEmail(e.target.value)} className="h-9" onKeyDown={e => e.key === 'Enter' && handleAuth()}/></div>
+  1740→            <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={handleAuth}>{authMode === 'login' ? 'Login' : 'Create Account'}</Button>
+  1741→            <p className="text-xs text-center text-muted-foreground">
+  1742→              {authMode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+  1743→              <button className="text-indigo-500 font-medium" onClick={() => setAuthMode(m => m === 'login' ? 'register' : 'login')}>{authMode === 'login' ? 'Sign up' : 'Login'}</button>
+  1744→            </p>
+  1745→          </div>
+  1746→        </DialogContent>
+  1747→      </Dialog>
+  1748→
+  1749→      {/* Back to Top */}
+  1750→      {showBackToTop && (
+  1751→        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow-lg flex items-center justify-center hover:scale-110 transition animate-fadeUp">
+  1752→          <ArrowUp size={18}/>
+  1753→        </button>
+  1754→      )}
+  1755→
+  1756→      {/* Cookie Consent */}
+  1757→      {!cookieConsent && (
+  1758→        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-card border-t shadow-lg animate-fadeUp">
+  1759→          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+  1760→            <div className="flex items-center gap-2 text-sm"><Cookie size={18} className="text-indigo-500 shrink-0"/><span className="text-muted-foreground">We use cookies to enhance your experience. By continuing, you agree to our cookie policy.</span></div>
+  1761→            <Button size="sm" className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white shrink-0" onClick={() => { setCookieConsent(true); localStorage.setItem('bb_cookie', '1'); }}>Accept</Button>
+  1762→          </div>
+  1763→        </div>
+  1764→      )}
+  1765→    </div>
+  1766→  );
+  1767→}
+  1768→

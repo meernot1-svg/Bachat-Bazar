@@ -151,6 +151,7 @@
 /* Product Card Hover */
 .product-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
 }
 .product-card:hover {
   transform: translateY(-4px);
@@ -198,18 +199,30 @@
 }
 .marquee-track {
   animation: marquee 30s linear infinite;
+  will-change: transform;
 }
 .marquee-track:hover {
   animation-play-state: paused;
 }
 
-/* Fade Up Animation */
+/* Fade Up Animation — opacity only for containers (no transform to avoid scroll/sticky conflicts) */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .animate-fadeUp {
   animation: fadeUp 0.5s ease-out forwards;
+  will-change: opacity;
+}
+
+/* Card Fade Up — includes transform for small card elements */
+@keyframes cardFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-cardFadeUp {
+  animation: cardFadeUp 0.4s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 /* Slide Right Animation */
@@ -219,6 +232,7 @@
 }
 .animate-slideRight {
   animation: slideRight 0.4s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 /* Scale In Animation */
@@ -228,12 +242,13 @@
 }
 .animate-scaleIn {
   animation: scaleIn 0.3s ease-out forwards;
+  will-change: transform, opacity;
 }
 
-/* Pulse glow for deals */
+/* Pulse glow for deals — updated to teal */
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 8px rgba(236, 72, 153, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.6); }
+  0%, 100% { box-shadow: 0 0 8px rgba(15, 118, 110, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(15, 118, 110, 0.6); }
 }
 .pulse-glow {
   animation: pulseGlow 2s ease-in-out infinite;
@@ -261,7 +276,7 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* Range Slider Styling */
+/* Range Slider Styling — updated to teal */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -276,7 +291,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #6366f1;
+  background: #0f766e;
   cursor: pointer;
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
@@ -285,15 +300,15 @@ input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #6366f1;
+  background: #0f766e;
   cursor: pointer;
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-/* Gradient text */
+/* Gradient text — teal/emerald */
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1, #ec4899);
+  background: linear-gradient(135deg, #0f766e, #059669);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

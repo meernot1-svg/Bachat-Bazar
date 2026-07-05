@@ -1,0 +1,502 @@
+   500→        </div>
+   501→      </div>
+   502→    </div>
+   503→  );
+   504→}
+   505→
+   506→// PRODUCT DETAIL VIEW
+   507→function ProductDetailView({ productId }: { productId: string }) {
+   508→  const s = useStore();
+   509→  const { toast } = useToast();
+   510→  const product = s.getProduct(Number(productId));
+   511→  const [imgIdx, setImgIdx] = useState(0);
+   512→  const [qty, setQty] = useState(1);
+   513→  const [activeTab, setActiveTab] = useState('description');
+   514→
+   515→  useEffect(() => { if (product) s.pushRecent(product.id); }, [product]);
+   516→
+   517→  if (!product) return <div className="text-center py-20"><h2 className="text-2xl font-bold">Product not found</h2><p className="text-muted-foreground mt-2">This product may have been removed.</p></div>;
+   518→
+   519→  const related = product.related.map(id => s.getProduct(id)).filter(Boolean) as Product[];
+   520→  const inWish = s.inWishlist(product.id);
+   521→
+   522→  const handleAdd = () => {
+   523→    if (s.addToCart(product.id, qty)) {
+   524→      toast({ title: 'Added to cart', description: `${qty}x ${product.name.slice(0, 30)}` });
+   525→    }
+   526→  };
+   527→
+   528→  return (
+   529→    <div className="animate-fadeUp">
+   530→      <div className="grid md:grid-cols-2 gap-8">
+   531→        {/* Images */}
+   532→        <div className="space-y-3">
+   533→          <div className="aspect-square rounded-xl overflow-hidden bg-muted">
+   534→            <ProductImage src={product.images[imgIdx] || product.images[0]} alt={product.name} seed={product.imageId} className="w-full h-full object-cover" />
+   535→          </div>
+   536→          {product.images.length > 1 && (
+   537→            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+   538→              {product.images.map((img, i) => (
+   539→                <button key={i} onClick={() => setImgIdx(i)} className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 ${i === imgIdx ? 'border-indigo-500' : 'border-transparent'}`}>
+   540→                  <ProductImage src={img} alt="" seed={`${product.imageId}-${i}`} className="w-full h-full object-cover" />
+   541→                </button>
+   542→              ))}
+   543→            </div>
+   544→          )}
+   545→        </div>
+   546→
+   547→        {/* Details */}
+   548→        <div className="space-y-4">
+   549→          <div>
+   550→            <p className="text-sm text-muted-foreground mb-1">{product.brand}</p>
+   551→            <h1 className="text-2xl font-bold">{product.name}</h1>
+   552→          </div>
+   553→          <div className="flex items-center gap-2">
+   554→            <StarRating rating={product.rating}/>
+   555→            <span className="text-sm text-muted-foreground">{product.rating} ({product.reviews} reviews)</span>
+   556→          </div>
+   557→          <PriceDisplay price={product.price} oldPrice={product.oldPrice}/>
+   558→          {product.badge && <Badge className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white border-0">{product.badge}</Badge>}
+   559→          <p className="text-sm text-muted-foreground">{product.description}</p>
+   560→
+   561→          {/* Stock */}
+   562→          <div className="flex items-center gap-2">
+   563→            {product.stock > 0 ? (
+   564→              <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1"><Check size={14}/> In Stock ({product.stock})</span>
+   565→            ) : (
+   566→              <span className="text-sm text-red-500 font-medium flex items-center gap-1"><AlertCircle size={14}/> Out of Stock</span>
+   567→            )}
+   568→          </div>
+   569→
+   570→          {/* Qty + Add to Cart */}
+   571→          <div className="flex items-center gap-3">
+   572→            <div className="flex items-center border rounded-lg">
+   573→              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setQty(q => Math.max(1, q - 1))}><Minus size={14}/></Button>
+   574→              <span className="w-10 text-center font-medium">{qty}</span>
+   575→              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setQty(q => Math.min(product.stock, q + 1))}><Plus size={14}/></Button>
+   576→            </div>
+   577→            <Button className="flex-1 bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white" onClick={handleAdd} disabled={product.stock <= 0}>
+   578→              <ShoppingCart size={16} className="mr-2"/> Add to Cart
+   579→            </Button>
+   580→          </div>
+   581→
+   582→          <div className="flex gap-2">
+   583→            <Button variant="outline" size="sm" className={inWish ? 'text-pink-500 border-pink-500' : ''} onClick={() => { const a = s.toggleWishlist(product.id); toast({ title: a ? 'Wishlist added' : 'Wishlist removed' }); }}><Heart size={14} fill={inWish ? 'currentColor' : 'none'} className="mr-1"/> {inWish ? 'Wishlisted' : 'Wishlist'}</Button>
+   584→            <Button variant="outline" size="sm" onClick={() => { const ok = s.toggleCompare(product.id); toast({ title: ok ? 'Compare added' : 'Removed / Max 4' }); }}><GitCompare size={14} className="mr-1"/> Compare</Button>
+   585→            <Button variant="outline" size="sm"><Share2 size={14} className="mr-1"/> Share</Button>
+   586→          </div>
+   587→
+   588→          {/* SKU */}
+   589→          <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
+   590→
+   591→          {/* Features */}
+   592→          <div className="flex flex-wrap gap-2">
+   593→            {product.features.map((f, i) => (
+   594→              <span key={i} className="text-xs bg-muted px-2 py-1 rounded-full">{f}</span>
+   595→            ))}
+   596→          </div>
+   597→        </div>
+   598→      </div>
+   599→
+   600→      {/* Tabs */}
+   601→      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-8">
+   602→        <TabsList>
+   603→          <TabsTrigger value="description">Description</TabsTrigger>
+   604→          <TabsTrigger value="specs">Specifications</TabsTrigger>
+   605→        </TabsList>
+   606→        <TabsContent value="description" className="mt-4">
+   607→          <p className="text-sm text-muted-foreground">{product.description}</p>
+   608→        </TabsContent>
+   609→        <TabsContent value="specs" className="mt-4">
+   610→          <div className="grid grid-cols-2 gap-2 max-w-lg">
+   611→            {Object.entries(product.specs).map(([k, v]) => (
+   612→              <div key={k} className="flex justify-between text-sm border-b py-1.5 px-2"><span className="text-muted-foreground">{k}</span><span className="font-medium">{v}</span></div>
+   613→            ))}
+   614→          </div>
+   615→        </TabsContent>
+   616→      </Tabs>
+   617→
+   618→      {/* Related Products */}
+   619→      {related.length > 0 && (
+   620→        <section className="mt-10">
+   621→          <h3 className="text-xl font-bold mb-4">Related Products</h3>
+   622→          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+   623→            {related.map(p => <ProductCard key={p.id} product={p} onQuickView={() => {}}/>)}
+   624→          </div>
+   625→        </section>
+   626→      )}
+   627→    </div>
+   628→  );
+   629→}
+   630→
+   631→// CART VIEW
+   632→function CartView({ navigate }: { navigate: (h: string) => void }) {
+   633→  const s = useStore();
+   634→  const { toast } = useToast();
+   635→  const [couponCode, setCouponCode] = useState('');
+   636→  const cart = s.cart;
+   637→  const totals = s.cartTotals();
+   638→
+   639→  const handleCoupon = () => {
+   640→    if (s.applyCoupon(couponCode)) {
+   641→      toast({ title: 'Coupon applied!', description: s.coupon?.label });
+   642→      setCouponCode('');
+   643→    } else {
+   644→      toast({ title: 'Invalid coupon', variant: 'destructive' });
+   645→    }
+   646→  };
+   647→
+   648→  if (cart.length === 0) {
+   649→    return (
+   650→      <div className="animate-fadeUp text-center py-20">
+   651→        <ShoppingCart size={64} className="mx-auto mb-4 text-muted-foreground/30"/>
+   652→        <h2 className="text-2xl font-bold mb-2">Your cart is empty</h2>
+   653→        <p className="text-muted-foreground mb-6">Looks like you haven&apos;t added anything yet.</p>
+   654→        <Button className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={() => navigate(makeHash('shop'))}>Start Shopping</Button>
+   655→      </div>
+   656→    );
+   657→  }
+   658→
+   659→  return (
+   660→    <div className="animate-fadeUp">
+   661→      <h2 className="text-2xl font-bold mb-6">Shopping Cart ({s.cartCount()} items)</h2>
+   662→      <div className="grid lg:grid-cols-3 gap-6">
+   663→        <div className="lg:col-span-2 space-y-3">
+   664→          {cart.map(item => {
+   665→            const p = s.getProduct(item.id);
+   666→            if (!p) return null;
+   667→            return (
+   668→              <Card key={item.id} className="flex gap-4 p-4">
+   669→                <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted">
+   670→                  <ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/>
+   671→                </div>
+   672→                <div className="flex-1 min-w-0">
+   673→                  <p className="font-medium text-sm truncate">{p.name}</p>
+   674→                  <p className="text-xs text-muted-foreground">{p.brand}</p>
+   675→                  <PriceDisplay price={p.price} oldPrice={p.oldPrice}/>
+   676→                  <div className="flex items-center gap-2 mt-2">
+   677→                    <div className="flex items-center border rounded">
+   678→                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => s.setQty(item.id, item.qty - 1)}><Minus size={12}/></Button>
+   679→                      <span className="w-8 text-center text-sm">{item.qty}</span>
+   680→                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => s.setQty(item.id, item.qty + 1)}><Plus size={12}/></Button>
+   681→                    </div>
+   682→                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => { s.saveForLater(item.id); toast({ title: 'Saved for later' }); }}><Clock size={12} className="mr-1"/> Save</Button>
+   683→                    <Button variant="ghost" size="sm" className="text-xs text-red-500" onClick={() => { s.removeFromCart(item.id); toast({ title: 'Removed from cart' }); }}><Trash2 size={12} className="mr-1"/> Remove</Button>
+   684→                  </div>
+   685→                </div>
+   686→                <div className="font-semibold text-sm shrink-0">{s.money(p.price * item.qty)}</div>
+   687→              </Card>
+   688→            );
+   689→          })}
+   690→        </div>
+   691→
+   692→        <div className="space-y-4">
+   693→          <Card className="p-4 space-y-3">
+   694→            <h3 className="font-semibold">Order Summary</h3>
+   695→            <Separator/>
+   696→            <div className="space-y-1.5 text-sm">
+   697→              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{totals.subDisplay}</span></div>
+   698→              <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className="text-emerald-600">-{totals.discountDisplay}</span></div>
+   699→              <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>{totals.shipDisplay}</span></div>
+   700→              <div className="flex justify-between"><span className="text-muted-foreground">Tax (8%)</span><span>{totals.taxDisplay}</span></div>
+   701→            </div>
+   702→            <Separator/>
+   703→            <div className="flex justify-between font-bold text-lg"><span>Total</span><span>{totals.totalDisplay}</span></div>
+   704→
+   705→            {/* Coupon */}
+   706→            <div className="flex gap-2">
+   707→              <Input placeholder="Coupon code" value={couponCode} onChange={e => setCouponCode(e.target.value)} className="h-8 text-xs"/>
+   708→              <Button size="sm" variant="outline" onClick={handleCoupon} className="shrink-0">Apply</Button>
+   709→            </div>
+   710→            {s.coupon && <div className="flex items-center gap-1 text-xs text-emerald-600"><Check size={12}/> {s.coupon.label} <button onClick={() => { s.clearCoupon(); toast({ title: 'Coupon removed' }); }} className="text-red-500 ml-1"><X size={12}/></button></div>}
+   711→
+   712→            <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={() => navigate(makeHash('checkout'))}>Proceed to Checkout</Button>
+   713→          </Card>
+   714→
+   715→          {/* Saved for Later */}
+   716→          {s.saved.length > 0 && (
+   717→            <Card className="p-4 space-y-3">
+   718→              <h3 className="font-semibold">Saved for Later</h3>
+   719→              {s.saved.map(item => {
+   720→                const p = s.getProduct(item.id);
+   721→                if (!p) return null;
+   722→                return (
+   723→                  <div key={item.id} className="flex items-center gap-3 text-sm">
+   724→                    <div className="w-10 h-10 rounded bg-muted overflow-hidden shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div>
+   725→                    <span className="flex-1 truncate">{p.name}</span>
+   726→                    <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => { s.moveToCart(item.id); toast({ title: 'Moved to cart' }); }}>Move to Cart</Button>
+   727→                  </div>
+   728→                );
+   729→              })}
+   730→            </Card>
+   731→          )}
+   732→        </div>
+   733→      </div>
+   734→    </div>
+   735→  );
+   736→}
+   737→
+   738→// CHECKOUT VIEW
+   739→function CheckoutView({ navigate }: { navigate: (h: string) => void }) {
+   740→  const s = useStore();
+   741→  const { toast } = useToast();
+   742→  const [step, setStep] = useState(0);
+   743→  const [address, setAddress] = useState(s.addresses[0] || { id: 1, label: 'Home', name: '', line: '', city: '', state: '', zip: '', country: 'Pakistan', phone: '', default: true });
+   744→  const [shipping, setShipping] = useState('standard');
+   745→  const [payment, setPayment] = useState('cod');
+   746→  const totals = s.cartTotals();
+   747→
+   748→  const steps = ['Address', 'Shipping', 'Payment', 'Review'];
+   749→
+   750→  const handlePlaceOrder = () => {
+   751→    const addr = { ...address, id: 1, default: true };
+   752→    const order = s.placeOrder(payment, addr);
+   753→    toast({ title: 'Order placed!', description: `Order #${order.id}` });
+   754→    s.addNotif({ icon: 'Package', title: 'Order Confirmed', text: `Order #${order.id} placed successfully!` });
+   755→    navigate(makeHash('orders'));
+   756→  };
+   757→
+   758→  return (
+   759→    <div className="animate-fadeUp max-w-2xl mx-auto">
+   760→      <h2 className="text-2xl font-bold mb-6">Checkout</h2>
+   761→      {/* Steps */}
+   762→      <div className="flex items-center mb-8">
+   763→        {steps.map((st, i) => (
+   764→          <React.Fragment key={st}>
+   765→            <button onClick={() => i < step && setStep(i)} className={`flex items-center gap-1.5 text-sm font-medium ${i <= step ? 'text-indigo-500' : 'text-muted-foreground'}`}>
+   766→              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${i < step ? 'bg-indigo-500 text-white' : i === step ? 'border-2 border-indigo-500 text-indigo-500' : 'border border-gray-300 text-gray-400'}`}>{i < step ? <Check size={14}/> : i + 1}</span>
+   767→              <span className="hidden sm:inline">{st}</span>
+   768→            </button>
+   769→            {i < steps.length - 1 && <div className={`flex-1 h-0.5 mx-2 ${i < step ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-gray-700'}`}/>}
+   770→          </React.Fragment>
+   771→        ))}
+   772→      </div>
+   773→
+   774→      {step === 0 && (
+   775→        <Card className="p-6 space-y-4">
+   776→          <h3 className="font-semibold text-lg">Shipping Address</h3>
+   777→          <div className="grid grid-cols-2 gap-3">
+   778→            <div><Label className="text-xs">Full Name</Label><Input value={address.name} onChange={e => setAddress({...address, name: e.target.value})} className="h-9"/></div>
+   779→            <div><Label className="text-xs">Phone</Label><Input value={address.phone} onChange={e => setAddress({...address, phone: e.target.value})} className="h-9"/></div>
+   780→          </div>
+   781→          <div><Label className="text-xs">Address Line</Label><Input value={address.line} onChange={e => setAddress({...address, line: e.target.value})} className="h-9"/></div>
+   782→          <div className="grid grid-cols-3 gap-3">
+   783→            <div><Label className="text-xs">City</Label><Input value={address.city} onChange={e => setAddress({...address, city: e.target.value})} className="h-9"/></div>
+   784→            <div><Label className="text-xs">State</Label><Input value={address.state} onChange={e => setAddress({...address, state: e.target.value})} className="h-9"/></div>
+   785→            <div><Label className="text-xs">ZIP</Label><Input value={address.zip} onChange={e => setAddress({...address, zip: e.target.value})} className="h-9"/></div>
+   786→          </div>
+   787→          <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={() => setStep(1)}>Continue to Shipping</Button>
+   788→        </Card>
+   789→      )}
+   790→
+   791→      {step === 1 && (
+   792→        <Card className="p-6 space-y-4">
+   793→          <h3 className="font-semibold text-lg">Shipping Method</h3>
+   794→          {SHIPPING_METHODS.map(m => (
+   795→            <label key={m.id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${shipping === m.id ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'hover:bg-muted'}`}>
+   796→              <input type="radio" name="shipping" checked={shipping === m.id} onChange={() => setShipping(m.id)} className="accent-indigo-500"/>
+   797→              <div className="flex-1"><p className="font-medium text-sm">{m.name}</p><p className="text-xs text-muted-foreground">{m.desc}</p></div>
+   798→              <span className="font-semibold text-sm">{m.cost === 0 ? 'Free' : s.money(m.cost)}</span>
+   799→            </label>
+   800→          ))}
+   801→          <div className="flex gap-3">
+   802→            <Button variant="outline" onClick={() => setStep(0)} className="flex-1">Back</Button>
+   803→            <Button className="flex-1 bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={() => setStep(2)}>Continue to Payment</Button>
+   804→          </div>
+   805→        </Card>
+   806→      )}
+   807→
+   808→      {step === 2 && (
+   809→        <Card className="p-6 space-y-4">
+   810→          <h3 className="font-semibold text-lg">Payment Method</h3>
+   811→          {PAYMENTS.map(p => (
+   812→            <label key={p.id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${payment === p.id ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'hover:bg-muted'}`}>
+   813→              <input type="radio" name="payment" checked={payment === p.id} onChange={() => setPayment(p.id)} className="accent-indigo-500"/>
+   814→              <span className="font-medium text-sm">{p.name}</span>
+   815→            </label>
+   816→          ))}
+   817→          <div className="flex gap-3">
+   818→            <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Back</Button>
+   819→            <Button className="flex-1 bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={() => setStep(3)}>Review Order</Button>
+   820→          </div>
+   821→        </Card>
+   822→      )}
+   823→
+   824→      {step === 3 && (
+   825→        <Card className="p-6 space-y-4">
+   826→          <h3 className="font-semibold text-lg">Review Order</h3>
+   827→          <div className="space-y-2 text-sm">
+   828→            <div><span className="text-muted-foreground">Ship to:</span> {address.name}, {address.line}, {address.city}</div>
+   829→            <div><span className="text-muted-foreground">Shipping:</span> {SHIPPING_METHODS.find(m => m.id === shipping)?.name}</div>
+   830→            <div><span className="text-muted-foreground">Payment:</span> {PAYMENTS.find(p => p.id === payment)?.name}</div>
+   831→          </div>
+   832→          <Separator/>
+   833→          <div className="space-y-1 text-sm">
+   834→            <div className="flex justify-between"><span>Subtotal</span><span>{totals.subDisplay}</span></div>
+   835→            <div className="flex justify-between"><span>Discount</span><span className="text-emerald-600">-{totals.discountDisplay}</span></div>
+   836→            <div className="flex justify-between"><span>Shipping</span><span>{totals.shipDisplay}</span></div>
+   837→            <div className="flex justify-between"><span>Tax</span><span>{totals.taxDisplay}</span></div>
+   838→            <div className="flex justify-between font-bold text-lg pt-2"><span>Total</span><span>{totals.totalDisplay}</span></div>
+   839→          </div>
+   840→          <div className="flex gap-3">
+   841→            <Button variant="outline" onClick={() => setStep(2)} className="flex-1">Back</Button>
+   842→            <Button className="flex-1 bg-gradient-to-r from-indigo-500 to-pink-500 text-white" onClick={handlePlaceOrder}>Place Order</Button>
+   843→          </div>
+   844→        </Card>
+   845→      )}
+   846→    </div>
+   847→  );
+   848→}
+   849→
+   850→// WISHLIST VIEW
+   851→function WishlistView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
+   852→  const s = useStore();
+   853→  const { toast } = useToast();
+   854→  const items = s.wishlist.map(id => s.getProduct(id)).filter(Boolean) as Product[];
+   855→
+   856→  if (items.length === 0) {
+   857→    return (
+   858→      <div className="animate-fadeUp text-center py-20">
+   859→        <Heart size={64} className="mx-auto mb-4 text-muted-foreground/30"/>
+   860→        <h2 className="text-2xl font-bold mb-2">Your wishlist is empty</h2>
+   861→        <Button className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white mt-4" onClick={() => navigate(makeHash('shop'))}>Browse Products</Button>
+   862→      </div>
+   863→    );
+   864→  }
+   865→
+   866→  return (
+   867→    <div className="animate-fadeUp">
+   868→      <h2 className="text-2xl font-bold mb-6">Wishlist ({items.length})</h2>
+   869→      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+   870→        {items.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
+   871→      </div>
+   872→    </div>
+   873→  );
+   874→}
+   875→
+   876→// COMPARE VIEW
+   877→function CompareView() {
+   878→  const s = useStore();
+   879→  const { toast } = useToast();
+   880→  const items = s.compare.map(id => s.getProduct(id)).filter(Boolean) as Product[];
+   881→
+   882→  if (items.length === 0) {
+   883→    return <div className="animate-fadeUp text-center py-20"><GitCompare size={64} className="mx-auto mb-4 text-muted-foreground/30"/><h2 className="text-2xl font-bold mb-2">No items to compare</h2><p className="text-muted-foreground">Add up to 4 products to compare.</p></div>;
+   884→  }
+   885→
+   886→  const specKeys = [...new Set(items.flatMap(p => Object.keys(p.specs)))];
+   887→
+   888→  return (
+   889→    <div className="animate-fadeUp">
+   890→      <h2 className="text-2xl font-bold mb-6">Compare Products</h2>
+   891→      <div className="overflow-x-auto">
+   892→        <table className="w-full text-sm border-collapse">
+   893→          <thead>
+   894→            <tr>
+   895→              <th className="p-3 text-left bg-muted/50 w-32"></th>
+   896→              {items.map(p => (
+   897→                <th key={p.id} className="p-3 text-center bg-muted/50 min-w-[200px]">
+   898→                  <div className="w-24 h-24 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
+   899→                    <ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/>
+   900→                  </div>
+   901→                  <p className="font-semibold text-xs truncate">{p.name}</p>
+   902→                  <Button variant="ghost" size="sm" className="text-red-500 text-xs h-6 mt-1" onClick={() => { s.toggleCompare(p.id); toast({ title: 'Removed from compare' }); }}><X size={12}/></Button>
+   903→                </th>
+   904→              ))}
+   905→            </tr>
+   906→          </thead>
+   907→          <tbody>
+   908→            <tr><td className="p-3 font-medium text-muted-foreground">Price</td>{items.map(p => <td key={p.id} className="p-3 text-center font-semibold">{s.money(p.price)}</td>)}</tr>
+   909→            <tr className="bg-muted/30"><td className="p-3 font-medium text-muted-foreground">Rating</td>{items.map(p => <td key={p.id} className="p-3 text-center"><StarRating rating={p.rating} size={12}/></td>)}</tr>
+   910→            <tr><td className="p-3 font-medium text-muted-foreground">Brand</td>{items.map(p => <td key={p.id} className="p-3 text-center">{p.brand}</td>)}</tr>
+   911→            <tr className="bg-muted/30"><td className="p-3 font-medium text-muted-foreground">Category</td>{items.map(p => <td key={p.id} className="p-3 text-center">{p.category}</td>)}</tr>
+   912→            {specKeys.map(key => (
+   913→              <tr key={key}><td className="p-3 font-medium text-muted-foreground">{key}</td>{items.map(p => <td key={p.id} className="p-3 text-center">{p.specs[key] || '-'}</td>)}</tr>
+   914→            ))}
+   915→          </tbody>
+   916→        </table>
+   917→      </div>
+   918→    </div>
+   919→  );
+   920→}
+   921→
+   922→// ORDERS VIEW
+   923→function OrdersView() {
+   924→  const s = useStore();
+   925→  const { toast } = useToast();
+   926→
+   927→  if (s.orders.length === 0) {
+   928→    return <div className="animate-fadeUp text-center py-20"><Package size={64} className="mx-auto mb-4 text-muted-foreground/30"/><h2 className="text-2xl font-bold mb-2">No orders yet</h2><p className="text-muted-foreground">Your order history will appear here.</p></div>;
+   929→  }
+   930→
+   931→  return (
+   932→    <div className="animate-fadeUp">
+   933→      <h2 className="text-2xl font-bold mb-6">Order History</h2>
+   934→      <div className="space-y-4">
+   935→        {s.orders.map(o => (
+   936→          <Card key={o.id} className="p-4">
+   937→            <div className="flex items-center justify-between mb-3">
+   938→              <div>
+   939→                <p className="font-semibold">#{o.id}</p>
+   940→                <p className="text-xs text-muted-foreground">{new Date(o.date).toLocaleDateString()}</p>
+   941→              </div>
+   942→              <div className="flex items-center gap-2">
+   943→                <Badge variant={o.status === 'Cancelled' ? 'destructive' : 'default'}>{o.status}</Badge>
+   944→                {o.status !== 'Cancelled' && <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => { s.cancelOrder(o.id); toast({ title: 'Order cancelled' }); }}>Cancel</Button>}
+   945→              </div>
+   946→            </div>
+   947→            <div className="space-y-1 text-sm">
+   948→              {o.items.map((item, i) => (
+   949→                <div key={i} className="flex justify-between"><span>{item.qty}x {item.name?.slice(0, 40)}</span><span>{item.price ? s.money(item.price * item.qty) : ''}</span></div>
+   950→              ))}
+   951→            </div>
+   952→            <Separator className="my-2"/>
+   953→            <div className="flex justify-between font-semibold text-sm"><span>Total</span><span>{o.totals.totalDisplay}</span></div>
+   954→          </Card>
+   955→        ))}
+   956→      </div>
+   957→    </div>
+   958→  );
+   959→}
+   960→
+   961→// ACCOUNT VIEW
+   962→function AccountView() {
+   963→  const s = useStore();
+   964→  const [tab, setTab] = useState('profile');
+   965→
+   966→  if (!s.user) {
+   967→    return <div className="animate-fadeUp text-center py-20"><User size={64} className="mx-auto mb-4 text-muted-foreground/30"/><h2 className="text-2xl font-bold mb-2">Please login</h2><p className="text-muted-foreground">You need to be logged in to view your account.</p></div>;
+   968→  }
+   969→
+   970→  return (
+   971→    <div className="animate-fadeUp">
+   972→      <h2 className="text-2xl font-bold mb-6">My Account</h2>
+   973→      <Tabs value={tab} onValueChange={setTab}>
+   974→        <TabsList className="mb-4">
+   975→          <TabsTrigger value="profile"><User size={14} className="mr-1"/> Profile</TabsTrigger>
+   976→          <TabsTrigger value="orders"><Package size={14} className="mr-1"/> Orders</TabsTrigger>
+   977→          <TabsTrigger value="addresses"><MapPin size={14} className="mr-1"/> Addresses</TabsTrigger>
+   978→          <TabsTrigger value="rewards"><Gift size={14} className="mr-1"/> Rewards</TabsTrigger>
+   979→        </TabsList>
+   980→
+   981→        <TabsContent value="profile">
+   982→          <Card className="p-6 space-y-4">
+   983→            <h3 className="font-semibold text-lg">Profile</h3>
+   984→            <div className="flex items-center gap-4">
+   985→              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 flex items-center justify-center text-white text-2xl font-bold">{s.user.name[0]}</div>
+   986→              <div><p className="font-semibold">{s.user.name}</p><p className="text-sm text-muted-foreground">{s.user.email}</p></div>
+   987→            </div>
+   988→            <p className="text-sm text-muted-foreground">Member since {new Date(s.user.joined).toLocaleDateString()}</p>
+   989→            <Button variant="outline" onClick={() => { s.logout(); }}><LogOut size={14} className="mr-1"/> Logout</Button>
+   990→          </Card>
+   991→        </TabsContent>
+   992→
+   993→        <TabsContent value="orders"><OrdersView/></TabsContent>
+   994→
+   995→        <TabsContent value="addresses">
+   996→          <Card className="p-6 space-y-3">
+   997→            <h3 className="font-semibold text-lg">Saved Addresses</h3>
+   998→            {s.addresses.map((a, i) => (
+   999→              <div key={i} className="border rounded-lg p-3">
+
+[showing lines 500-999 of 1768; use offset=1000 with limit to continue reading]

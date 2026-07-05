@@ -90,14 +90,14 @@ export interface Payment {
 }
 
 export const CATEGORIES: Category[] = [
-  { id:'beauty', name:'Health & Beauty', icon:'Sparkles', color:'from-fuchsia-500 to-pink-500', img:'1596462502278-27bfdc403348' },
+  { id:'beauty', name:'Health & Beauty', icon:'Sparkles', color:'from-teal-400 to-cyan-500', img:'1596462502278-27bfdc403348' },
   { id:'grocery', name:'Grocery & Pet Care', icon:'ShoppingCart', color:'from-lime-500 to-green-500', img:'1542838132-8c5d0fb1f8d4' },
-  { id:'appliances', name:'TV & Home Appliances', icon:'Tv', color:'from-blue-500 to-cyan-500', img:'1556909114-f6e7ad7d3136' },
-  { id:'electronics', name:'Phones & Computers', icon:'Smartphone', color:'from-indigo-500 to-blue-600', img:'1498049794561-7780e7231661' },
+  { id:'appliances', name:'TV & Home Appliances', icon:'Tv', color:'from-cyan-500 to-blue-500', img:'1556909114-f6e7ad7d3136' },
+  { id:'electronics', name:'Phones & Computers', icon:'Smartphone', color:'from-teal-600 to-cyan-600', img:'1498049794561-7780e7231661' },
   { id:'mens-fashion', name:"Men's Fashion", icon:'Shirt', color:'from-slate-600 to-slate-800', img:'1483985988355-763728e1935b' },
   { id:'home-lifestyle', name:'Home & Lifestyle', icon:'Sofa', color:'from-amber-500 to-yellow-600', img:'1556228453-efd6c1ff04f6' },
   { id:'watches-bags', name:'Watches, Bags & Jewellery', icon:'Watch', color:'from-orange-500 to-amber-500', img:'1523275335684-37898b6baf30' },
-  { id:'kids-babies', name:'Kids & Babies', icon:'Baby', color:'from-pink-500 to-rose-500', img:'1515488042361-ee00e0ddd4e4' },
+  { id:'kids-babies', name:'Kids & Babies', icon:'Baby', color:'from-rose-400 to-pink-500', img:'1515488042361-ee00e0ddd4e4' },
 ];
 
 export const BRANDS = ['Maybelline','Garnier','L\'Oreal','Johnson\'s','Nivea','Neutrogena','Medicube','Aveeno','Clean & Clear','Listerine','Wella','Schwarzkopf','Fresh Street','Bisconni','Knorr','Daffodils','Aero','Haut Notch','Mr. Muscle','Remia','Santan','Glam Gas','West Point','Anex','Redmi','Xiaomi','Samsung','TP-LINK','Joyroom','HOCO','Basix','Indus','Pace Setters','Echou','Warq Notes','Walkeaze','SJ','Avent'];
@@ -238,10 +238,10 @@ export const BLOGS: BlogPost[] = [
 ];
 
 export const HERO_SLIDES: HeroSlide[] = [
-  { title:'Health & Beauty Sale', sub:'Up to 20% off skincare & cosmetics', cta:'Shop Beauty', route:'#/shop?category=beauty', img:'1596462502278-27bfdc403348', grad:'from-fuchsia-600 to-pink-700' },
-  { title:'Premium Appliances', sub:'Kitchen & home appliances at best prices', cta:'Shop Appliances', route:'#/shop?category=appliances', img:'1556909114-f6e7ad7d3136', grad:'from-blue-600 to-cyan-700' },
-  { title:'Latest Phones & Gadgets', sub:'Phones, accessories and more', cta:'Shop Electronics', route:'#/shop?category=electronics', img:'1498049794561-7780e7231661', grad:'from-indigo-600 to-blue-700' },
-  { title:'Kids & Babies Essentials', sub:'Everything for your little ones', cta:'Shop Kids', route:'#/shop?category=kids-babies', img:'1515488042361-ee00e0ddd4e4', grad:'from-pink-500 to-rose-600' },
+  { title:'Health & Beauty Sale', sub:'Up to 20% off skincare & cosmetics', cta:'Shop Beauty', route:'#/shop?category=beauty', img:'1596462502278-27bfdc403348', grad:'from-teal-700 to-cyan-700' },
+  { title:'Premium Appliances', sub:'Kitchen & home appliances at best prices', cta:'Shop Appliances', route:'#/shop?category=appliances', img:'1556909114-f6e7ad7d3136', grad:'from-cyan-700 to-teal-700' },
+  { title:'Latest Phones & Gadgets', sub:'Phones, accessories and more', cta:'Shop Electronics', route:'#/shop?category=electronics', img:'1498049794561-7780e7231661', grad:'from-teal-800 to-emerald-700' },
+  { title:'Kids & Babies Essentials', sub:'Everything for your little ones', cta:'Shop Kids', route:'#/shop?category=kids-babies', img:'1515488042361-ee00e0ddd4e4', grad:'from-rose-600 to-pink-600' },
 ];
 
 export const SHIPPING_METHODS: ShippingMethod[] = [

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "This is the **Admin Panel** of the \"Bachat Bazar\" e-commerce site. Here’s a breakdown of what’s visible:  \n\n\n### 1. **Top Navigation & Site Info**  \n- **Site Header**: The brand name “Bachat Bazar” is displayed with a green “B” logo.  \n- **Contact/Info**: Phone number (`+92 321 1234`), email (`support@bachatbazar.pk`), and a promotional banner: *“Free Delivery on Rs 25,000+ | COD Available”*.  \n- **Search & Icons**: A search bar (“Search products…”), plus icons for cart, wishlist, notifications, settings, dark mode, and user profile.  \n- **Main Menu**: Navigation tabs: *Home, Shop, Deals, New, About, Contact*, followed by category links (e.g., *Health & Beauty, Grocery & Pet Care, TV & Home Appliances*).  \n\n\n### 2. **Admin Panel Tabs**  \nBelow the main menu, the **Admin Panel** has 5 tabs:  \n- `Dashboard` (active, highlighted)  \n- `Banners`  \n- `% Sales` (Sales analytics)  \n- `Products`  \n- `Orders`  \n\n\n### 3. **Dashboard Stats (Key Metrics)**  \nFour cards display core metrics:  \n- **Products**: `77` (with a cube icon)  \n- **Banners**: `3` (with a megaphone icon)  \n- **Active Sales**: `3` (with a percentage icon)  \n- **Orders**: `0` (with a clipboard icon)  \n\n\n### 4. **Quick Actions**  \nA section labeled “Quick Actions” offers 3 buttons for immediate tasks:  \n- `Add Banner` (green button, plus icon)  \n- `Add Sale` (gold button, plus icon)  \n- `Add Product` (white button, plus icon)  \n\n\n### 5. **Footer & Cookie Notice**  \nA green footer bar and a cookie consent banner at the bottom: *“We use cookies to enhance your experience… By continuing, you agree to our cookie policy”* with `Decline`/`Accept` buttons.  \n\n\nThis dashboard provides a snapshot of the store’s inventory, promotions, and orders, with quick access to add new content (banners, sales, products).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1783253342,
+  "id": "20260705200847c807afa4351a40e3",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260705200847c807afa4351a40e3",
+  "usage": {
+    "completion_tokens": 492,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1006,
+    "prompt_tokens_details": {
+      "cached_tokens": 6
+    },
+    "total_tokens": 1498
+  }
+}

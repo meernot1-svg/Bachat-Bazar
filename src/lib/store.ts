@@ -294,12 +294,15 @@ export const useStore = create<StoreState>()(
       addProduct: (d) => {
         const { catalog } = get();
         const id = (catalog.reduce((m, p) => Math.max(m, p.id), 0) || 0) + 1;
+        // Resolve image: prefer explicit images array, then imageId, then fallback
+        const resolvedImages = d.images && d.images.length ? d.images : d.imageId ? [d.imageId] : [PRODUCTS[0].images[0]];
+        const resolvedImageId = d.imageId || (d.images && d.images.length ? d.images[0] : PRODUCTS[0].imageId);
         const p: Product = {
           id, name: d.name || 'Untitled Product', brand: d.brand || 'Generic', category: d.category || 'home-lifestyle',
           price: Math.round(d.price || 0), oldPrice: Math.round(d.oldPrice || 0),
           rating: d.rating || 0, reviews: d.reviews || 0, stock: d.stock || 0,
           sku: d.sku || `BB-${String(id).padStart(4,'0')}`,
-          images: d.images && d.images.length ? d.images : [PRODUCTS[0].images[0]], imageId: d.imageId || PRODUCTS[0].imageId,
+          images: resolvedImages, imageId: resolvedImageId,
           badge: d.badge || '', isNew: !!d.isNew, trending: !!d.trending,
           bestSeller: !!d.bestSeller, featured: !!d.featured,
           description: d.description || `${d.name || 'Product'} by ${d.brand || 'Generic'}.`,
@@ -378,6 +381,6 @@ export const useStore = create<StoreState>()(
         set({ sales: get().sales.map(s => s.id === id ? { ...s, active: !s.active } : s) });
       },
     }),
-    { name: 'bachatbazar_v4' }
+    { name: 'bachatbazar_v6' }
   )
 );

@@ -1,26 +1,22 @@
 ---
-Task ID: 1
+Task ID: fix-upload-and-categories
 Agent: Main Agent
-Task: Fix Bachat Bazar e-commerce app - fonts, banners, admin panel, images, colors, routing
+Task: Fix image upload bug and add category management to admin panel
 
 Work Log:
-- Read all source files (BachatBazarApp.tsx, data.ts, store.ts, globals.css, layout.tsx)
-- Updated layout.tsx to use Inter (body) + Poppins (headings) fonts via next/font/google
-- Updated globals.css with improved color scheme, glass effect, font references, hero animations
-- Updated data.ts with proper product image IDs matching categories, added BannerData/SaleData interfaces and default data
-- Updated store.ts with banner CRUD (addBanner, updateBanner, deleteBanner, toggleBanner) and sale CRUD (addSale, updateSale, deleteSale, toggleSale) plus updateOrderStatus
-- Completely rewrote BachatBazarApp.tsx with:
-  - Pakistani-style gradient hero banners (no dependency on external images)
-  - Active sales strip and admin-managed banners on homepage
-  - Prominent green gradient Admin button in navbar with pulse animation
-  - Comprehensive admin panel with 6 tabs: Dashboard, Products, Orders, Banners, Sales, Categories
-  - Fixed product click routing using window.location.hash
-  - Fixed SSR hydration error with typeof window guard
-  - All headings use Poppins font, body uses Inter
-  - Improved color combination with glass-effect header
-- Build passes successfully, dev server returns HTTP 200
+- Fixed U() function in data.ts to handle /uploads/ local paths (was converting them to broken Unsplash URLs)
+- Added resolveImg() helper function for inline image resolution
+- Fixed 4 places in BachatBazarApp.tsx where inline regex URL checks broke /uploads/ paths
+- Fixed store's addProduct to properly resolve images when using uploaded files
+- Added full Category management to admin panel: Add, Edit, Delete with image upload support
+- Added Categories tab to admin panel with grid layout showing icons, images, edit/delete buttons
+- Added Category dialog with: name, icon selector, gradient color selector, image upload/URL
+- Added "Add Category" to dashboard quick actions and categories count card
+- Bumped store version to v6 to force fresh localStorage
+- Verified all changes with lint (0 errors) and agent browser testing
 
 Stage Summary:
-- All reported issues addressed: fonts, banners, admin panel, product images, color scheme, routing, text mixing
-- Build successful with no errors
-- Key files modified: layout.tsx, globals.css, data.ts, store.ts, BachatBazarApp.tsx
+- Image uploads now work correctly - /uploads/ paths are preserved, not converted to Unsplash URLs
+- Admin can now add, edit, and delete categories with image upload support
+- Categories tab visible in admin panel with full CRUD
+- Category visibility on homepage rated 9/10 by VLM analysis

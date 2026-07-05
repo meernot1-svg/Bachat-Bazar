@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The category names are clearly readable, and the text is visible against the background. Rating: 9",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1783253752,
+  "id": "20260705201547f7e8311f0da448a2",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260705201547f7e8311f0da448a2",
+  "usage": {
+    "completion_tokens": 23,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1012,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 1035
+  }
+}

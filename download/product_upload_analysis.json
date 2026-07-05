@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The image upload section in the \"Add Product\" dialog includes:  \n\n1. **Upload File button**: A green button with an upward arrow icon and the text \"Upload File\" (for uploading an image file).  \n2. **Image URL button**: A white button with a link icon and the text \"Image URL\" (for pasting an image link).  \n3. **Click-to-upload area**: A large, centered area below the buttons with a document/image icon, the text \"Click to upload image\", and a note about supported formats (\"JPEG, PNG, WebP — Max 5MB\").  \n\nThis section is labeled \"Product Image *\" (indicating it’s a required field) and provides two methods to add an image: either by uploading a file or by entering an image URL.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1783253782,
+  "id": "2026070520161529473b1102bf4854",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026070520161529473b1102bf4854",
+  "usage": {
+    "completion_tokens": 165,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1023,
+    "prompt_tokens_details": {
+      "cached_tokens": 6
+    },
+    "total_tokens": 1188
+  }
+}

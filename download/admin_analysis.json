@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The image shows the **admin panel login page** for the e-commerce site \"Bachat Bazar.\" Here’s a breakdown of what’s visible:  \n\n### 1. Header & Branding  \n- A **green top bar** displays contact info: a phone number (`+92 300 1234 1234`), email (`support@bachatbazar.pk`), and a promotional message: *\"Free Delivery on Rs 25,000+ | COD Available\"*.  \n- The site logo (\"Bachat Bazar\") appears with a green \"B\" icon, alongside a search bar (\"Search products...\") and navigation icons (cart, wishlist, notifications, settings, dark mode, user account).  \n\n\n### 2. Main Navigation Menu  \nBelow the header, a horizontal menu lists categories: *Home, Shop, Deals, New, About, Contact*, plus product categories like *Health & Beauty, Grocery & Pet Care, TV & Home Appliances, Phones & Computers, Men’s Fashion* (and a partially visible \"Hor...\" category).  \n\n\n### 3. Admin Panel Login Section  \nThe central focus is a white card with:  \n- A **green padlock icon** (indicating security).  \n- The title *\"Admin Panel\"* and subtitle *\"Enter admin password\"*.  \n- A text input field labeled *\"Password\"* (for entering the admin password).  \n- A green button labeled *\"Unlock\"* (to submit the password and access the admin dashboard).  \n\n\n### 4. Cookie Consent Banner  \nAt the bottom, a cookie consent banner states: *\"We use cookies to enhance your experience. By continuing, you agree to our cookie policy.\"* It includes two buttons: *\"Decline\"* (white) and *\"Accept\"* (green).  \n\n\nThe page is clean and focused on authenticating admin access, with the e-commerce site’s branding and navigation visible in the background.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1783253302,
+  "id": "202607052008091a66d144a8114e6f",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202607052008091a66d144a8114e6f",
+  "usage": {
+    "completion_tokens": 386,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 995,
+    "prompt_tokens_details": {
+      "cached_tokens": 6
+    },
+    "total_tokens": 1381
+  }
+}

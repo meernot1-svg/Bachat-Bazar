@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the \"Add Product\" dialog shown in the admin panel:\n\n1. **Image upload option**: Yes, there is an \"Upload File\" button with a green background and upload icon.\n\n2. **Image URL option**: Yes, there is an \"Image URL\" button with a link icon.\n\n3. **Upload or paste link**: The admin can either upload a file (by clicking \"Upload File\") or paste a link (by clicking \"Image URL\").\n\n4. **Form fields**:\n   - Product Name (required field with asterisk)\n   - Brand (text input)\n   - Category (dropdown, currently showing \"Health & Beauty\")\n   - Price (PKR) (numeric input)\n   - Old Price (numeric input)\n   - Stock (numeric input)\n   - Description (textarea)\n   - Product Image (required field with asterisk, with two options: Upload File or Image URL)\n\nThe dialog also includes a note at the bottom indicating supported image formats (JPEG, PNG, WebP) and maximum file size (5MB).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1783253413,
+  "id": "20260705201002265379e38b3d4513",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260705201002265379e38b3d4513",
+  "usage": {
+    "completion_tokens": 217,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1034,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 1251
+  }
+}

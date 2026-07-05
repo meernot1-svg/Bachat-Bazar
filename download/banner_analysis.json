@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Yes, the admin can manage the homepage hero slider banners here.  \n\n### What I see:  \nThis is the **Banner management section** of the *Bachat Bazar* admin panel, specifically for “Homepage Banners.”  \n\n- **Section Title & Context**: The page is titled “Homepage Banners (3),” with a description explaining these banners control the main hero slider on the homepage. Admins can add, edit, or reorder them to change what appears on the front page.  \n- **Action Button**: A green “Add Banner” button is available to create new banners.  \n- **Banner Example**: One banner is displayed:  \n  - **Visual**: A thumbnail image for “Eid Collection 2026.”  \n  - **Details**:  \n    - Title: *Eid Collection 2026* (marked “Active” in a green badge).  \n    - Subtitle: *Exclusive deals on Fashion & Beauty*.  \n    - Order: *Order: 1* (indicating its position in the slider).  \n    - CTA/Link: *CTA: Explore Now | Link: #/shop?category=beauty* (defines the call-to-action and destination).  \n  - **Action Icons**: Three icons (edit, view, delete) allow modifying the banner.  \n\n\nThis section is designed to let admins manage the hero slider banners that appear on the homepage, including adding new ones, editing existing ones, and controlling their order/visibility.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1783253370,
+  "id": "202607052009213d86af98fe3a478e",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202607052009213d86af98fe3a478e",
+  "usage": {
+    "completion_tokens": 305,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1005,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 1310
+  }
+}

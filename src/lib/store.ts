@@ -1,12 +1,12 @@
 /* ============================================================
    Bachat Bazar — Store / State Management (Zustand)
-   Cart, Wishlist, Compare, Theme, Auth, Orders
+   Cart, Wishlist, Compare, Theme, Auth, Orders, Banners, Sales
    ============================================================ */
 'use client';
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PRODUCTS, CATEGORIES, COUPONS, type Product, type Category, type Coupon } from './data';
+import { PRODUCTS, CATEGORIES, COUPONS, DEFAULT_BANNERS, DEFAULT_SALES, type Product, type Category, type Coupon, type BannerData, type SaleData } from './data';
 
 interface CartItem { id: number; qty: number; }
 interface Address {
@@ -64,6 +64,8 @@ interface StoreState {
   rewards: number;
   catalog: Product[];
   catList: Category[];
+  banners: BannerData[];
+  sales: SaleData[];
   // Computed
   getProduct: (id: number) => Product | undefined;
   allProducts: () => Product[];
@@ -94,6 +96,7 @@ interface StoreState {
   logout: () => void;
   placeOrder: (payment: string, address: Address) => Order;
   cancelOrder: (id: string) => void;
+  updateOrderStatus: (id: string, status: string) => void;
   addNotif: (n: { icon: string; title: string; text: string }) => void;
   markAllRead: () => void;
   addProduct: (d: Partial<Product>) => Product;
@@ -103,6 +106,16 @@ interface StoreState {
   updateCategory: (id: string, d: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
   resetCatalog: () => void;
+  // Banner actions
+  addBanner: (d: Partial<BannerData>) => BannerData;
+  updateBanner: (id: string, d: Partial<BannerData>) => void;
+  deleteBanner: (id: string) => void;
+  toggleBanner: (id: string) => void;
+  // Sale actions
+  addSale: (d: Partial<SaleData>) => SaleData;
+  updateSale: (id: string, d: Partial<SaleData>) => void;
+  deleteSale: (id: string) => void;
+  toggleSale: (id: string) => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -125,6 +138,8 @@ export const useStore = create<StoreState>()(
       rewards: 1250,
       catalog: JSON.parse(JSON.stringify(PRODUCTS)),
       catList: JSON.parse(JSON.stringify(CATEGORIES)),
+      banners: JSON.parse(JSON.stringify(DEFAULT_BANNERS)),
+      sales: JSON.parse(JSON.stringify(DEFAULT_SALES)),
 
       getProduct: (id) => get().catalog.find(p => p.id === Number(id)),
       allProducts: () => get().catalog,
@@ -268,6 +283,9 @@ export const useStore = create<StoreState>()(
       cancelOrder: (id) => {
         set({ orders: get().orders.map(o => o.id === id ? { ...o, status: 'Cancelled' } : o) });
       },
+      updateOrderStatus: (id, status) => {
+        set({ orders: get().orders.map(o => o.id === id ? { ...o, status } : o) });
+      },
       addNotif: (n) => {
         const notifs = [{ id: Date.now(), read: false, time: new Date().toISOString(), ...n }, ...get().notifs].slice(0, 12);
         set({ notifs });
@@ -281,7 +299,7 @@ export const useStore = create<StoreState>()(
           price: Math.round(d.price || 0), oldPrice: Math.round(d.oldPrice || 0),
           rating: d.rating || 0, reviews: d.reviews || 0, stock: d.stock || 0,
           sku: d.sku || `BB-${String(id).padStart(4,'0')}`,
-          images: d.images || [PRODUCTS[0].images[0]], imageId: d.imageId || PRODUCTS[0].imageId,
+          images: d.images && d.images.length ? d.images : [PRODUCTS[0].images[0]], imageId: d.imageId || PRODUCTS[0].imageId,
           badge: d.badge || '', isNew: !!d.isNew, trending: !!d.trending,
           bestSeller: !!d.bestSeller, featured: !!d.featured,
           description: d.description || `${d.name || 'Product'} by ${d.brand || 'Generic'}.`,
@@ -313,7 +331,52 @@ export const useStore = create<StoreState>()(
           catalog: get().catalog.map(p => p.category === id ? { ...p, category: 'home-lifestyle' } : p)
         });
       },
-      resetCatalog: () => set({ catalog: JSON.parse(JSON.stringify(PRODUCTS)), catList: JSON.parse(JSON.stringify(CATEGORIES)) }),
+      resetCatalog: () => set({
+        catalog: JSON.parse(JSON.stringify(PRODUCTS)),
+        catList: JSON.parse(JSON.stringify(CATEGORIES)),
+        banners: JSON.parse(JSON.stringify(DEFAULT_BANNERS)),
+        sales: JSON.parse(JSON.stringify(DEFAULT_SALES)),
+      }),
+      // Banner actions
+      addBanner: (d) => {
+        const { banners } = get();
+        const id = 'b' + Date.now().toString().slice(-6);
+        const banner: BannerData = {
+          id, title: d.title || 'New Banner', subtitle: d.subtitle || '', cta: d.cta || 'Shop Now',
+          ctaLink: d.ctaLink || '#/shop', image: d.image || '', gradient: d.gradient || 'from-[#006233] to-[#00A651]',
+          active: d.active !== false, order: d.order ?? banners.length + 1
+        };
+        set({ banners: [...banners, banner] });
+        return banner;
+      },
+      updateBanner: (id, d) => {
+        set({ banners: get().banners.map(b => b.id === id ? { ...b, ...d } : b) });
+      },
+      deleteBanner: (id) => set({ banners: get().banners.filter(b => b.id !== id) }),
+      toggleBanner: (id) => {
+        set({ banners: get().banners.map(b => b.id === id ? { ...b, active: !b.active } : b) });
+      },
+      // Sale actions
+      addSale: (d) => {
+        const { sales } = get();
+        const id = 's' + Date.now().toString().slice(-6);
+        const sale: SaleData = {
+          id, name: d.name || 'New Sale', description: d.description || '',
+          discountPercent: d.discountPercent || 10, startDate: d.startDate || new Date().toISOString().split('T')[0],
+          endDate: d.endDate || new Date(Date.now() + 7 * 864e5).toISOString().split('T')[0],
+          categoryId: d.categoryId || '', active: d.active !== false,
+          bannerColor: d.bannerColor || '#006233'
+        };
+        set({ sales: [...sales, sale] });
+        return sale;
+      },
+      updateSale: (id, d) => {
+        set({ sales: get().sales.map(s => s.id === id ? { ...s, ...d } : s) });
+      },
+      deleteSale: (id) => set({ sales: get().sales.filter(s => s.id !== id) }),
+      toggleSale: (id) => {
+        set({ sales: get().sales.map(s => s.id === id ? { ...s, active: !s.active } : s) });
+      },
     }),
     { name: 'bachatbazar_v4' }
   )

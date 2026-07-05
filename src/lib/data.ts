@@ -76,6 +76,7 @@ export interface HeroSlide {
   route: string;
   img: string;
   grad: string;
+  bg: string;
 }
 
 export interface ShippingMethod {
@@ -91,9 +92,33 @@ export interface Payment {
   icon: string;
 }
 
+export interface BannerData {
+  id: string;
+  title: string;
+  subtitle: string;
+  cta: string;
+  ctaLink: string;
+  image: string;
+  gradient: string;
+  active: boolean;
+  order: number;
+}
+
+export interface SaleData {
+  id: string;
+  name: string;
+  description: string;
+  discountPercent: number;
+  startDate: string;
+  endDate: string;
+  categoryId: string;
+  active: boolean;
+  bannerColor: string;
+}
+
 export const CATEGORIES: Category[] = [
   { id:'beauty', name:'Health & Beauty', icon:'Sparkles', color:'from-emerald-500 to-teal-500', img:'1596462502278-27bfdc403348' },
-  { id:'grocery', name:'Grocery & Pet Care', icon:'ShoppingCart', color:'from-amber-500 to-orange-500', img:'1604724399219-3e0d6e6d0b3d' },
+  { id:'grocery', name:'Grocery & Pet Care', icon:'ShoppingCart', color:'from-amber-500 to-orange-500', img:'1542838132-92f5d5c0b1bc' },
   { id:'appliances', name:'TV & Home Appliances', icon:'Tv', color:'from-sky-500 to-blue-500', img:'1556909114-f6e7ad7d3136' },
   { id:'electronics', name:'Phones & Computers', icon:'Smartphone', color:'from-indigo-500 to-purple-500', img:'1511707171634-5f897ff02aa9' },
   { id:'mens-fashion', name:"Men's Fashion", icon:'Shirt', color:'from-slate-600 to-zinc-700', img:'1483985988355-763728e1935b' },
@@ -140,14 +165,14 @@ export const PRODUCTS: Product[] = [
   P(11,'Neutrogena Ultra Sheer Sunscreen SPF50 200ml','Neutrogena','beauty',6500,0,4.8,120,12,'1612817288484-6f916006738a',{featured:true,description:'Invisible sunscreen lotion, water resistant SPF50 with Glycerin and Niacinamide, 200ml.'}),
   P(12,'Medicube Zero Pore Cream 2.0 50ml','Medicube','beauty',6300,0,4.5,38,8,'1571781926291-c477ebfd024b',{isNew:true,description:'Zero Pore Cream 2.0 with Hyaluronic Acid for oily & combination skin, 50ml.'}),
   // ---- Grocery & Pet Care ----
-  P(13,'Remia Thousand Island Salad Dressing 250ml','Remia','grocery',1030,0,4.3,25,60,'1604724399219-3e0d6e6d0b3d',{description:'Classic Thousand Island salad dressing, 250ml bottle.'}),
-  P(14,'Santan Instant Coconut Milk Powder 50g','Santan','grocery',225,0,4.2,15,80,'1604724399219-3e0d6e6d0b3d',{description:'Instant coconut milk powder, 50g. Quick and convenient for cooking.'}),
+  P(13,'Remia Thousand Island Salad Dressing 250ml','Remia','grocery',1030,0,4.3,25,60,'1542838132-92f5d5c0b1bc',{description:'Classic Thousand Island salad dressing, 250ml bottle.'}),
+  P(14,'Santan Instant Coconut Milk Powder 50g','Santan','grocery',225,0,4.2,15,80,'1509365390695-33aee7543016',{description:'Instant coconut milk powder, 50g. Quick and convenient for cooking.'}),
   P(15,'Mr. Muscle Washroom Cleaner 750ml','Mr. Muscle','grocery',1050,0,4.4,48,55,'1585428103455-9b8c6e0f1f8c',{trending:true,description:'Washroom cleaner with trigger spray, 750ml. Powerful cleaning action.'}),
   P(16,'Bisconni Chai Wala Plain Cake 20g','Bisconni','grocery',20,0,4.0,200,100,'1509365390695-33aee7543016',{bestSeller:true,description:'Chai Wala plain cake, 20g pack. Perfect with tea!'}),
   P(17,'Knorr Italian Creamy Fettuccine Noodles 132g','Knorr','grocery',450,0,4.3,35,70,'1610334295032-1cf6e1c4f4d4',{description:'Italian creamy fettuccine spicy noodles, 132g. Quick meal solution.'}),
   P(18,'Daffodils Space Rocket Jelly Beans 68g','Daffodils','grocery',325,0,4.1,18,90,'1509365390695-33aee7543016',{isNew:true,description:'Space rocket jelly beans candy, 68g. Fun treat for kids.'}),
-  P(19,'Fresh Street Himalayan Pink Salt Onion 125g','Fresh Street','grocery',510,0,4.4,28,50,'1604724399219-3e0d6e6d0b3d',{featured:true,description:'Himalayan pink salt with onion flavor, 125g. Premium seasoning.'}),
-  P(20,'Fresh Street Himalayan Pink Salt Jar 2.25KG','Fresh Street','grocery',750,0,4.5,22,30,'1604724399219-3e0d6e6d0b3d',{description:'Himalayan pink salt, 2.25KG jar. Bulk value pack.'}),
+  P(19,'Fresh Street Himalayan Pink Salt Onion 125g','Fresh Street','grocery',510,0,4.4,28,50,'1542838132-92f5d5c0b1bc',{featured:true,description:'Himalayan pink salt with onion flavor, 125g. Premium seasoning.'}),
+  P(20,'Fresh Street Himalayan Pink Salt Jar 2.25KG','Fresh Street','grocery',750,0,4.5,22,30,'1542838132-92f5d5c0b1bc',{description:'Himalayan pink salt, 2.25KG jar. Bulk value pack.'}),
   P(21,'Aero Mint Assorted Candy Sugar Free 300g','Aero','grocery',925,0,4.2,12,40,'1509365390695-33aee7543016',{description:'Assorted mint candy, sugar free, 300g. Refreshing and guilt-free.'}),
   P(22,'Haut Notch Red Kidney Beans Tin 400g','Haut Notch','grocery',585,0,4.3,8,45,'1610334295032-1cf6e1c4f4d4',{description:'Red kidney beans tin, 400g. Ready to cook premium quality beans.'}),
   // ---- TV & Home Appliances ----
@@ -171,7 +196,7 @@ export const PRODUCTS: Product[] = [
   P(39,'TP-LINK AX1800 Wi-Fi 6 PCIe Adapter','TP-LINK','electronics',9400,10000,4.4,12,15,'1586495985370-3f0b7b4e1c0d',{description:'AX1800 dual band Wi-Fi 6 Bluetooth 5.2 PCI Express adapter. 6% OFF!'}),
   P(40,'TP-LINK 4G LTE Router 300Mbps','TP-LINK','electronics',15886,16900,4.3,8,10,'1586495985370-3f0b7b4e1c0d',{description:'Wireless N 4G LTE router, 300Mbps, 2 antennas. 6% OFF!'}),
   P(41,'TP-LINK AX3000 Wi-Fi 6 Range Extender','TP-LINK','electronics',24346,25900,4.5,5,6,'1586495985370-3f0b7b4e1c0d',{description:'AX3000 Wi-Fi 6 range extender, 2402 Mbps. 6% OFF!'}),
-  P(42,'HOCO Sonar Sports Bluetooth Speaker','HOCO','electronics',4059,0,4.2,20,35,'1586495985370-3f0b7b4e1c0d',{bestSeller:true,description:'Sonar sports Bluetooth speaker, 1200mAh battery, 3 hours playtime.'}),
+  P(42,'HOCO Sonar Sports Bluetooth Speaker','HOCO','electronics',4059,0,4.2,20,35,'1505740420928-5e560c06d30e',{bestSeller:true,description:'Sonar sports Bluetooth speaker, 1200mAh battery, 3 hours playtime.'}),
   // ---- Men's Fashion ----
   P(43,'Basix Men\'s Zipper Mesh 3 Quarter Black & White','Basix','mens-fashion',1900,0,4.3,15,30,'1483985988355-763728e1935b',{featured:true,description:'Men\'s zipper pockets mesh 3 quarter. Black & White.'}),
   P(44,'Indus Men\'s Cotton T-Shirt Sky Blue','Indus','mens-fashion',1250,0,4.4,48,50,'1483985988355-763728e1935b',{bestSeller:true,trending:true,description:'Men\'s cotton t-shirt in sky blue. Comfortable everyday wear.'}),
@@ -240,12 +265,26 @@ export const BLOGS: BlogPost[] = [
   { id:4, title:'Best Phone Accessories Under Rs 5,000', img:'1505740420928-5e560c06d30e', date:'Jun 10, 2026', author:'Tech Desk', excerpt:'From earbuds to chargers, here are the best accessories that won\'t break the bank.' },
 ];
 
-// Pakistani-themed hero slides with vibrant cultural colors
+// Pakistani-themed hero slides with vibrant cultural colors and gradient backgrounds
 export const HERO_SLIDES: HeroSlide[] = [
-  { title:'Eid Mubarak Sale!', sub:'Up to 30% off on Health & Beauty essentials', cta:'Shop Now', route:'#/shop?category=beauty', img:'1596462502278-27bfdc403348', grad:'from-[#006233] to-[#00A651]' },
-  { title:'Ramzan Kitchen Deals', sub:'Premium appliances at unbeatable prices', cta:'Shop Appliances', route:'#/shop?category=appliances', img:'1556909114-f6e7ad7d3136', grad:'from-[#004D25] to-[#006233]' },
-  { title:'Latest Phones & Gadgets', sub:'Smartphones, earbuds & accessories', cta:'Shop Electronics', route:'#/shop?category=electronics', img:'1511707171634-5f897ff02aa9', grad:'from-[#0C2340] to-[#1A4D8F]' },
-  { title:'Bachat ka Vaade!', sub:'Best prices on Fashion, Home & more', cta:'Shop All', route:'#/shop', img:'1483985988355-763728e1935b', grad:'from-[#8B1A1A] to-[#C41E3A]' },
+  { title:'Eid Mubarak Sale!', sub:'Up to 30% off on Health & Beauty essentials', cta:'Shop Now', route:'#/shop?category=beauty', img:'1596462502278-27bfdc403348', grad:'from-[#006233] to-[#00A651]', bg:'bg-gradient-to-br from-[#004D25] via-[#006233] to-[#00A651]' },
+  { title:'Ramzan Kitchen Deals', sub:'Premium appliances at unbeatable prices', cta:'Shop Appliances', route:'#/shop?category=appliances', img:'1556909114-f6e7ad7d3136', grad:'from-[#004D25] to-[#006233]', bg:'bg-gradient-to-br from-[#002510] via-[#004D25] to-[#006233]' },
+  { title:'Latest Phones & Gadgets', sub:'Smartphones, earbuds & accessories', cta:'Shop Electronics', route:'#/shop?category=electronics', img:'1511707171634-5f897ff02aa9', grad:'from-[#0C2340] to-[#1A4D8F]', bg:'bg-gradient-to-br from-[#0C2340] via-[#1A4D8F] to-[#2E6BC6]' },
+  { title:'Bachat ka Vaade!', sub:'Best prices on Fashion, Home & more', cta:'Shop All', route:'#/shop', img:'1483985988355-763728e1935b', grad:'from-[#8B1A1A] to-[#C41E3A]', bg:'bg-gradient-to-br from-[#5C1010] via-[#8B1A1A] to-[#C41E3A]' },
+];
+
+// Default banners for admin management
+export const DEFAULT_BANNERS: BannerData[] = [
+  { id:'b1', title:'Eid Collection 2026', subtitle:'Exclusive deals on Fashion & Beauty', cta:'Explore Now', ctaLink:'#/shop?category=beauty', image:'1596462502278-27bfdc403348', gradient:'from-[#006233] to-[#C5A028]', active:true, order:1 },
+  { id:'b2', title:'Mega Sale Weekend', subtitle:'Flat 20% off on all Electronics', cta:'Shop Electronics', ctaLink:'#/shop?category=electronics', image:'1511707171634-5f897ff02aa9', gradient:'from-[#1A4D8F] to-[#00A651]', active:true, order:2 },
+  { id:'b3', title:'Free Delivery Nationwide', subtitle:'On orders above Rs 25,000', cta:'Start Shopping', ctaLink:'#/shop', image:'', gradient:'from-[#8B1A1A] to-[#C41E3A]', active:true, order:3 },
+];
+
+// Default sales for admin management
+export const DEFAULT_SALES: SaleData[] = [
+  { id:'s1', name:'Eid Mubarak Sale', description:'25% off on all beauty products', discountPercent:25, startDate:'2026-06-25', endDate:'2026-07-15', categoryId:'beauty', active:true, bannerColor:'#006233' },
+  { id:'s2', name:'Tech Week', description:'15% off on electronics', discountPercent:15, startDate:'2026-07-01', endDate:'2026-07-10', categoryId:'electronics', active:true, bannerColor:'#1A4D8F' },
+  { id:'s3', name:'Ramzan Special', description:'20% off on groceries', discountPercent:20, startDate:'2026-07-05', endDate:'2026-07-20', categoryId:'grocery', active:true, bannerColor:'#C5A028' },
 ];
 
 export const SHIPPING_METHODS: ShippingMethod[] = [

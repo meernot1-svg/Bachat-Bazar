@@ -26,7 +26,8 @@ import {
   Settings, BarChart3, BoxIcon, ClipboardList, Lock, LogOut,
   Bell, Cookie, Sparkles, Tv, Smartphone, Shirt, Sofa, Watch, Baby,
   Home, Store, Zap, TrendingUp, Award, ThumbsUp, Info, HelpCircle, BookOpen,
-  Users, ArrowRight, Image as ImageIcon, Search as SearchIcon
+  Users, ArrowRight, Image as ImageIcon, Search as SearchIcon, ShieldCheck,
+  Upload
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -67,7 +68,7 @@ function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
     <span className="inline-flex gap-0.5">
       {[1,2,3,4,5].map(i => (
-        <Star key={i} size={size} className={i <= Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'} />
+        <Star key={i} size={size} className={i <= Math.round(rating) ? 'fill-[#C5A028] text-[#C5A028]' : 'text-gray-300 dark:text-gray-600'} />
       ))}
     </span>
   );
@@ -81,6 +82,7 @@ function ProductImage({ src, alt, seed, className = '' }: { src: string; alt: st
       className={className}
       onError={(e) => imgFallback(e, seed)}
       loading="lazy"
+      draggable={false}
     />
   );
 }
@@ -89,7 +91,7 @@ function PriceDisplay({ price, oldPrice }: { price: number; oldPrice: number }) 
   const s = useStore();
   return (
     <span className="flex items-center gap-2">
-      <span className="font-bold text-lg">{s.money(price)}</span>
+      <span className="font-bold text-lg text-[#006233] dark:text-[#00A651]">{s.money(price)}</span>
       {oldPrice > price && <span className="text-sm text-muted-foreground line-through">{s.money(oldPrice)}</span>}
     </span>
   );
@@ -145,19 +147,19 @@ function ProductCard({ product, onQuickView }: { product: Product; onQuickView: 
     <div className="product-card animate-cardFadeUp group bg-card rounded-xl border overflow-hidden cursor-pointer" onClick={() => { window.location.hash = makeHash('product', String(product.id)); }}>
       <div className="relative aspect-square overflow-hidden bg-muted">
         <ProductImage src={product.images[0]} alt={product.name} seed={product.imageId} className="product-img w-full h-full object-cover" />
-        {product.badge && <span className="absolute top-2 left-2 bg-gradient-to-r from-teal-600 to-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{product.badge}</span>}
-        {product.isNew && <span className="absolute top-2 right-2 bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">NEW</span>}
+        {product.badge && <span className="absolute top-2 left-2 bg-gradient-to-r from-[#006233] to-[#00A651] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow">{product.badge}</span>}
+        {product.isNew && <span className="absolute top-2 right-2 bg-[#C5A028] text-white text-xs font-bold px-2 py-0.5 rounded-full shadow">NEW</span>}
         <div className="absolute bottom-2 left-2 right-2 flex gap-1.5">
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(product); }} className="quick-view-btn flex-1 bg-white/90 dark:bg-zinc-800/90 backdrop-blur text-xs font-medium py-1.5 rounded-lg hover:bg-teal-600 hover:text-white transition flex items-center justify-center gap-1"><Eye size={14}/>Quick View</button>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(product); }} className="quick-view-btn flex-1 bg-white/95 dark:bg-zinc-800/95 backdrop-blur text-xs font-semibold py-1.5 rounded-lg hover:bg-[#006233] hover:text-white transition flex items-center justify-center gap-1 shadow"><Eye size={14}/>Quick View</button>
         </div>
         <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const added = s.toggleWishlist(product.id); toast({ title: added ? 'Added to wishlist' : 'Removed from wishlist' }); }} className={`p-1.5 rounded-full ${inWish ? 'bg-pink-500 text-white' : 'bg-white/90 dark:bg-zinc-800/90'} hover:scale-110 transition`}><Heart size={14} fill={inWish ? 'currentColor' : 'none'}/></button>
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const ok = s.toggleCompare(product.id); toast({ title: ok ? 'Added to compare' : 'Removed / Max 4', variant: ok ? 'default' : 'destructive' }); }} className={`p-1.5 rounded-full ${inComp ? 'bg-teal-600 text-white' : 'bg-white/90 dark:bg-zinc-800/90'} hover:scale-110 transition`}><GitCompare size={14}/></button>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const added = s.toggleWishlist(product.id); toast({ title: added ? 'Added to wishlist' : 'Removed from wishlist' }); }} className={`p-1.5 rounded-full shadow ${inWish ? 'bg-pink-500 text-white' : 'bg-white/90 dark:bg-zinc-800/90'} hover:scale-110 transition`}><Heart size={14} fill={inWish ? 'currentColor' : 'none'}/></button>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); const ok = s.toggleCompare(product.id); toast({ title: ok ? 'Added to compare' : 'Removed / Max 4', variant: ok ? 'default' : 'destructive' }); }} className={`p-1.5 rounded-full shadow ${inComp ? 'bg-[#006233] text-white' : 'bg-white/90 dark:bg-zinc-800/90'} hover:scale-110 transition`}><GitCompare size={14}/></button>
         </div>
       </div>
       <div className="p-3 space-y-1.5">
-        <p className="text-xs text-muted-foreground truncate">{product.brand}</p>
-        <p className="text-sm font-medium line-clamp-2 leading-snug min-h-[2.5rem] text-slate-700 dark:text-slate-200">{product.name}</p>
+        <p className="text-xs text-[#C5A028] font-semibold truncate">{product.brand}</p>
+        <p className="text-sm font-medium line-clamp-2 leading-snug min-h-[2.5rem] text-slate-800 dark:text-slate-100">{product.name}</p>
         <div className="flex items-center gap-1.5">
           <StarRating rating={product.rating} size={12}/>
           <span className="text-xs text-muted-foreground">({product.reviews})</span>
@@ -165,7 +167,7 @@ function ProductCard({ product, onQuickView }: { product: Product; onQuickView: 
         <div className="flex items-center justify-between pt-1">
           <PriceDisplay price={product.price} oldPrice={product.oldPrice}/>
         </div>
-        <Button size="sm" className="w-full mt-1 bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white border-0" onClick={handleCart}>
+        <Button size="sm" className="w-full mt-1 bg-gradient-to-r from-[#006233] to-[#00A651] hover:from-[#004D25] hover:to-[#006233] text-white border-0 font-semibold" onClick={handleCart}>
           <ShoppingCart size={14} className="mr-1"/> Add to Cart
         </Button>
       </div>
@@ -196,41 +198,59 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
 
   return (
     <div className="animate-fadeUp">
-      {/* Hero Slider */}
-      <div className="relative overflow-hidden rounded-2xl mb-8" style={{ minHeight: 320 }}>
+      {/* Hero Slider - Pakistani Style */}
+      <div className="relative overflow-hidden rounded-2xl mb-8 shadow-xl" style={{ minHeight: 340 }}>
         {HERO_SLIDES.map((slide, i) => (
           <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === heroIdx ? 'opacity-100' : 'opacity-0'}`}>
-            <div className={`absolute inset-0 bg-gradient-to-r ${slide.grad} opacity-90`}/>
+            <div className={`absolute inset-0 bg-gradient-to-r ${slide.grad} opacity-95`}/>
             <ProductImage src={U(slide.img, 1200)} alt={slide.title} seed={slide.img} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 pk-pattern"/>
             <div className="absolute inset-0 flex items-center p-6 md:p-12">
               <div className="max-w-lg text-white space-y-4">
-                <h2 className="text-2xl md:text-4xl font-bold drop-shadow-lg">{slide.title}</h2>
-                <p className="text-base md:text-lg opacity-90 drop-shadow">{slide.sub}</p>
-                <Button className="bg-white text-gray-900 hover:bg-gray-100 font-semibold" onClick={() => navigate(slide.route)}>{slide.cta} <ChevronRight size={16}/></Button>
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
+                  <span className="text-[#FFD700]">☪</span> Bachat Bazar
+                </div>
+                <h2 className="text-3xl md:text-5xl font-extrabold drop-shadow-lg leading-tight">{slide.title}</h2>
+                <p className="text-base md:text-lg opacity-95 drop-shadow font-medium">{slide.sub}</p>
+                <Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold px-6 shadow-lg" onClick={() => navigate(slide.route)}>{slide.cta} <ChevronRight size={16}/></Button>
               </div>
             </div>
           </div>
         ))}
-        <button onClick={() => setHeroIdx(i => (i - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur rounded-full p-2 text-white hover:bg-white/50 transition"><ChevronLeft size={20}/></button>
-        <button onClick={() => setHeroIdx(i => (i + 1) % HERO_SLIDES.length)} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur rounded-full p-2 text-white hover:bg-white/50 transition"><ChevronRight size={20}/></button>
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-          {HERO_SLIDES.map((_, i) => <button key={i} onClick={() => setHeroIdx(i)} className={`w-2.5 h-2.5 rounded-full transition ${i === heroIdx ? 'bg-white' : 'bg-white/40'}`}/>)}
+        <button onClick={() => setHeroIdx(i => (i - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur rounded-full p-2.5 text-white hover:bg-white/60 transition shadow"><ChevronLeft size={20}/></button>
+        <button onClick={() => setHeroIdx(i => (i + 1) % HERO_SLIDES.length)} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur rounded-full p-2.5 text-white hover:bg-white/60 transition shadow"><ChevronRight size={20}/></button>
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          {HERO_SLIDES.map((_, i) => <button key={i} onClick={() => setHeroIdx(i)} className={`w-3 h-3 rounded-full transition shadow ${i === heroIdx ? 'bg-[#FFD700] scale-110' : 'bg-white/50'}`}/>)}
         </div>
       </div>
 
-      {/* Category Cards */}
+      {/* Pakistani Promo Strip */}
+      <div className="mb-8 bg-gradient-to-r from-[#006233] via-[#00A651] to-[#006233] rounded-xl p-4 flex items-center justify-between text-white shadow-lg">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🇵🇰</span>
+          <div>
+            <p className="font-bold text-sm md:text-base">Pakistan Zindabad! Free Delivery Nationwide</p>
+            <p className="text-xs opacity-80">On orders above Rs 25,000 — Cash on Delivery Available</p>
+          </div>
+        </div>
+        <Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold text-sm shrink-0 shadow" onClick={() => navigate('#/shop')}>Shop Now</Button>
+      </div>
+
+      {/* Category Cards - Better with overlay */}
       <section className="mb-10">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-slate-50"><Store size={22}/> Shop by Category</h3>
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-slate-50"><Store size={22} className="text-[#006233]"/> Shop by Category</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {s.categories().map(cat => {
             const Icon = getCatIcon(cat.icon);
             return (
-              <button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className="group relative rounded-xl overflow-hidden aspect-[4/3] cursor-pointer bg-slate-200 dark:bg-slate-700">
+              <button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className="group relative rounded-xl overflow-hidden aspect-[4/3] cursor-pointer bg-slate-200 dark:bg-slate-700 shadow-md hover:shadow-xl transition-shadow">
                 <ProductImage src={U(cat.img, 400)} alt={cat.name} seed={cat.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-                <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} opacity-40 group-hover:opacity-50 transition`}/>
+                <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} opacity-60 group-hover:opacity-75 transition`}/>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-2">
-                  <Icon size={28} className="mb-1 drop-shadow"/>
-                  <span className="text-sm font-semibold text-center drop-shadow">{cat.name}</span>
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 shadow">
+                    <Icon size={24} className="drop-shadow"/>
+                  </div>
+                  <span className="text-sm font-bold text-center drop-shadow-lg">{cat.name}</span>
                 </div>
               </button>
             );
@@ -242,8 +262,8 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
       {flashItems.length > 0 && (
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><Flame size={22} className="text-rose-500"/> Flash Sale</h3>
-            <div className="flex items-center gap-2 text-sm"><Clock size={16}/> Ends in <CountdownTimer targetDate={flashSaleEnd}/></div>
+            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><Flame size={22} className="text-red-500"/> Flash Sale</h3>
+            <div className="flex items-center gap-2 text-sm bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full"><Clock size={16} className="text-red-500"/> Ends in <CountdownTimer targetDate={flashSaleEnd}/></div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {flashItems.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
@@ -255,8 +275,8 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
       {featured.length > 0 && (
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><Award size={22} className="text-teal-600"/> Featured</h3>
-            <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { featured: 'true' }))}>View All <ChevronRight size={14}/></Button>
+            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><Award size={22} className="text-[#C5A028]"/> Featured</h3>
+            <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { featured: 'true' }))} className="text-[#006233] dark:text-[#00A651]">View All <ChevronRight size={14}/></Button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {featured.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
@@ -264,21 +284,23 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
         </section>
       )}
 
-      {/* Promo Banner */}
-      <div className="mb-10 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-500 p-6 md:p-10 text-white flex flex-col md:flex-row items-center gap-6">
+      {/* Promo Banner - Pakistani Style */}
+      <div className="mb-10 rounded-xl bg-gradient-to-r from-[#006233] to-[#004D25] p-6 md:p-10 text-white flex flex-col md:flex-row items-center gap-6 shadow-xl pk-pattern relative overflow-hidden">
+        <div className="absolute top-4 right-4 text-6xl opacity-10">☪</div>
         <div className="flex-1 space-y-2">
-          <h3 className="text-2xl md:text-3xl font-bold">Get 25% Off This Eid!</h3>
-          <p className="opacity-90">Use code <span className="font-mono bg-white/20 px-2 py-0.5 rounded">EID25</span> on orders above Rs 50,000</p>
+          <p className="text-[#FFD700] text-sm font-bold uppercase tracking-wider">Limited Time Offer</p>
+          <h3 className="text-2xl md:text-3xl font-extrabold">Eid Mubarak Sale — 25% Off!</h3>
+          <p className="opacity-90 font-medium">Use code <span className="font-mono bg-[#C5A028] px-2 py-0.5 rounded text-white">EID25</span> on orders above Rs 50,000</p>
         </div>
-        <Button className="bg-white text-gray-900 hover:bg-gray-100 font-semibold shrink-0" onClick={() => navigate(makeHash('deals'))}>Shop Deals <ArrowRight size={16}/></Button>
+        <Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold shrink-0 shadow-lg" onClick={() => navigate(makeHash('deals'))}>Shop Deals <ArrowRight size={16}/></Button>
       </div>
 
       {/* Trending */}
       {trending.length > 0 && (
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><TrendingUp size={22} className="text-emerald-500"/> Trending Now</h3>
-            <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { trending: 'true' }))}>View All <ChevronRight size={14}/></Button>
+            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><TrendingUp size={22} className="text-[#00A651]"/> Trending Now</h3>
+            <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { trending: 'true' }))} className="text-[#006233] dark:text-[#00A651]">View All <ChevronRight size={14}/></Button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {trending.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
@@ -290,8 +312,8 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
       {newArrivals.length > 0 && (
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><Zap size={22} className="text-amber-500"/> New Arrivals</h3>
-            <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('new'))}>View All <ChevronRight size={14}/></Button>
+            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><Zap size={22} className="text-[#C5A028]"/> New Arrivals</h3>
+            <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('new'))} className="text-[#006233] dark:text-[#00A651]">View All <ChevronRight size={14}/></Button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {newArrivals.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
@@ -303,7 +325,7 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
       {bestSellers.length > 0 && (
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><ThumbsUp size={22} className="text-teal-600"/> Best Sellers</h3>
+            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><ThumbsUp size={22} className="text-[#006233]"/> Best Sellers</h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {bestSellers.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
@@ -313,13 +335,13 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
 
       {/* Testimonials */}
       <section className="mb-10">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-slate-50"><Users size={22}/> What Our Customers Say</h3>
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-slate-50"><Users size={22} className="text-[#006233]"/> What Our Customers Say</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {TESTIMONIALS.map((t, i) => (
-            <Card key={i} className="p-4">
+            <Card key={i} className="p-4 border-t-2 border-t-[#C5A028]">
               <div className="flex items-center gap-3 mb-3">
                 <img src={U(t.avatar, 80)} alt={t.name} className="w-10 h-10 rounded-full object-cover" onError={(e) => imgFallback(e, t.name)}/>
-                <div><p className="font-medium text-sm">{t.name}</p><p className="text-xs text-muted-foreground">{t.role}</p></div>
+                <div><p className="font-semibold text-sm">{t.name}</p><p className="text-xs text-[#C5A028]">{t.role}</p></div>
               </div>
               <StarRating rating={t.rating} size={12}/>
               <p className="mt-2 text-sm text-muted-foreground">&ldquo;{t.text}&rdquo;</p>
@@ -331,18 +353,18 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
       {/* Blog Posts */}
       <section className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><BookOpen size={22}/> From the Blog</h3>
-          <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('blog'))}>All Posts <ChevronRight size={14}/></Button>
+          <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><BookOpen size={22} className="text-[#006233]"/> From the Blog</h3>
+          <Button variant="ghost" size="sm" onClick={() => navigate(makeHash('blog'))} className="text-[#006233] dark:text-[#00A651]">All Posts <ChevronRight size={14}/></Button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {BLOGS.map((b) => (
-            <Card key={b.id} className="overflow-hidden group cursor-pointer">
+            <Card key={b.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
               <div className="aspect-video overflow-hidden">
                 <ProductImage src={U(b.img, 400)} alt={b.title} seed={b.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
               </div>
               <div className="p-3 space-y-1">
-                <p className="text-xs text-muted-foreground">{b.date} &middot; {b.author}</p>
-                <p className="font-medium text-sm line-clamp-2">{b.title}</p>
+                <p className="text-xs text-[#C5A028] font-medium">{b.date} &middot; {b.author}</p>
+                <p className="font-semibold text-sm line-clamp-2">{b.title}</p>
                 <p className="text-xs text-muted-foreground line-clamp-2">{b.excerpt}</p>
               </div>
             </Card>
@@ -359,7 +381,7 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
               <React.Fragment key={si}>
                 {s.allProducts().map((p, i) => `${si}-${i}`).filter((_, i) => i < 20).map((key, idx) => {
                   const p = s.allProducts()[idx];
-                  return p ? <span key={key} className="text-lg font-bold text-muted-foreground/50 px-4">{p.brand}</span> : null;
+                  return p ? <span key={key} className="text-lg font-bold text-[#006233]/20 dark:text-[#00A651]/20 px-4">{p.brand}</span> : null;
                 })}
               </React.Fragment>
             ))}
@@ -367,16 +389,18 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
         </div>
       </section>
 
-      {/* Features */}
+      {/* Features - Pakistani Style */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
-          { icon: Truck, title: 'Free Shipping', desc: 'On orders over Rs 25,000' },
-          { icon: Shield, title: 'Secure Payment', desc: '100% secure checkout' },
+          { icon: Truck, title: 'Free Shipping', desc: 'Orders over Rs 25,000' },
+          { icon: ShieldCheck, title: 'Genuine Products', desc: '100% authentic items' },
           { icon: RotateCcw, title: '7-Day Returns', desc: 'Easy return policy' },
-          { icon: Headphones, title: '24/7 Support', desc: 'We are here to help' },
+          { icon: Banknote, title: 'Cash on Delivery', desc: 'Pay when you receive' },
         ].map((f, i) => (
-          <div key={i} className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/50">
-            <f.icon size={28} className="text-teal-600 mb-2"/>
+          <div key={i} className="flex flex-col items-center text-center p-4 rounded-xl bg-gradient-to-b from-[#006233]/5 to-transparent dark:from-[#00A651]/10 border border-[#006233]/10">
+            <div className="w-12 h-12 rounded-full bg-[#006233]/10 dark:bg-[#00A651]/20 flex items-center justify-center mb-2">
+              <f.icon size={22} className="text-[#006233] dark:text-[#00A651]"/>
+            </div>
             <p className="font-semibold text-sm">{f.title}</p>
             <p className="text-xs text-muted-foreground">{f.desc}</p>
           </div>
@@ -429,14 +453,14 @@ function ShopView({ onQuickView, query }: { onQuickView: (p: Product) => void; q
       </div>
 
       <div className="flex gap-6">
-        {/* Filters - Desktop */}
+        {/* Filters */}
         <aside className={`${showFilters ? 'block' : 'hidden'} md:block w-56 shrink-0 space-y-5`}>
           <div>
             <h4 className="font-semibold mb-2 text-sm">Category</h4>
             <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
-              <button onClick={() => { setCatFilter(''); resetPage(); }} className={`block w-full text-left text-sm px-2 py-1 rounded ${!catFilter ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-medium' : 'hover:bg-muted'}`}>All Categories</button>
+              <button onClick={() => { setCatFilter(''); resetPage(); }} className={`block w-full text-left text-sm px-2 py-1 rounded ${!catFilter ? 'bg-[#006233]/10 text-[#006233] dark:bg-[#00A651]/20 dark:text-[#00A651] font-medium' : 'hover:bg-muted'}`}>All Categories</button>
               {s.categories().map(c => (
-                <button key={c.id} onClick={() => { setCatFilter(c.id); resetPage(); }} className={`block w-full text-left text-sm px-2 py-1 rounded ${catFilter === c.id ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-medium' : 'hover:bg-muted'}`}>{c.name}</button>
+                <button key={c.id} onClick={() => { setCatFilter(c.id); resetPage(); }} className={`block w-full text-left text-sm px-2 py-1 rounded ${catFilter === c.id ? 'bg-[#006233]/10 text-[#006233] dark:bg-[#00A651]/20 dark:text-[#00A651] font-medium' : 'hover:bg-muted'}`}>{c.name}</button>
               ))}
             </div>
           </div>
@@ -455,7 +479,7 @@ function ShopView({ onQuickView, query }: { onQuickView: (p: Product) => void; q
             <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
               {brands.slice(0, 15).map(b => (
                 <label key={b} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={brandFilter.includes(b)} onChange={e => { setBrandFilter(prev => e.target.checked ? [...prev, b] : prev.filter(x => x !== b)); resetPage(); }} className="rounded border-gray-300"/>
+                  <input type="checkbox" checked={brandFilter.includes(b)} onChange={e => { setBrandFilter(prev => e.target.checked ? [...prev, b] : prev.filter(x => x !== b)); resetPage(); }} className="rounded border-gray-300 accent-[#006233]"/>
                   <span className="truncate">{b}</span>
                 </label>
               ))}
@@ -492,7 +516,7 @@ function ShopView({ onQuickView, query }: { onQuickView: (p: Product) => void; q
             <div className="flex items-center justify-center gap-2 mt-8">
               <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}><ChevronLeft size={14}/></Button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), page + 2).map(n => (
-                <Button key={n} variant={n === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(n)} className="w-8 h-8 p-0">{n}</Button>
+                <Button key={n} variant={n === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(n)} className={`w-8 h-8 p-0 ${n === page ? 'bg-[#006233] text-white' : ''}`}>{n}</Button>
               ))}
               <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight size={14}/></Button>
             </div>
@@ -530,13 +554,13 @@ function ProductDetailView({ productId }: { productId: string }) {
       <div className="grid md:grid-cols-2 gap-8">
         {/* Images */}
         <div className="space-y-3">
-          <div className="aspect-square rounded-xl overflow-hidden bg-muted">
+          <div className="aspect-square rounded-xl overflow-hidden bg-muted shadow-inner">
             <ProductImage src={product.images[imgIdx] || product.images[0]} alt={product.name} seed={product.imageId} className="w-full h-full object-cover" />
           </div>
           {product.images.length > 1 && (
             <div className="flex gap-2 overflow-x-auto no-scrollbar">
               {product.images.map((img, i) => (
-                <button key={i} onClick={() => setImgIdx(i)} className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 ${i === imgIdx ? 'border-teal-500' : 'border-transparent'}`}>
+                <button key={i} onClick={() => setImgIdx(i)} className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 ${i === imgIdx ? 'border-[#006233]' : 'border-transparent'}`}>
                   <ProductImage src={img} alt={product.name} seed={product.imageId} className="w-full h-full object-cover" />
                 </button>
               ))}
@@ -547,7 +571,7 @@ function ProductDetailView({ productId }: { productId: string }) {
         {/* Details */}
         <div className="space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">{product.brand}</p>
+            <p className="text-sm text-[#C5A028] font-semibold mb-1">{product.brand}</p>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">{product.name}</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -555,8 +579,8 @@ function ProductDetailView({ productId }: { productId: string }) {
             <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
           </div>
           <PriceDisplay price={product.price} oldPrice={product.oldPrice}/>
-          {product.badge && <Badge className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white">{product.badge}</Badge>}
-          <p className="text-sm text-slate-700 dark:text-slate-200">{product.description}</p>
+          {product.badge && <Badge className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white">{product.badge}</Badge>}
+          <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{product.description}</p>
 
           <Separator/>
 
@@ -567,10 +591,10 @@ function ProductDetailView({ productId }: { productId: string }) {
               <span className="w-10 text-center font-medium">{qty}</span>
               <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setQty(q => Math.min(product.stock, q + 1))}><Plus size={14}/></Button>
             </div>
-            <Button className="flex-1 bg-gradient-to-r from-teal-600 to-emerald-500 text-white hover:from-teal-700 hover:to-emerald-600" onClick={handleAdd} disabled={product.stock <= 0}>
+            <Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white hover:from-[#004D25] hover:to-[#006233] font-semibold" onClick={handleAdd} disabled={product.stock <= 0}>
               <ShoppingCart size={16} className="mr-2"/> {product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
             </Button>
-            <Button variant="outline" size="icon" className={inWish ? 'text-pink-500' : ''} onClick={() => { const added = s.toggleWishlist(product.id); toast({ title: added ? 'Added to wishlist' : 'Removed from wishlist' }); }}><Heart size={18} fill={inWish ? 'currentColor' : 'none'}/></Button>
+            <Button variant="outline" size="icon" className={inWish ? 'text-pink-500 border-pink-200' : ''} onClick={() => { const added = s.toggleWishlist(product.id); toast({ title: added ? 'Added to wishlist' : 'Removed from wishlist' }); }}><Heart size={18} fill={inWish ? 'currentColor' : 'none'}/></Button>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -587,12 +611,12 @@ function ProductDetailView({ productId }: { productId: string }) {
           <div className="grid grid-cols-2 gap-2">
             {[
               { icon: Truck, text: 'Free delivery over Rs 25,000' },
-              { icon: Shield, text: 'Genuine product guarantee' },
+              { icon: ShieldCheck, text: 'Genuine product guarantee' },
               { icon: RotateCcw, text: '7-day easy returns' },
-              { icon: Headphones, text: '24/7 customer support' },
+              { icon: Banknote, text: 'Cash on Delivery available' },
             ].map((t, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground p-2 rounded-lg bg-muted/50">
-                <t.icon size={14} className="text-teal-600 shrink-0"/>
+              <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground p-2 rounded-lg bg-[#006233]/5 dark:bg-[#00A651]/10">
+                <t.icon size={14} className="text-[#006233] dark:text-[#00A651] shrink-0"/>
                 <span>{t.text}</span>
               </div>
             ))}
@@ -609,7 +633,7 @@ function ProductDetailView({ productId }: { productId: string }) {
             <TabsTrigger value="features">Features</TabsTrigger>
           </TabsList>
           <TabsContent value="description" className="mt-4">
-            <p className="text-sm text-slate-700 dark:text-slate-200">{product.description}</p>
+            <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{product.description}</p>
           </TabsContent>
           <TabsContent value="specs" className="mt-4">
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -621,7 +645,7 @@ function ProductDetailView({ productId }: { productId: string }) {
           <TabsContent value="features" className="mt-4">
             <ul className="space-y-2">
               {product.features.map((f, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm"><Check size={14} className="text-teal-600 shrink-0"/>{f}</li>
+                <li key={i} className="flex items-center gap-2 text-sm"><Check size={14} className="text-[#006233] dark:text-[#00A651] shrink-0"/>{f}</li>
               ))}
             </ul>
           </TabsContent>
@@ -654,7 +678,7 @@ function CartView({ navigate }: { navigate: (h: string) => void }) {
         <ShoppingCart size={64} className="mx-auto mb-4 text-muted-foreground/30"/>
         <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-slate-50">Your cart is empty</h2>
         <p className="text-muted-foreground mb-6">Add some products to get started</p>
-        <Button className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => navigate('#/shop')}>Start Shopping</Button>
+        <Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate('#/shop')}>Start Shopping</Button>
       </div>
     );
   }
@@ -674,7 +698,7 @@ function CartView({ navigate }: { navigate: (h: string) => void }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate text-slate-700 dark:text-slate-200">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">{p.brand}</p>
+                  <p className="text-xs text-[#C5A028]">{p.brand}</p>
                   <PriceDisplay price={p.price} oldPrice={p.oldPrice}/>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex items-center border rounded">
@@ -689,17 +713,17 @@ function CartView({ navigate }: { navigate: (h: string) => void }) {
             );
           })}
         </div>
-        <Card className="p-6 h-fit space-y-4">
+        <Card className="p-6 h-fit space-y-4 border-t-2 border-t-[#C5A028]">
           <h3 className="font-semibold">Order Summary</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{totals.subDisplay}</span></div>
-            {totals.discount > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-{totals.discountDisplay}</span></div>}
+            {totals.discount > 0 && <div className="flex justify-between text-[#00A651]"><span>Discount</span><span>-{totals.discountDisplay}</span></div>}
             <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>{totals.shipDisplay}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Tax (8%)</span><span>{totals.taxDisplay}</span></div>
             <Separator/>
-            <div className="flex justify-between font-bold text-lg"><span>Total</span><span>{totals.totalDisplay}</span></div>
+            <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{totals.totalDisplay}</span></div>
           </div>
-          <Button className="w-full bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => navigate(makeHash('checkout'))}>Proceed to Checkout</Button>
+          <Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={() => navigate(makeHash('checkout'))}>Proceed to Checkout</Button>
         </Card>
       </div>
     </div>
@@ -730,11 +754,11 @@ function CheckoutView({ navigate }: { navigate: (h: string) => void }) {
       <div className="flex items-center gap-2 mb-8">
         {['Shipping', 'Payment', 'Review'].map((label, i) => (
           <React.Fragment key={label}>
-            <button onClick={() => setStep(i + 1)} className={`flex items-center gap-1.5 text-sm font-medium ${step === i + 1 ? 'text-teal-600' : step > i + 1 ? 'text-emerald-500' : 'text-muted-foreground'}`}>
-              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step >= i + 1 ? 'bg-teal-600 text-white' : 'bg-muted text-muted-foreground'}`}>{i + 1}</span>
+            <button onClick={() => setStep(i + 1)} className={`flex items-center gap-1.5 text-sm font-medium ${step === i + 1 ? 'text-[#006233]' : step > i + 1 ? 'text-[#00A651]' : 'text-muted-foreground'}`}>
+              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step >= i + 1 ? 'bg-[#006233] text-white' : 'bg-muted text-muted-foreground'}`}>{i + 1}</span>
               <span className="hidden sm:inline">{label}</span>
             </button>
-            {i < 2 && <div className={`flex-1 h-0.5 ${step > i + 1 ? 'bg-teal-600' : 'bg-muted'}`}/>}
+            {i < 2 && <div className={`flex-1 h-0.5 ${step > i + 1 ? 'bg-[#006233]' : 'bg-muted'}`}/>}
           </React.Fragment>
         ))}
       </div>
@@ -744,13 +768,13 @@ function CheckoutView({ navigate }: { navigate: (h: string) => void }) {
           <h3 className="font-semibold">Shipping Method</h3>
           <div className="space-y-2">
             {SHIPPING_METHODS.map(m => (
-              <button key={m.id} onClick={() => setShippingMethod(m.id)} className={`w-full flex items-center justify-between p-3 rounded-lg border transition ${shippingMethod === m.id ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20' : 'hover:bg-muted'}`}>
-                <div className="flex items-center gap-3"><Truck size={18} className="text-teal-600"/><div><p className="text-sm font-medium">{m.name}</p><p className="text-xs text-muted-foreground">{m.desc}</p></div></div>
+              <button key={m.id} onClick={() => setShippingMethod(m.id)} className={`w-full flex items-center justify-between p-3 rounded-lg border transition ${shippingMethod === m.id ? 'border-[#006233] bg-[#006233]/5 dark:bg-[#00A651]/10' : 'hover:bg-muted'}`}>
+                <div className="flex items-center gap-3"><Truck size={18} className="text-[#006233]"/><div><p className="text-sm font-medium">{m.name}</p><p className="text-xs text-muted-foreground">{m.desc}</p></div></div>
                 <span className="text-sm font-medium">{m.cost === 0 ? 'Free' : s.money(m.cost)}</span>
               </button>
             ))}
           </div>
-          <Button className="w-full bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => setStep(2)}>Continue to Payment</Button>
+          <Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={() => setStep(2)}>Continue to Payment</Button>
         </Card>
       )}
 
@@ -759,15 +783,15 @@ function CheckoutView({ navigate }: { navigate: (h: string) => void }) {
           <h3 className="font-semibold">Payment Method</h3>
           <div className="space-y-2">
             {PAYMENTS.map(pm => (
-              <button key={pm.id} onClick={() => setPaymentMethod(pm.id)} className={`w-full flex items-center gap-3 p-3 rounded-lg border transition ${paymentMethod === pm.id ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20' : 'hover:bg-muted'}`}>
-                <CreditCard size={18} className="text-teal-600"/>
+              <button key={pm.id} onClick={() => setPaymentMethod(pm.id)} className={`w-full flex items-center gap-3 p-3 rounded-lg border transition ${paymentMethod === pm.id ? 'border-[#006233] bg-[#006233]/5 dark:bg-[#00A651]/10' : 'hover:bg-muted'}`}>
+                <CreditCard size={18} className="text-[#006233]"/>
                 <span className="text-sm font-medium">{pm.name}</span>
               </button>
             ))}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-            <Button className="flex-1 bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => setStep(3)}>Review Order</Button>
+            <Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={() => setStep(3)}>Review Order</Button>
           </div>
         </Card>
       )}
@@ -792,11 +816,11 @@ function CheckoutView({ navigate }: { navigate: (h: string) => void }) {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between"><span>Subtotal</span><span>{totals.subDisplay}</span></div>
             <div className="flex justify-between"><span>Shipping</span><span>{shippingCost === 0 ? 'Free' : s.money(shippingCost)}</span></div>
-            <div className="flex justify-between font-bold text-lg"><span>Total</span><span>{totals.totalDisplay}</span></div>
+            <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{totals.totalDisplay}</span></div>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
-            <Button className="flex-1 bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={handlePlaceOrder} disabled={s.cart.length === 0}>Place Order</Button>
+            <Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={handlePlaceOrder} disabled={s.cart.length === 0}>Place Order</Button>
           </div>
         </Card>
       )}
@@ -816,7 +840,7 @@ function WishlistView({ onQuickView, navigate }: { onQuickView: (p: Product) => 
         <Heart size={64} className="mx-auto mb-4 text-muted-foreground/30"/>
         <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-slate-50">Your wishlist is empty</h2>
         <p className="text-muted-foreground mb-6">Save items you love for later</p>
-        <Button className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => navigate('#/shop')}>Browse Products</Button>
+        <Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate('#/shop')}>Browse Products</Button>
       </div>
     );
   }
@@ -865,7 +889,7 @@ function CompareView() {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-t"><td className="p-3 text-muted-foreground">Price</td>{items.map(p => <td key={p.id} className="p-3 text-center font-bold">{s.money(p.price)}</td>)}</tr>
+            <tr className="border-t"><td className="p-3 text-muted-foreground">Price</td>{items.map(p => <td key={p.id} className="p-3 text-center font-bold text-[#006233] dark:text-[#00A651]">{s.money(p.price)}</td>)}</tr>
             <tr className="border-t bg-muted/20"><td className="p-3 text-muted-foreground">Brand</td>{items.map(p => <td key={p.id} className="p-3 text-center">{p.brand}</td>)}</tr>
             <tr className="border-t"><td className="p-3 text-muted-foreground">Rating</td>{items.map(p => <td key={p.id} className="p-3 text-center"><StarRating rating={p.rating} size={12}/></td>)}</tr>
             <tr className="border-t bg-muted/20"><td className="p-3 text-muted-foreground">Stock</td>{items.map(p => <td key={p.id} className="p-3 text-center">{p.stock > 0 ? `${p.stock} available` : 'Out of stock'}</td>)}</tr>
@@ -899,7 +923,7 @@ function OrdersView() {
             <div className="flex items-center justify-between mb-3">
               <div><p className="font-semibold">Order #{o.id}</p><p className="text-xs text-muted-foreground">{new Date(o.date).toLocaleDateString()}</p></div>
               <div className="flex items-center gap-2">
-                <Badge variant={o.status === 'Cancelled' ? 'destructive' : 'default'}>{o.status}</Badge>
+                <Badge variant={o.status === 'Cancelled' ? 'destructive' : 'default'} className={o.status !== 'Cancelled' ? 'bg-[#006233]' : ''}>{o.status}</Badge>
                 {o.status === 'Confirmed' && <Button variant="outline" size="sm" className="text-xs text-red-500" onClick={() => { s.cancelOrder(o.id); }}>Cancel</Button>}
               </div>
             </div>
@@ -980,7 +1004,7 @@ function DealsView({ onQuickView }: { onQuickView: (p: Product) => void }) {
   return (
     <div className="animate-fadeUp">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><Flame size={24} className="text-rose-500"/> Today&apos;s Deals</h2>
+        <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-50"><Flame size={24} className="text-red-500"/> Today&apos;s Deals</h2>
         <div className="flex items-center gap-2 text-sm pulse-glow rounded-full px-3 py-1"><Clock size={14}/> <CountdownTimer targetDate={saleEnd}/></div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -997,7 +1021,7 @@ function NewArrivalsView({ onQuickView }: { onQuickView: (p: Product) => void })
   const items = s.allProducts().filter(p => p.isNew);
   return (
     <div className="animate-fadeUp">
-      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-slate-900 dark:text-slate-50"><Zap size={24} className="text-amber-500"/> New Arrivals</h2>
+      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-slate-900 dark:text-slate-50"><Zap size={24} className="text-[#C5A028]"/> New Arrivals</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {items.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}
       </div>
@@ -1011,8 +1035,8 @@ function AboutView() {
     <div className="animate-fadeUp max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-slate-50">About Bachat Bazar</h2>
       <div className="prose dark:prose-invert max-w-none space-y-4">
-        <p className="text-slate-700 dark:text-slate-200">Bachat Bazar is Pakistan&apos;s leading online marketplace, bringing you the best deals on health & beauty, groceries, electronics, fashion, home appliances, and more.</p>
-        <p className="text-slate-700 dark:text-slate-200">Founded with the mission to make quality products accessible to everyone, we partner with trusted brands and sellers to offer genuine products at unbeatable prices.</p>
+        <p className="text-slate-700 dark:text-slate-200 leading-relaxed">Bachat Bazar is Pakistan&apos;s leading online marketplace, bringing you the best deals on health & beauty, groceries, electronics, fashion, home appliances, and more.</p>
+        <p className="text-slate-700 dark:text-slate-200 leading-relaxed">Founded with the mission to make quality products accessible to everyone, we partner with trusted brands and sellers to offer genuine products at unbeatable prices.</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
           {[
             { label: 'Products', value: '5,000+' },
@@ -1020,13 +1044,13 @@ function AboutView() {
             { label: 'Cities Served', value: '50+' },
             { label: 'Brands', value: '200+' },
           ].map((s, i) => (
-            <div key={i} className="text-center p-4 rounded-xl bg-muted/50">
+            <div key={i} className="text-center p-4 rounded-xl bg-gradient-to-b from-[#006233]/5 to-transparent dark:from-[#00A651]/10 border border-[#006233]/10">
               <p className="text-2xl font-bold gradient-text">{s.value}</p>
               <p className="text-sm text-muted-foreground">{s.label}</p>
             </div>
           ))}
         </div>
-        <p className="text-slate-700 dark:text-slate-200">With Cash on Delivery, free returns, and fast shipping across Pakistan, shopping with Bachat Bazar is safe, easy, and rewarding.</p>
+        <p className="text-slate-700 dark:text-slate-200 leading-relaxed">With Cash on Delivery, free returns, and fast shipping across Pakistan, shopping with Bachat Bazar is safe, easy, and rewarding.</p>
       </div>
     </div>
   );
@@ -1042,19 +1066,19 @@ function ContactView() {
       <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-slate-50">Contact Us</h2>
       <div className="grid md:grid-cols-2 gap-8">
         <div className="space-y-4">
-          <Card className="p-4 flex items-center gap-3"><Phone size={20} className="text-teal-600"/><div><p className="font-medium text-sm">Phone</p><p className="text-sm text-muted-foreground">+92 300 1234567</p></div></Card>
-          <Card className="p-4 flex items-center gap-3"><Mail size={20} className="text-teal-600"/><div><p className="font-medium text-sm">Email</p><p className="text-sm text-muted-foreground">support@bachatbazar.pk</p></div></Card>
-          <Card className="p-4 flex items-center gap-3"><MapPin size={20} className="text-teal-600"/><div><p className="font-medium text-sm">Address</p><p className="text-sm text-muted-foreground">Gulberg III, Lahore, Pakistan</p></div></Card>
+          <Card className="p-4 flex items-center gap-3 border-l-2 border-l-[#006233]"><Phone size={20} className="text-[#006233]"/><div><p className="font-medium text-sm">Phone</p><p className="text-sm text-muted-foreground">+92 300 1234567</p></div></Card>
+          <Card className="p-4 flex items-center gap-3 border-l-2 border-l-[#C5A028]"><Mail size={20} className="text-[#C5A028]"/><div><p className="font-medium text-sm">Email</p><p className="text-sm text-muted-foreground">support@bachatbazar.pk</p></div></Card>
+          <Card className="p-4 flex items-center gap-3 border-l-2 border-l-[#006233]"><MapPin size={20} className="text-[#006233]"/><div><p className="font-medium text-sm">Address</p><p className="text-sm text-muted-foreground">Gulberg III, Lahore, Pakistan</p></div></Card>
         </div>
         <Card className="p-6 space-y-4">
           {sent ? (
-            <div className="text-center py-8"><Check size={48} className="mx-auto mb-4 text-emerald-500"/><p className="font-semibold">Message sent!</p><p className="text-sm text-muted-foreground">We&apos;ll get back to you soon.</p></div>
+            <div className="text-center py-8"><Check size={48} className="mx-auto mb-4 text-[#00A651]"/><p className="font-semibold">Message sent!</p><p className="text-sm text-muted-foreground">We&apos;ll get back to you soon.</p></div>
           ) : (
             <>
               <div><Label>Name</Label><Input placeholder="Your name" className="h-9"/></div>
               <div><Label>Email</Label><Input placeholder="you@email.com" className="h-9"/></div>
               <div><Label>Message</Label><Textarea placeholder="How can we help?" rows={4}/></div>
-              <Button className="w-full bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => { setSent(true); toast({ title: 'Message sent!' }); }}>Send Message</Button>
+              <Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={() => { setSent(true); toast({ title: 'Message sent!' }); }}>Send Message</Button>
             </>
           )}
         </Card>
@@ -1093,15 +1117,15 @@ function FAQView() {
 function BlogView() {
   return (
     <div className="animate-fadeUp">
-      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-slate-900 dark:text-slate-50"><BookOpen size={22}/> Blog</h2>
+      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-slate-900 dark:text-slate-50"><BookOpen size={22} className="text-[#006233]"/> Blog</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6">
         {BLOGS.map(b => (
-          <Card key={b.id} className="overflow-hidden">
+          <Card key={b.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <div className="aspect-video overflow-hidden">
               <ProductImage src={U(b.img, 600)} alt={b.title} seed={b.img} className="w-full h-full object-cover" />
             </div>
             <div className="p-4 space-y-2">
-              <p className="text-xs text-muted-foreground">{b.date} &middot; {b.author}</p>
+              <p className="text-xs text-[#C5A028] font-medium">{b.date} &middot; {b.author}</p>
               <h3 className="font-semibold">{b.title}</h3>
               <p className="text-sm text-muted-foreground">{b.excerpt}</p>
             </div>
@@ -1119,13 +1143,13 @@ function NotFoundView() {
       <h2 className="text-6xl font-bold gradient-text mb-4">404</h2>
       <p className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-50">Page Not Found</p>
       <p className="text-muted-foreground mb-6">The page you&apos;re looking for doesn&apos;t exist.</p>
-      <Button className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => { window.location.hash = '#/'; }}>Go Home</Button>
+      <Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { window.location.hash = '#/'; }}>Go Home</Button>
     </div>
   );
 }
 
 // ──────────────────────────────────────────────────────────────
-// ADMIN VIEW (ENHANCED)
+// ADMIN VIEW (ENHANCED with Image Upload)
 // ──────────────────────────────────────────────────────────────
 function AdminView() {
   const s = useStore();
@@ -1138,6 +1162,7 @@ function AdminView() {
   const [adminTab, setAdminTab] = useState('dashboard');
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [adminSearch, setAdminSearch] = useState('');
+  const [imagePreview, setImagePreview] = useState<string>('');
 
   const emptyProduct: Product = {
     id: 0, name: '', brand: '', category: '', price: 0, oldPrice: 0,
@@ -1159,7 +1184,6 @@ function AdminView() {
   const allProducts = s.allProducts();
   const totalRevenue = s.orders.reduce((sum, o) => sum + o.totals.total, 0);
 
-  // Filter products for admin table
   const filteredAdminProducts = useMemo(() => {
     if (!adminSearch.trim()) return allProducts;
     const q = adminSearch.toLowerCase();
@@ -1170,14 +1194,37 @@ function AdminView() {
     );
   }, [allProducts, adminSearch]);
 
+  // Handle image file upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Please select an image file', variant: 'destructive' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setImagePreview(dataUrl);
+      if (editProduct) {
+        setEditProduct({
+          ...editProduct,
+          images: [dataUrl],
+          imageId: ''
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   if (!authed) {
     return (
       <div className="animate-fadeUp max-w-sm mx-auto text-center py-16">
-        <Lock size={48} className="mx-auto mb-4 text-muted-foreground"/>
+        <Lock size={48} className="mx-auto mb-4 text-[#006233]"/>
         <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-slate-50">Admin Access</h2>
         <div className="flex gap-2">
           <Input type="password" placeholder="Enter password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} className="h-9"/>
-          <Button onClick={handleLogin}>Enter</Button>
+          <Button className="bg-[#006233] text-white" onClick={handleLogin}>Enter</Button>
         </div>
       </div>
     );
@@ -1185,7 +1232,7 @@ function AdminView() {
 
   return (
     <div className="animate-fadeUp">
-      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-slate-900 dark:text-slate-50"><Settings size={22}/> Admin Panel</h2>
+      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-slate-900 dark:text-slate-50"><Settings size={22} className="text-[#006233]"/> Admin Panel</h2>
       <Tabs value={adminTab} onValueChange={setAdminTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="dashboard"><BarChart3 size={14} className="mr-1"/> Dashboard</TabsTrigger>
@@ -1196,12 +1243,12 @@ function AdminView() {
         <TabsContent value="dashboard">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: 'Total Products', value: allProducts.length, icon: BoxIcon, color: 'text-teal-600' },
-              { label: 'Total Orders', value: s.orders.length, icon: ClipboardList, color: 'text-rose-500' },
-              { label: 'Revenue', value: s.money(totalRevenue), icon: Banknote, color: 'text-emerald-500' },
-              { label: 'Customers', value: s.orders.length ? Math.ceil(s.orders.length * 0.8) : 0, icon: Users, color: 'text-amber-500' },
+              { label: 'Total Products', value: allProducts.length, icon: BoxIcon, color: 'text-[#006233]' },
+              { label: 'Total Orders', value: s.orders.length, icon: ClipboardList, color: 'text-red-500' },
+              { label: 'Revenue', value: s.money(totalRevenue), icon: Banknote, color: 'text-[#C5A028]' },
+              { label: 'Customers', value: s.orders.length ? Math.ceil(s.orders.length * 0.8) : 0, icon: Users, color: 'text-[#00A651]' },
             ].map((stat, i) => (
-              <Card key={i} className="p-4">
+              <Card key={i} className="p-4 border-t-2 border-t-[#C5A028]">
                 <div className="flex items-center gap-3">
                   <stat.icon size={24} className={stat.color}/>
                   <div><p className="text-xs text-muted-foreground">{stat.label}</p><p className="text-xl font-bold">{stat.value}</p></div>
@@ -1221,12 +1268,14 @@ function AdminView() {
                   <SearchIcon size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"/>
                   <Input placeholder="Search products..." value={adminSearch} onChange={e => setAdminSearch(e.target.value)} className="h-8 w-48 pl-8 text-xs"/>
                 </div>
-                <Button size="sm" className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => setEditProduct({...emptyProduct})}>Add Product</Button>
+                <Button size="sm" className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={() => { setEditProduct({...emptyProduct}); setImagePreview(''); }}>
+                  <Plus size={14} className="mr-1"/> Add Product
+                </Button>
               </div>
             </div>
             <div className="max-h-[500px] overflow-y-auto custom-scrollbar border rounded-lg">
               <table className="w-full text-sm">
-                <thead className="bg-muted/50 sticky top-0 z-10"><tr>
+                <thead className="bg-[#006233]/5 dark:bg-[#00A651]/10 sticky top-0 z-10"><tr>
                   <th className="p-2 text-left w-12">Image</th>
                   <th className="p-2 text-left">Name</th>
                   <th className="p-2 text-left">Brand</th>
@@ -1244,12 +1293,12 @@ function AdminView() {
                         </div>
                       </td>
                       <td className="p-2 truncate max-w-[200px] text-slate-700 dark:text-slate-200">{p.name}</td>
-                      <td className="p-2 text-muted-foreground">{p.brand}</td>
+                      <td className="p-2 text-[#C5A028]">{p.brand}</td>
                       <td className="p-2"><Badge variant="secondary" className="text-xs">{p.category}</Badge></td>
-                      <td className="p-2 text-right">{s.money(p.price)}</td>
+                      <td className="p-2 text-right font-medium">{s.money(p.price)}</td>
                       <td className="p-2 text-right">{p.stock}</td>
                       <td className="p-2 text-right space-x-1">
-                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditProduct({...p})}>Edit</Button>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs text-[#006233]" onClick={() => { setEditProduct({...p}); setImagePreview(p.images[0] || ''); }}>Edit</Button>
                         <Button variant="ghost" size="sm" className="h-6 text-xs text-red-500" onClick={() => { s.deleteProduct(p.id); toast({ title: 'Product deleted' }); }}>Delete</Button>
                       </td>
                     </tr>
@@ -1259,30 +1308,44 @@ function AdminView() {
             </div>
           </div>
 
-          {/* Edit/Add Product Dialog — Enhanced */}
-          <Dialog open={!!editProduct} onOpenChange={(open) => { if (!open) setEditProduct(null); }}>
+          {/* Edit/Add Product Dialog */}
+          <Dialog open={!!editProduct} onOpenChange={(open) => { if (!open) { setEditProduct(null); setImagePreview(''); } }}>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>{editProduct?.id ? 'Edit Product' : 'Add Product'}</DialogTitle><DialogDescription>Fill in the product details below.</DialogDescription></DialogHeader>
+              <DialogHeader><DialogTitle className="flex items-center gap-2"><BoxIcon size={18} className="text-[#006233]"/>{editProduct?.id ? 'Edit Product' : 'Add Product'}</DialogTitle><DialogDescription>Fill in the product details below.</DialogDescription></DialogHeader>
               {editProduct && (
                 <div className="space-y-4">
-                  {/* Image Preview */}
-                  {(editProduct.images.length > 0 || editProduct.imageId) && (
-                    <div className="w-full h-40 rounded-lg overflow-hidden bg-muted">
-                      <ProductImage
-                        src={editProduct.images[0] || U(editProduct.imageId, 400)}
-                        alt={editProduct.name || 'Product preview'}
-                        seed={editProduct.imageId || 'new'}
-                        className="w-full h-full object-cover"
-                      />
+                  {/* Image Preview & Upload */}
+                  <div className="space-y-2">
+                    {(imagePreview || editProduct.images.length > 0 || editProduct.imageId) ? (
+                      <div className="w-full h-40 rounded-lg overflow-hidden bg-muted border-2 border-[#006233]/20">
+                        <ProductImage
+                          src={imagePreview || editProduct.images[0] || U(editProduct.imageId, 400)}
+                          alt={editProduct.name || 'Product preview'}
+                          seed={editProduct.imageId || 'new'}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-40 rounded-lg border-2 border-dashed border-[#006233]/30 flex flex-col items-center justify-center bg-muted/30">
+                        <ImageIcon size={32} className="text-[#006233]/40 mb-2"/>
+                        <p className="text-xs text-muted-foreground">No image yet</p>
+                      </div>
+                    )}
+                    {/* Image Upload Button */}
+                    <div className="flex gap-2">
+                      <label className="flex-1 flex items-center justify-center gap-2 h-9 rounded-md border border-[#006233]/30 text-sm font-medium text-[#006233] cursor-pointer hover:bg-[#006233]/5 transition">
+                        <Upload size={14}/> Upload Image
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload}/>
+                      </label>
                     </div>
-                  )}
+                  </div>
 
-                  <div><Label className="text-xs">Name</Label><Input value={editProduct.name} onChange={e => setEditProduct({...editProduct, name: e.target.value})} className="h-9" placeholder="Product name"/></div>
+                  <div><Label className="text-xs font-semibold">Name</Label><Input value={editProduct.name} onChange={e => setEditProduct({...editProduct, name: e.target.value})} className="h-9" placeholder="Product name"/></div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label className="text-xs">Brand</Label><Input value={editProduct.brand} onChange={e => setEditProduct({...editProduct, brand: e.target.value})} className="h-9" placeholder="Brand name"/></div>
+                    <div><Label className="text-xs font-semibold">Brand</Label><Input value={editProduct.brand} onChange={e => setEditProduct({...editProduct, brand: e.target.value})} className="h-9" placeholder="Brand name"/></div>
                     <div>
-                      <Label className="text-xs">Category</Label>
+                      <Label className="text-xs font-semibold">Category</Label>
                       <Select value={editProduct.category} onValueChange={v => setEditProduct({...editProduct, category: v})}>
                         <SelectTrigger className="h-9"><SelectValue placeholder="Select category"/></SelectTrigger>
                         <SelectContent>
@@ -1293,15 +1356,15 @@ function AdminView() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
-                    <div><Label className="text-xs">Price (PKR)</Label><Input type="number" value={editProduct.price} onChange={e => setEditProduct({...editProduct, price: Number(e.target.value)})} className="h-9"/></div>
-                    <div><Label className="text-xs">Old Price</Label><Input type="number" value={editProduct.oldPrice} onChange={e => setEditProduct({...editProduct, oldPrice: Number(e.target.value)})} className="h-9"/></div>
-                    <div><Label className="text-xs">Stock</Label><Input type="number" value={editProduct.stock} onChange={e => setEditProduct({...editProduct, stock: Number(e.target.value)})} className="h-9"/></div>
+                    <div><Label className="text-xs font-semibold">Price (PKR)</Label><Input type="number" value={editProduct.price} onChange={e => setEditProduct({...editProduct, price: Number(e.target.value)})} className="h-9"/></div>
+                    <div><Label className="text-xs font-semibold">Old Price</Label><Input type="number" value={editProduct.oldPrice} onChange={e => setEditProduct({...editProduct, oldPrice: Number(e.target.value)})} className="h-9"/></div>
+                    <div><Label className="text-xs font-semibold">Stock</Label><Input type="number" value={editProduct.stock} onChange={e => setEditProduct({...editProduct, stock: Number(e.target.value)})} className="h-9"/></div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label className="text-xs">Rating (0-5)</Label><Input type="number" step="0.1" min="0" max="5" value={editProduct.rating} onChange={e => setEditProduct({...editProduct, rating: Number(e.target.value)})} className="h-9"/></div>
+                    <div><Label className="text-xs font-semibold">Rating (0-5)</Label><Input type="number" step="0.1" min="0" max="5" value={editProduct.rating} onChange={e => setEditProduct({...editProduct, rating: Number(e.target.value)})} className="h-9"/></div>
                     <div>
-                      <Label className="text-xs">Image URL</Label>
+                      <Label className="text-xs font-semibold">Image URL</Label>
                       <Input
                         value={editProduct.images[0] || ''}
                         onChange={e => {
@@ -1311,15 +1374,16 @@ function AdminView() {
                             images: url ? [url] : [],
                             imageId: url ? '' : editProduct.imageId
                           });
+                          setImagePreview(url);
                         }}
                         className="h-9"
-                        placeholder="Paste an image URL"
+                        placeholder="Paste image URL or upload"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-xs">Description</Label>
+                    <Label className="text-xs font-semibold">Description</Label>
                     <Textarea
                       value={editProduct.description}
                       onChange={e => setEditProduct({...editProduct, description: e.target.value})}
@@ -1352,8 +1416,8 @@ function AdminView() {
                   </div>
 
                   <DialogFooter className="gap-2">
-                    <Button variant="outline" onClick={() => setEditProduct(null)}>Cancel</Button>
-                    <Button className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => {
+                    <Button variant="outline" onClick={() => { setEditProduct(null); setImagePreview(''); }}>Cancel</Button>
+                    <Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={() => {
                       if (editProduct.id) {
                         s.updateProduct(editProduct.id, editProduct);
                         toast({ title: 'Product updated' });
@@ -1362,6 +1426,7 @@ function AdminView() {
                         toast({ title: 'Product added' });
                       }
                       setEditProduct(null);
+                      setImagePreview('');
                     }}>Save Product</Button>
                   </DialogFooter>
                 </div>
@@ -1377,7 +1442,7 @@ function AdminView() {
               s.orders.map(o => (
                 <Card key={o.id} className="p-3 flex items-center justify-between">
                   <div><p className="font-medium text-sm">#{o.id}</p><p className="text-xs text-muted-foreground">{o.items.length} items &middot; {o.totals.totalDisplay}</p></div>
-                  <Badge variant={o.status === 'Cancelled' ? 'destructive' : 'default'}>{o.status}</Badge>
+                  <Badge variant={o.status === 'Cancelled' ? 'destructive' : 'default'} className={o.status !== 'Cancelled' ? 'bg-[#006233]' : ''}>{o.status}</Badge>
                 </Card>
               ))
             )}
@@ -1405,7 +1470,7 @@ export default function BachatBazarApp() {
     return () => window.removeEventListener('hashchange', handler);
   }, []);
 
-  // ── CRITICAL FIX: Scroll to top on route change ──
+  // Scroll to top on route change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
   }, [route]);
@@ -1513,12 +1578,12 @@ export default function BachatBazarApp() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      {/* Top Promo Bar */}
-      <div className="bg-gradient-to-r from-teal-700 to-emerald-600 text-white text-xs sm:text-sm">
+      {/* Top Promo Bar - Pakistani Green */}
+      <div className="bg-gradient-to-r from-[#004D25] to-[#006233] text-white text-xs sm:text-sm">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between">
-          <span className="flex items-center gap-1.5"><Truck size={14}/> Free shipping on orders over Rs 25,000</span>
+          <span className="flex items-center gap-1.5"><Truck size={14} className="text-[#FFD700]"/> Free shipping on orders over Rs 25,000</span>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:flex items-center gap-1"><Clock size={12}/> <CountdownTimer targetDate={promoEnd}/></span>
+            <span className="hidden sm:flex items-center gap-1"><Clock size={12} className="text-[#FFD700]"/> <CountdownTimer targetDate={promoEnd}/></span>
             <Select value={s.currency} onValueChange={s.setCurrency}>
               <SelectTrigger className="w-16 h-6 text-xs border-white/30 bg-white/10 text-white"><SelectValue/></SelectTrigger>
               <SelectContent>
@@ -1529,25 +1594,25 @@ export default function BachatBazarApp() {
         </div>
       </div>
 
-      {/* Sticky Navbar */}
-      <header className="sticky top-0 z-40 glass border-b">
+      {/* Sticky Navbar - Pakistani Green */}
+      <header className="sticky top-0 z-40 glass border-b border-[#006233]/10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
           {/* Mobile Menu Button */}
           <Button variant="ghost" size="icon" className="md:hidden shrink-0" onClick={() => setMobileMenuOpen(true)}><Menu size={22}/></Button>
 
           {/* Logo */}
           <button onClick={() => navigate('#/')} className="flex items-center gap-2 shrink-0">
-            <img src="/logo.svg" alt="Bachat Bazar" className="h-8 w-8"/>
-            <span className="text-lg font-bold hidden sm:block gradient-text">Bachat Bazar</span>
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#006233] to-[#00A651] flex items-center justify-center text-white font-bold text-lg shadow">B</div>
+            <span className="text-lg font-extrabold hidden sm:block gradient-text">Bachat Bazar</span>
           </button>
 
           {/* Search */}
           <div className="flex-1 max-w-xl relative">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/>
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#006233]"/>
               <Input
                 placeholder="Search products, brands..."
-                className="pl-9 h-9 text-sm w-full"
+                className="pl-9 h-9 text-sm w-full border-[#006233]/20 focus:border-[#006233]"
                 value={searchQuery}
                 onChange={e => { setSearchQuery(e.target.value); setSearchOpen(true); }}
                 onFocus={() => setSearchOpen(true)}
@@ -1558,9 +1623,9 @@ export default function BachatBazarApp() {
             {searchOpen && searchResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-card border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto custom-scrollbar">
                 {searchResults.map(p => (
-                  <button key={p.id} className="flex items-center gap-3 p-2 hover:bg-muted w-full text-left" onMouseDown={() => { navigate(makeHash('product', String(p.id))); setSearchOpen(false); setSearchQuery(''); }}>
+                  <button key={p.id} className="flex items-center gap-3 p-2 hover:bg-[#006233]/5 w-full text-left" onMouseDown={() => { navigate(makeHash('product', String(p.id))); setSearchOpen(false); setSearchQuery(''); }}>
                     <div className="w-10 h-10 rounded bg-muted overflow-hidden shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div>
-                    <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{p.name}</p><p className="text-xs text-muted-foreground">{p.brand} &middot; {s.money(p.price)}</p></div>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{p.name}</p><p className="text-xs text-[#C5A028]">{p.brand} &middot; {s.money(p.price)}</p></div>
                   </button>
                 ))}
               </div>
@@ -1570,23 +1635,27 @@ export default function BachatBazarApp() {
           {/* Nav Links - Desktop */}
           <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map(link => (
-              <Button key={link.hash} variant="ghost" size="sm" className="text-xs h-8" onClick={() => navigate(link.hash)}>{link.label}</Button>
+              <Button key={link.hash} variant="ghost" size="sm" className="text-xs h-8 font-medium hover:text-[#006233]" onClick={() => navigate(link.hash)}>{link.label}</Button>
             ))}
           </nav>
 
           {/* Action Icons */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={() => navigate(makeHash('wishlist'))}>
               <Heart size={18}/>{s.wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-pink-500 text-white text-[10px] flex items-center justify-center font-bold">{s.wishlist.length}</span>}
             </Button>
             <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={() => navigate(makeHash('compare'))}>
-              <GitCompare size={18}/>{s.compare.length > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-teal-600 text-white text-[10px] flex items-center justify-center font-bold">{s.compare.length}</span>}
+              <GitCompare size={18}/>{s.compare.length > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#006233] text-white text-[10px] flex items-center justify-center font-bold">{s.compare.length}</span>}
             </Button>
             <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={() => setCartOpen(true)}>
-              <ShoppingCart size={18}/>{cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-pink-500 text-white text-[10px] flex items-center justify-center font-bold">{cartCount}</span>}
+              <ShoppingCart size={18}/>{cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#C5A028] text-white text-[10px] flex items-center justify-center font-bold">{cartCount}</span>}
             </Button>
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => { if (s.user) navigate(makeHash('account')); else setAuthOpen(true); }}>
               <User size={18}/>
+            </Button>
+            {/* ADMIN ICON - Always visible */}
+            <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={() => navigate(makeHash('admin'))} title="Admin Panel">
+              <Settings size={18} className="text-[#006233] dark:text-[#00A651]"/>
             </Button>
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={s.toggleTheme}>
               {s.theme === 'dark' ? <Sun size={18}/> : <Moon size={18}/>}
@@ -1595,11 +1664,11 @@ export default function BachatBazarApp() {
         </div>
       </header>
 
-      {/* Category Bar */}
-      <div className="border-b bg-card/50 overflow-x-auto no-scrollbar">
+      {/* Category Bar - Pakistani style */}
+      <div className="border-b bg-gradient-to-r from-[#006233]/5 to-transparent dark:from-[#00A651]/10 overflow-x-auto no-scrollbar">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 py-1.5">
           {s.categories().map(cat => (
-            <button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className={`whitespace-nowrap text-xs font-medium px-3 py-1.5 rounded-full transition ${route.query.category === cat.id ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400' : 'hover:bg-muted text-muted-foreground'}`}>{cat.name}</button>
+            <button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className={`whitespace-nowrap text-xs font-medium px-3 py-1.5 rounded-full transition ${route.query.category === cat.id ? 'bg-[#006233] text-white dark:bg-[#00A651]' : 'hover:bg-[#006233]/10 dark:hover:bg-[#00A651]/20 text-muted-foreground'}`}>{cat.name}</button>
           ))}
         </div>
       </div>
@@ -1609,45 +1678,48 @@ export default function BachatBazarApp() {
         {renderView()}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t bg-muted/30 mt-auto">
+      {/* Footer - Pakistani style */}
+      <footer className="border-t bg-gradient-to-b from-[#004D25] to-[#002510] text-white mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="flex items-center gap-2 mb-3"><img src="/logo.svg" alt="Bachat Bazar" className="h-6 w-6"/><span className="font-bold gradient-text">Bachat Bazar</span></div>
-              <p className="text-sm text-muted-foreground mb-3">Pakistan&apos;s #1 online marketplace for quality products at the best prices.</p>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center text-[#FFD700] font-bold text-lg">B</div>
+                <span className="font-extrabold text-[#FFD700]">Bachat Bazar</span>
+              </div>
+              <p className="text-sm text-white/70 mb-3">Pakistan&apos;s #1 online marketplace for quality products at the best prices.</p>
               <div className="flex gap-2">
-                {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => <button key={i} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-teal-600 hover:text-white transition"><Icon size={14}/></button>)}
+                {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => <button key={i} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#C5A028] transition"><Icon size={14}/></button>)}
               </div>
             </div>
             <div>
-              <h4 className="font-semibold mb-3 text-sm">Quick Links</h4>
-              <div className="space-y-1.5 text-sm text-muted-foreground">
-                {navLinks.map(l => <button key={l.hash} onClick={() => navigate(l.hash)} className="block hover:text-foreground transition">{l.label}</button>)}
+              <h4 className="font-semibold mb-3 text-sm text-[#FFD700]">Quick Links</h4>
+              <div className="space-y-1.5 text-sm text-white/70">
+                {navLinks.map(l => <button key={l.hash} onClick={() => navigate(l.hash)} className="block hover:text-white transition">{l.label}</button>)}
               </div>
             </div>
             <div>
-              <h4 className="font-semibold mb-3 text-sm">Help</h4>
-              <div className="space-y-1.5 text-sm text-muted-foreground">
+              <h4 className="font-semibold mb-3 text-sm text-[#FFD700]">Help</h4>
+              <div className="space-y-1.5 text-sm text-white/70">
                 {[{ l: 'About Us', h: '#/about' }, { l: 'Contact', h: '#/contact' }, { l: 'FAQ', h: '#/faq' }, { l: 'Blog', h: '#/blog' }].map(item => (
-                  <button key={item.h} onClick={() => navigate(item.h)} className="block hover:text-foreground transition">{item.l}</button>
+                  <button key={item.h} onClick={() => navigate(item.h)} className="block hover:text-white transition">{item.l}</button>
                 ))}
               </div>
             </div>
             <div>
-              <h4 className="font-semibold mb-3 text-sm">Newsletter</h4>
-              <p className="text-sm text-muted-foreground mb-2">Get the latest deals in your inbox.</p>
+              <h4 className="font-semibold mb-3 text-sm text-[#FFD700]">Newsletter</h4>
+              <p className="text-sm text-white/70 mb-2">Get the latest deals in your inbox.</p>
               <div className="flex gap-2">
-                <Input placeholder="Email address" className="h-8 text-xs"/>
-                <Button size="sm" className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white shrink-0">Subscribe</Button>
+                <Input placeholder="Email address" className="h-8 text-xs bg-white/10 border-white/20 text-white placeholder:text-white/50"/>
+                <Button size="sm" className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-semibold shrink-0">Subscribe</Button>
               </div>
             </div>
           </div>
-          <Separator className="mb-4"/>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+          <Separator className="mb-4 bg-white/10"/>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-white/50">
             <p>&copy; 2026 Bachat Bazar. All rights reserved.</p>
             <div className="flex gap-4">
-              <button onClick={() => navigate(makeHash('admin'))} className="hover:text-foreground transition">Admin</button>
+              <button onClick={() => navigate(makeHash('admin'))} className="hover:text-[#FFD700] transition flex items-center gap-1"><Settings size={12}/> Admin</button>
               <span>Privacy Policy</span>
               <span>Terms of Service</span>
             </div>
@@ -1660,8 +1732,8 @@ export default function BachatBazarApp() {
       {/* Cart Drawer */}
       <Sheet open={cartOpen} onOpenChange={setCartOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle className="flex items-center gap-2"><ShoppingCart size={18}/> Cart ({cartCount})</SheetTitle>
+          <SheetHeader className="p-4 border-b border-[#006233]/10">
+            <SheetTitle className="flex items-center gap-2 text-[#006233]"><ShoppingCart size={18}/> Cart ({cartCount})</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
             {cartItems.length === 0 ? (
@@ -1674,7 +1746,7 @@ export default function BachatBazarApp() {
                   <div className="w-14 h-14 rounded bg-muted overflow-hidden shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{s.money(p.price)}</p>
+                    <p className="text-xs text-[#C5A028]">{s.money(p.price)}</p>
                     <div className="flex items-center gap-1.5 mt-1">
                       <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => s.setQty(item.id, item.qty - 1)}><Minus size={10}/></Button>
                       <span className="text-xs w-6 text-center">{item.qty}</span>
@@ -1690,10 +1762,10 @@ export default function BachatBazarApp() {
             <SheetFooter className="p-4 border-t space-y-3">
               <div className="space-y-1 text-sm w-full">
                 <div className="flex justify-between"><span>Subtotal</span><span>{cartTotals.subDisplay}</span></div>
-                <div className="flex justify-between font-bold"><span>Total</span><span>{cartTotals.totalDisplay}</span></div>
+                <div className="flex justify-between font-bold"><span>Total</span><span className="text-[#006233]">{cartTotals.totalDisplay}</span></div>
               </div>
-              <Button className="w-full bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => { setCartOpen(false); navigate(makeHash('cart')); }}>View Cart</Button>
-              <Button className="w-full" variant="outline" onClick={() => { setCartOpen(false); navigate(makeHash('checkout')); }}>Checkout</Button>
+              <Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={() => { setCartOpen(false); navigate(makeHash('cart')); }}>View Cart</Button>
+              <Button className="w-full border-[#006233] text-[#006233]" variant="outline" onClick={() => { setCartOpen(false); navigate(makeHash('checkout')); }}>Checkout</Button>
             </SheetFooter>
           )}
         </SheetContent>
@@ -1703,7 +1775,7 @@ export default function BachatBazarApp() {
       <Sheet open={wishlistOpen} onOpenChange={setWishlistOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
           <SheetHeader className="p-4 border-b">
-            <SheetTitle className="flex items-center gap-2"><Heart size={18}/> Wishlist ({s.wishlist.length})</SheetTitle>
+            <SheetTitle className="flex items-center gap-2"><Heart size={18} className="text-pink-500"/> Wishlist ({s.wishlist.length})</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
             {s.wishlist.length === 0 ? (
@@ -1716,7 +1788,7 @@ export default function BachatBazarApp() {
                   <div className="w-14 h-14 rounded bg-muted overflow-hidden shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{s.money(p.price)}</p>
+                    <p className="text-xs text-[#C5A028]">{s.money(p.price)}</p>
                     <div className="flex gap-1.5 mt-1">
                       <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => { s.addToCart(id); toast({ title: 'Added to cart' }); }}><ShoppingCart size={10} className="mr-1"/> Add</Button>
                       <Button size="sm" variant="ghost" className="h-6 text-xs text-red-500 px-2" onClick={() => { s.toggleWishlist(id); toast({ title: 'Removed' }); }}><Trash2 size={10}/></Button>
@@ -1728,7 +1800,7 @@ export default function BachatBazarApp() {
           </div>
           {s.wishlist.length > 0 && (
             <SheetFooter className="p-4 border-t">
-              <Button className="w-full bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => { setWishlistOpen(false); navigate(makeHash('wishlist')); }}>View All</Button>
+              <Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={() => { setWishlistOpen(false); navigate(makeHash('wishlist')); }}>View All</Button>
             </SheetFooter>
           )}
         </SheetContent>
@@ -1737,30 +1809,30 @@ export default function BachatBazarApp() {
       {/* Mobile Menu */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="w-72 p-0">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle className="flex items-center gap-2"><img src="/logo.svg" alt="" className="h-6 w-6"/> Bachat Bazar</SheetTitle>
+          <SheetHeader className="p-4 border-b bg-gradient-to-r from-[#006233] to-[#00A651] text-white">
+            <SheetTitle className="flex items-center gap-2"><div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-[#FFD700]">B</div> Bachat Bazar</SheetTitle>
           </SheetHeader>
           <nav className="p-4 space-y-1">
             {navLinks.map(l => (
-              <button key={l.hash} onClick={() => { navigate(l.hash); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted transition text-sm font-medium">
-                <l.icon size={16} className="text-muted-foreground"/><span>{l.label}</span>
+              <button key={l.hash} onClick={() => { navigate(l.hash); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-[#006233]/5 transition text-sm font-medium">
+                <l.icon size={16} className="text-[#006233]"/><span>{l.label}</span>
               </button>
             ))}
             <Separator className="my-2"/>
             {[{ l: 'Wishlist', h: makeHash('wishlist'), i: Heart }, { l: 'Compare', h: makeHash('compare'), i: GitCompare }, { l: 'Orders', h: makeHash('orders'), i: Package }, { l: 'Account', h: makeHash('account'), i: User }].map(item => (
-              <button key={item.h} onClick={() => { navigate(item.h); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted transition text-sm font-medium">
+              <button key={item.h} onClick={() => { navigate(item.h); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-[#006233]/5 transition text-sm font-medium">
                 <item.i size={16} className="text-muted-foreground"/><span>{item.l}</span>
               </button>
             ))}
             <Separator className="my-2"/>
             {[{ l: 'About', h: makeHash('about'), i: Info }, { l: 'Contact', h: makeHash('contact'), i: Phone }, { l: 'FAQ', h: makeHash('faq'), i: HelpCircle }, { l: 'Blog', h: makeHash('blog'), i: BookOpen }].map(item => (
-              <button key={item.h} onClick={() => { navigate(item.h); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted transition text-sm font-medium">
+              <button key={item.h} onClick={() => { navigate(item.h); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-[#006233]/5 transition text-sm font-medium">
                 <item.i size={16} className="text-muted-foreground"/><span>{item.l}</span>
               </button>
             ))}
             <Separator className="my-2"/>
-            <button onClick={() => { navigate(makeHash('admin')); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted transition text-sm font-medium">
-              <Lock size={16} className="text-muted-foreground"/><span>Admin</span>
+            <button onClick={() => { navigate(makeHash('admin')); setMobileMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-[#006233]/5 transition text-sm font-medium">
+              <Settings size={16} className="text-[#006233]"/><span className="text-[#006233] font-semibold">Admin Panel</span>
             </button>
           </nav>
           <div className="p-4 border-t">
@@ -1785,14 +1857,14 @@ export default function BachatBazarApp() {
               <div className="space-y-3">
                 <DialogHeader>
                   <DialogTitle className="text-lg">{quickViewProduct.name}</DialogTitle>
-                  <DialogDescription>{quickViewProduct.brand}</DialogDescription>
+                  <DialogDescription className="text-[#C5A028] font-semibold">{quickViewProduct.brand}</DialogDescription>
                 </DialogHeader>
                 <div className="flex items-center gap-2"><StarRating rating={quickViewProduct.rating} size={14}/><span className="text-xs text-muted-foreground">({quickViewProduct.reviews})</span></div>
                 <PriceDisplay price={quickViewProduct.price} oldPrice={quickViewProduct.oldPrice}/>
                 <p className="text-sm text-muted-foreground line-clamp-3">{quickViewProduct.description}</p>
                 <div className="flex gap-2">
-                  <Button className="flex-1 bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={() => { s.addToCart(quickViewProduct.id); toast({ title: 'Added to cart' }); }}><ShoppingCart size={14} className="mr-1"/> Add to Cart</Button>
-                  <Button variant="outline" onClick={() => { setQuickViewProduct(null); navigate(makeHash('product', String(quickViewProduct.id))); }}>View Details</Button>
+                  <Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={() => { s.addToCart(quickViewProduct.id); toast({ title: 'Added to cart' }); }}><ShoppingCart size={14} className="mr-1"/> Add to Cart</Button>
+                  <Button variant="outline" className="border-[#006233] text-[#006233]" onClick={() => { setQuickViewProduct(null); navigate(makeHash('product', String(quickViewProduct.id))); }}>View Details</Button>
                 </div>
               </div>
             </div>
@@ -1812,10 +1884,10 @@ export default function BachatBazarApp() {
               <div><Label className="text-xs">Full Name</Label><Input placeholder="Your name" value={authName} onChange={e => setAuthName(e.target.value)} className="h-9"/></div>
             )}
             <div><Label className="text-xs">Email</Label><Input type="email" placeholder="you@email.com" value={authEmail} onChange={e => setAuthEmail(e.target.value)} className="h-9" onKeyDown={e => e.key === 'Enter' && handleAuth()}/></div>
-            <Button className="w-full bg-gradient-to-r from-teal-600 to-emerald-500 text-white" onClick={handleAuth}>{authMode === 'login' ? 'Login' : 'Create Account'}</Button>
+            <Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-semibold" onClick={handleAuth}>{authMode === 'login' ? 'Login' : 'Create Account'}</Button>
             <p className="text-xs text-center text-muted-foreground">
               {authMode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-              <button className="text-teal-600 font-medium" onClick={() => setAuthMode(m => m === 'login' ? 'register' : 'login')}>{authMode === 'login' ? 'Sign up' : 'Login'}</button>
+              <button className="text-[#006231] dark:text-[#00A651] font-semibold" onClick={() => setAuthMode(m => m === 'login' ? 'register' : 'login')}>{authMode === 'login' ? 'Sign up' : 'Login'}</button>
             </p>
           </div>
         </DialogContent>
@@ -1823,17 +1895,17 @@ export default function BachatBazarApp() {
 
       {/* Back to Top */}
       {showBackToTop && (
-        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 text-white shadow-lg flex items-center justify-center hover:scale-110 transition animate-fadeUp">
+        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white shadow-lg flex items-center justify-center hover:scale-110 transition animate-fadeUp">
           <ArrowUp size={18}/>
         </button>
       )}
 
       {/* Cookie Consent */}
       {!cookieConsent && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-card border-t shadow-lg animate-fadeUp">
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-card border-t-2 border-t-[#C5A028] shadow-lg animate-fadeUp">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm"><Cookie size={18} className="text-teal-600 shrink-0"/><span className="text-muted-foreground">We use cookies to enhance your experience. By continuing, you agree to our cookie policy.</span></div>
-            <Button size="sm" className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white shrink-0" onClick={() => { setCookieConsent(true); localStorage.setItem('bb_cookie', '1'); }}>Accept</Button>
+            <div className="flex items-center gap-2 text-sm"><Cookie size={18} className="text-[#006233] shrink-0"/><span className="text-muted-foreground">We use cookies to enhance your experience. By continuing, you agree to our cookie policy.</span></div>
+            <Button size="sm" className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white shrink-0 font-semibold" onClick={() => { setCookieConsent(true); localStorage.setItem('bb_cookie', '1'); }}>Accept</Button>
           </div>
         </div>
       )}

@@ -1,0 +1,933 @@
+     1→- generic
+     2→  - StaticText "Free shipping on orders over Rs 25,000"
+     3→  - StaticText "23"
+     4→  - StaticText ":"
+     5→  - StaticText "59"
+     6→  - StaticText ":"
+     7→  - StaticText "48"
+     8→  - combobox [expanded=false, ref=e1]: PKR
+     9→    - generic [ref=e11] clickable [onclick]
+    10→      - StaticText "PKR"
+    11→  - banner
+    12→    - button "B Bachat Bazar" [ref=e12]
+    13→      - StaticText "B"
+    14→      - StaticText "Bachat Bazar"
+    15→    - textbox "Search products, brands..." [ref=e106]
+    16→    - navigation
+    17→      - button "Home" [ref=e39]
+    18→      - button "Shop" [ref=e40]
+    19→      - button "Deals" [ref=e41]
+    20→      - button "New" [ref=e42]
+    21→    - button [ref=e13]
+    22→    - button [ref=e14]
+    23→    - button [ref=e15]
+    24→    - button [ref=e16]
+    25→    - button "Admin Panel" [ref=e17]
+    26→    - button [ref=e18]
+    27→  - button "Health & Beauty" [ref=e2]
+    28→  - button "Grocery & Pet Care" [ref=e3]
+    29→  - button "TV & Home Appliances" [ref=e4]
+    30→  - button "Phones & Computers" [ref=e5]
+    31→  - button "Men's Fashion" [ref=e6]
+    32→  - button "Home & Lifestyle" [ref=e7]
+    33→  - button "Watches, Bags & Jewellery" [ref=e8]
+    34→  - button "Kids & Babies" [ref=e9]
+    35→  - main
+    36→    - generic
+    37→      - generic
+    38→        - image "Eid Mubarak Sale!"
+    39→        - generic
+    40→          - StaticText "☪"
+    41→          - StaticText "Bachat Bazar"
+    42→        - heading "Eid Mubarak Sale!" [level=2, ref=e149]
+    43→        - paragraph
+    44→          - StaticText "Up to 30% off on Health & Beauty essentials"
+    45→        - button "Shop Now" [ref=e150]
+    46→      - generic
+    47→        - image "Ramzan Kitchen Deals"
+    48→        - generic
+    49→          - StaticText "☪"
+    50→          - StaticText "Bachat Bazar"
+    51→        - heading "Ramzan Kitchen Deals" [level=2, ref=e151]
+    52→        - paragraph
+    53→          - StaticText "Premium appliances at unbeatable prices"
+    54→        - button "Shop Appliances" [ref=e152]
+    55→      - generic
+    56→        - image "Latest Phones & Gadgets"
+    57→        - generic
+    58→          - StaticText "☪"
+    59→          - StaticText "Bachat Bazar"
+    60→        - heading "Latest Phones & Gadgets" [level=2, ref=e153]
+    61→        - paragraph
+    62→          - StaticText "Smartphones, earbuds & accessories"
+    63→        - button "Shop Electronics" [ref=e154]
+    64→      - generic
+    65→        - image "Bachat ka Vaade!"
+    66→        - generic
+    67→          - StaticText "☪"
+    68→          - StaticText "Bachat Bazar"
+    69→        - heading "Bachat ka Vaade!" [level=2, ref=e155]
+    70→        - paragraph
+    71→          - StaticText "Best prices on Fashion, Home & more"
+    72→        - button "Shop All" [ref=e156]
+    73→      - button [ref=e43]
+    74→      - button [ref=e44]
+    75→      - generic
+    76→        - button [ref=e107]
+    77→        - button [ref=e108]
+    78→        - button [ref=e109]
+    79→        - button [ref=e110]
+    80→    - StaticText "🇵🇰"
+    81→    - paragraph
+    82→      - StaticText "Pakistan Zindabad! Free Delivery Nationwide"
+    83→    - paragraph
+    84→      - StaticText "On orders above Rs 25,000 — Cash on Delivery Available"
+    85→    - button "Shop Now" [ref=e19]
+    86→    - generic
+    87→      - heading "Shop by Category" [level=3, ref=e45]
+    88→      - button "Health & Beauty Health & Beauty" [ref=e46]
+    89→        - image "Health & Beauty"
+    90→        - generic
+    91→          - StaticText "Health & Beauty"
+    92→      - button "Grocery & Pet Care Grocery & Pet Care" [ref=e47]
+    93→        - image "Grocery & Pet Care"
+    94→        - generic
+    95→          - StaticText "Grocery & Pet Care"
+    96→      - button "TV & Home Appliances TV & Home Appliances" [ref=e48]
+    97→        - image "TV & Home Appliances"
+    98→        - generic
+    99→          - StaticText "TV & Home Appliances"
+   100→      - button "Phones & Computers Phones & Computers" [ref=e49]
+   101→        - image "Phones & Computers"
+   102→        - generic
+   103→          - StaticText "Phones & Computers"
+   104→      - button "Men's Fashion Men's Fashion" [ref=e50]
+   105→        - image "Men's Fashion"
+   106→        - generic
+   107→          - StaticText "Men's Fashion"
+   108→      - button "Home & Lifestyle Home & Lifestyle" [ref=e51]
+   109→        - image "Home & Lifestyle"
+   110→        - generic
+   111→          - StaticText "Home & Lifestyle"
+   112→      - button "Watches, Bags & Jewellery Watches, Bags & Jewellery" [ref=e52]
+   113→        - image "Watches, Bags & Jewellery"
+   114→        - generic
+   115→          - StaticText "Watches, Bags & Jewellery"
+   116→      - button "Kids & Babies Kids & Babies" [ref=e53]
+   117→        - image "Kids & Babies"
+   118→        - generic
+   119→          - StaticText "Kids & Babies"
+   120→    - generic
+   121→      - heading "Flash Sale" [level=3, ref=e54]
+   122→      - StaticText "Ends in"
+   123→      - StaticText "05"
+   124→      - StaticText ":"
+   125→      - StaticText "59"
+   126→      - StaticText ":"
+   127→      - StaticText "48"
+   128→      - generic [ref=e55] clickable [cursor:pointer, onclick]
+   129→        - generic
+   130→          - image "Joyroom PD Fast Charger 30W With Cable"
+   131→          - StaticText "5% OFF"
+   132→          - StaticText "NEW"
+   133→          - button "Quick View" [ref=e158]
+   134→          - generic
+   135→            - button [ref=e159]
+   136→            - button [ref=e160]
+   137→        - paragraph
+   138→          - StaticText "Joyroom"
+   139→        - paragraph
+   140→          - StaticText "Joyroom PD Fast Charger 30W With Cable"
+   141→        - StaticText "("
+   142→        - StaticText "15"
+   143→        - StaticText ")"
+   144→        - StaticText "Rs 3,325"
+   145→        - StaticText "Rs 3,500"
+   146→        - button "Add to Cart" [ref=e111]
+   147→      - generic [ref=e56] clickable [cursor:pointer, onclick]
+   148→        - generic
+   149→          - image "TP-LINK AX1800 Wi-Fi 6 PCIe Adapter"
+   150→          - StaticText "6% OFF"
+   151→          - button "Quick View" [ref=e161]
+   152→          - generic
+   153→            - button [ref=e162]
+   154→            - button [ref=e163]
+   155→        - paragraph
+   156→          - StaticText "TP-LINK"
+   157→        - paragraph
+   158→          - StaticText "TP-LINK AX1800 Wi-Fi 6 PCIe Adapter"
+   159→        - StaticText "("
+   160→        - StaticText "12"
+   161→        - StaticText ")"
+   162→        - StaticText "Rs 9,400"
+   163→        - StaticText "Rs 10,000"
+   164→        - button "Add to Cart" [ref=e112]
+   165→      - generic [ref=e57] clickable [cursor:pointer, onclick]
+   166→        - generic
+   167→          - image "TP-LINK 4G LTE Router 300Mbps"
+   168→          - StaticText "6% OFF"
+   169→          - button "Quick View" [ref=e164]
+   170→          - generic
+   171→            - button [ref=e165]
+   172→            - button [ref=e166]
+   173→        - paragraph
+   174→          - StaticText "TP-LINK"
+   175→        - paragraph
+   176→          - StaticText "TP-LINK 4G LTE Router 300Mbps"
+   177→        - StaticText "("
+   178→        - StaticText "8"
+   179→        - StaticText ")"
+   180→        - StaticText "Rs 15,886"
+   181→        - StaticText "Rs 16,900"
+   182→        - button "Add to Cart" [ref=e113]
+   183→      - generic [ref=e58] clickable [cursor:pointer, onclick]
+   184→        - generic
+   185→          - image "TP-LINK AX3000 Wi-Fi 6 Range Extender"
+   186→          - StaticText "6% OFF"
+   187→          - button "Quick View" [ref=e167]
+   188→          - generic
+   189→            - button [ref=e168]
+   190→            - button [ref=e169]
+   191→        - paragraph
+   192→          - StaticText "TP-LINK"
+   193→        - paragraph
+   194→          - StaticText "TP-LINK AX3000 Wi-Fi 6 Range Extender"
+   195→        - StaticText "("
+   196→        - StaticText "5"
+   197→        - StaticText ")"
+   198→        - StaticText "Rs 24,346"
+   199→        - StaticText "Rs 25,900"
+   200→        - button "Add to Cart" [ref=e114]
+   201→      - generic [ref=e59] clickable [cursor:pointer, onclick]
+   202→        - generic
+   203→          - image "Walkeaze Women's Ring Jewelry Golden 004476j"
+   204→          - StaticText "15% OFF"
+   205→          - button "Quick View" [ref=e170]
+   206→          - generic
+   207→            - button [ref=e171]
+   208→            - button [ref=e172]
+   209→        - paragraph
+   210→          - StaticText "Walkeaze"
+   211→        - paragraph
+   212→          - StaticText "Walkeaze Women's Ring Jewelry Golden 004476j"
+   213→        - StaticText "("
+   214→        - StaticText "12"
+   215→        - StaticText ")"
+   216→        - StaticText "Rs 1,828"
+   217→        - StaticText "Rs 2,150"
+   218→        - button "Add to Cart" [ref=e115]
+   219→      - generic [ref=e60] clickable [cursor:pointer, onclick]
+   220→        - generic
+   221→          - image "Walkeaze Women's Ring Jewelry Golden 004471j"
+   222→          - StaticText "15% OFF"
+   223→          - button "Quick View" [ref=e173]
+   224→          - generic
+   225→            - button [ref=e174]
+   226→            - button [ref=e175]
+   227→        - paragraph
+   228→          - StaticText "Walkeaze"
+   229→        - paragraph
+   230→          - StaticText "Walkeaze Women's Ring Jewelry Golden 004471j"
+   231→        - StaticText "("
+   232→        - StaticText "8"
+   233→        - StaticText ")"
+   234→        - StaticText "Rs 1,998"
+   235→        - StaticText "Rs 2,350"
+   236→        - button "Add to Cart" [ref=e116]
+   237→    - generic
+   238→      - heading "Featured" [level=3, ref=e61]
+   239→      - button "View All" [ref=e62]
+   240→      - generic [ref=e63] clickable [cursor:pointer, onclick]
+   241→        - generic
+   242→          - image "Maybelline Superstay Teddy Tint Lip & Cheek Color 5ml"
+   243→          - button "Quick View" [ref=e176]
+   244→          - generic
+   245→            - button [ref=e177]
+   246→            - button [ref=e178]
+   247→        - paragraph
+   248→          - StaticText "Maybelline"
+   249→        - paragraph
+   250→          - StaticText "Maybelline Superstay Teddy Tint Lip & Cheek Color 5ml"
+   251→        - StaticText "("
+   252→        - StaticText "1"
+   253→        - StaticText ")"
+   254→        - StaticText "Rs 3,650"
+   255→        - button "Add to Cart" [ref=e117]
+   256→      - generic [ref=e64] clickable [cursor:pointer, onclick]
+   257→        - generic
+   258→          - image "Garnier Vitamin C Booster Serum 15ML"
+   259→          - button "Quick View" [ref=e179]
+   260→          - generic
+   261→            - button [ref=e180]
+   262→            - button [ref=e181]
+   263→        - paragraph
+   264→          - StaticText "Garnier"
+   265→        - paragraph
+   266→          - StaticText "Garnier Vitamin C Booster Serum 15ML"
+   267→        - StaticText "("
+   268→        - StaticText "21"
+   269→        - StaticText ")"
+   270→        - StaticText "Rs 1,099"
+   271→        - button "Add to Cart" [ref=e118]
+   272→      - generic [ref=e65] clickable [cursor:pointer, onclick]
+   273→        - generic
+   274→          - image "Neutrogena Ultra Sheer Sunscreen SPF50 200ml"
+   275→          - button "Quick View" [ref=e182]
+   276→          - generic
+   277→            - button [ref=e183]
+   278→            - button [ref=e184]
+   279→        - paragraph
+   280→          - StaticText "Neutrogena"
+   281→        - paragraph
+   282→          - StaticText "Neutrogena Ultra Sheer Sunscreen SPF50 200ml"
+   283→        - StaticText "("
+   284→        - StaticText "120"
+   285→        - StaticText ")"
+   286→        - StaticText "Rs 6,500"
+   287→        - button "Add to Cart" [ref=e119]
+   288→      - generic [ref=e66] clickable [cursor:pointer, onclick]
+   289→        - generic
+   290→          - image "Fresh Street Himalayan Pink Salt Onion 125g"
+   291→          - button "Quick View" [ref=e185]
+   292→          - generic
+   293→            - button [ref=e186]
+   294→            - button [ref=e187]
+   295→        - paragraph
+   296→          - StaticText "Fresh Street"
+   297→        - paragraph
+   298→          - StaticText "Fresh Street Himalayan Pink Salt Onion 125g"
+   299→        - StaticText "("
+   300→        - StaticText "28"
+   301→        - StaticText ")"
+   302→        - StaticText "Rs 510"
+   303→        - button "Add to Cart" [ref=e120]
+   304→      - generic [ref=e67] clickable [cursor:pointer, onclick]
+   305→        - generic
+   306→          - image "Glam Gas Built In Hob 3 Brass Burner Black"
+   307→          - button "Quick View" [ref=e188]
+   308→          - generic
+   309→            - button [ref=e189]
+   310→            - button [ref=e190]
+   311→        - paragraph
+   312→          - StaticText "Glam Gas"
+   313→        - paragraph
+   314→          - StaticText "Glam Gas Built In Hob 3 Brass Burner Black"
+   315→        - StaticText "("
+   316→        - StaticText "12"
+   317→        - StaticText ")"
+   318→        - StaticText "Rs 43,500"
+   319→        - button "Add to Cart" [ref=e121]
+   320→      - generic [ref=e68] clickable [cursor:pointer, onclick]
+   321→        - generic
+   322→          - image "Redmi Buds 8 Lite Earbuds ANC White"
+   323→          - button "Quick View" [ref=e191]
+   324→          - generic
+   325→            - button [ref=e192]
+   326→            - button [ref=e193]
+   327→        - paragraph
+   328→          - StaticText "Redmi"
+   329→        - paragraph
+   330→          - StaticText "Redmi Buds 8 Lite Earbuds ANC White"
+   331→        - StaticText "("
+   332→        - StaticText "85"
+   333→        - StaticText ")"
+   334→        - StaticText "Rs 8,500"
+   335→        - button "Add to Cart" [ref=e122]
+   336→      - generic [ref=e69] clickable [cursor:pointer, onclick]
+   337→        - generic
+   338→          - image "Samsung A37 Smartphone 8+256GB White"
+   339→          - button "Quick View" [ref=e194]
+   340→          - generic
+   341→            - button [ref=e195]
+   342→            - button [ref=e196]
+   343→        - paragraph
+   344→          - StaticText "Samsung"
+   345→        - paragraph
+   346→          - StaticText "Samsung A37 Smartphone 8+256GB White"
+   347→        - StaticText "("
+   348→        - StaticText "95"
+   349→        - StaticText ")"
+   350→        - StaticText "Rs 149,999"
+   351→        - button "Add to Cart" [ref=e123]
+   352→      - generic [ref=e70] clickable [cursor:pointer, onclick]
+   353→        - generic
+   354→          - image "Basix Men's Zipper Mesh 3 Quarter Black & White"
+   355→          - button "Quick View" [ref=e197]
+   356→          - generic
+   357→            - button [ref=e198]
+   358→            - button [ref=e199]
+   359→        - paragraph
+   360→          - StaticText "Basix"
+   361→        - paragraph
+   362→          - StaticText "Basix Men's Zipper Mesh 3 Quarter Black & White"
+   363→        - StaticText "("
+   364→        - StaticText "15"
+   365→        - StaticText ")"
+   366→        - StaticText "Rs 1,900"
+   367→        - button "Add to Cart" [ref=e124]
+   368→    - generic
+   369→      - StaticText "☪"
+   370→      - paragraph
+   371→        - StaticText "LIMITED TIME OFFER"
+   372→      - heading "Eid Mubarak Sale — 25% Off!" [level=3, ref=e71]
+   373→      - paragraph
+   374→        - StaticText "Use code EID25 on orders above Rs 50,000"
+   375→      - button "Shop Deals" [ref=e72]
+   376→    - generic
+   377→      - heading "Trending Now" [level=3, ref=e73]
+   378→      - button "View All" [ref=e74]
+   379→      - generic [ref=e75] clickable [cursor:pointer, onclick]
+   380→        - generic
+   381→          - image "Garnier Vitamin C Booster Serum 15ML"
+   382→          - button "Quick View" [ref=e200]
+   383→          - generic
+   384→            - button [ref=e201]
+   385→            - button [ref=e202]
+   386→        - paragraph
+   387→          - StaticText "Garnier"
+   388→        - paragraph
+   389→          - StaticText "Garnier Vitamin C Booster Serum 15ML"
+   390→        - StaticText "("
+   391→        - StaticText "21"
+   392→        - StaticText ")"
+   393→        - StaticText "Rs 1,099"
+   394→        - button "Add to Cart" [ref=e125]
+   395→      - generic [ref=e76] clickable [cursor:pointer, onclick]
+   396→        - generic
+   397→          - image "Garnier Vitamin C Face Wash 100ml"
+   398→          - button "Quick View" [ref=e203]
+   399→          - generic
+   400→            - button [ref=e204]
+   401→            - button [ref=e205]
+   402→        - paragraph
+   403→          - StaticText "Garnier"
+   404→        - paragraph
+   405→          - StaticText "Garnier Vitamin C Face Wash 100ml"
+   406→        - StaticText "("
+   407→        - StaticText "2"
+   408→        - StaticText ")"
+   409→        - StaticText "Rs 579"
+   410→        - button "Add to Cart" [ref=e126]
+   411→      - generic [ref=e77] clickable [cursor:pointer, onclick]
+   412→        - generic
+   413→          - image "Nivea Aloe & Hydration Body Lotion 400ml"
+   414→          - button "Quick View" [ref=e206]
+   415→          - generic
+   416→            - button [ref=e207]
+   417→            - button [ref=e208]
+   418→        - paragraph
+   419→          - StaticText "Nivea"
+   420→        - paragraph
+   421→          - StaticText "Nivea Aloe & Hydration Body Lotion 400ml"
+   422→        - StaticText "("
+   423→        - StaticText "95"
+   424→        - StaticText ")"
+   425→        - StaticText "Rs 2,200"
+   426→        - button "Add to Cart" [ref=e127]
+   427→      - generic [ref=e78] clickable [cursor:pointer, onclick]
+   428→        - generic
+   429→          - image "Mr. Muscle Washroom Cleaner 750ml"
+   430→          - button "Quick View" [ref=e209]
+   431→          - generic
+   432→            - button [ref=e210]
+   433→            - button [ref=e211]
+   434→        - paragraph
+   435→          - StaticText "Mr. Muscle"
+   436→        - paragraph
+   437→          - StaticText "Mr. Muscle Washroom Cleaner 750ml"
+   438→        - StaticText "("
+   439→        - StaticText "48"
+   440→        - StaticText ")"
+   441→        - StaticText "Rs 1,050"
+   442→        - button "Add to Cart" [ref=e128]
+   443→      - generic [ref=e79] clickable [cursor:pointer, onclick]
+   444→        - generic
+   445→          - image "West Point Deluxe Stand Mixer 500W"
+   446→          - button "Quick View" [ref=e212]
+   447→          - generic
+   448→            - button [ref=e213]
+   449→            - button [ref=e214]
+   450→        - paragraph
+   451→          - StaticText "West Point"
+   452→        - paragraph
+   453→          - StaticText "West Point Deluxe Stand Mixer 500W"
+   454→        - StaticText "("
+   455→        - StaticText "22"
+   456→        - StaticText ")"
+   457→        - StaticText "Rs 11,500"
+   458→        - button "Add to Cart" [ref=e129]
+   459→      - generic [ref=e80] clickable [cursor:pointer, onclick]
+   460→        - generic
+   461→          - image "Redmi Buds 8 Lite Earbuds ANC White"
+   462→          - button "Quick View" [ref=e215]
+   463→          - generic
+   464→            - button [ref=e216]
+   465→            - button [ref=e217]
+   466→        - paragraph
+   467→          - StaticText "Redmi"
+   468→        - paragraph
+   469→          - StaticText "Redmi Buds 8 Lite Earbuds ANC White"
+   470→        - StaticText "("
+   471→        - StaticText "85"
+   472→        - StaticText ")"
+   473→        - StaticText "Rs 8,500"
+   474→        - button "Add to Cart" [ref=e130]
+   475→      - generic [ref=e81] clickable [cursor:pointer, onclick]
+   476→        - generic
+   477→          - image "Xiaomi MI Power Bank 22.5W 20000mAh Dark Gray"
+   478→          - button "Quick View" [ref=e218]
+   479→          - generic
+   480→            - button [ref=e219]
+   481→            - button [ref=e220]
+   482→        - paragraph
+   483→          - StaticText "Xiaomi"
+   484→        - paragraph
+   485→          - StaticText "Xiaomi MI Power Bank 22.5W 20000mAh Dark Gray"
+   486→        - StaticText "("
+   487→        - StaticText "45"
+   488→        - StaticText ")"
+   489→        - StaticText "Rs 7,800"
+   490→        - button "Add to Cart" [ref=e131]
+   491→      - generic [ref=e82] clickable [cursor:pointer, onclick]
+   492→        - generic
+   493→          - image "Indus Men's Cotton T-Shirt Sky Blue"
+   494→          - button "Quick View" [ref=e221]
+   495→          - generic
+   496→            - button [ref=e222]
+   497→            - button [ref=e223]
+   498→        - paragraph
+   499→          - StaticText "Indus"
+   500→        - paragraph
+   501→          - StaticText "Indus Men's Cotton T-Shirt Sky Blue"
+   502→        - StaticText "("
+   503→        - StaticText "48"
+   504→        - StaticText ")"
+   505→        - StaticText "Rs 1,250"
+   506→        - button "Add to Cart" [ref=e132]
+   507→    - generic
+   508→      - heading "New Arrivals" [level=3, ref=e83]
+   509→      - button "View All" [ref=e84]
+   510→      - generic [ref=e85] clickable [cursor:pointer, onclick]
+   511→        - generic
+   512→          - image "Clean & Clear Morning Energy Facial Scrub 150g"
+   513→          - StaticText "NEW"
+   514→          - button "Quick View" [ref=e224]
+   515→          - generic
+   516→            - button [ref=e225]
+   517→            - button [ref=e226]
+   518→        - paragraph
+   519→          - StaticText "Clean & Clear"
+   520→        - paragraph
+   521→          - StaticText "Clean & Clear Morning Energy Facial Scrub 150g"
+   522→        - StaticText "("
+   523→        - StaticText "42"
+   524→        - StaticText ")"
+   525→        - StaticText "Rs 1,500"
+   526→        - button "Add to Cart" [ref=e133]
+   527→      - generic [ref=e86] clickable [cursor:pointer, onclick]
+   528→        - generic
+   529→          - image "Medicube Zero Pore Cream 2.0 50ml"
+   530→          - StaticText "NEW"
+   531→          - button "Quick View" [ref=e227]
+   532→          - generic
+   533→            - button [ref=e228]
+   534→            - button [ref=e229]
+   535→        - paragraph
+   536→          - StaticText "Medicube"
+   537→        - paragraph
+   538→          - StaticText "Medicube Zero Pore Cream 2.0 50ml"
+   539→        - StaticText "("
+   540→        - StaticText "38"
+   541→        - StaticText ")"
+   542→        - StaticText "Rs 6,300"
+   543→        - button "Add to Cart" [ref=e134]
+   544→      - generic [ref=e87] clickable [cursor:pointer, onclick]
+   545→        - generic
+   546→          - image "Daffodils Space Rocket Jelly Beans 68g"
+   547→          - StaticText "NEW"
+   548→          - button "Quick View" [ref=e230]
+   549→          - generic
+   550→            - button [ref=e231]
+   551→            - button [ref=e232]
+   552→        - paragraph
+   553→          - StaticText "Daffodils"
+   554→        - paragraph
+   555→          - StaticText "Daffodils Space Rocket Jelly Beans 68g"
+   556→        - StaticText "("
+   557→        - StaticText "18"
+   558→        - StaticText ")"
+   559→        - StaticText "Rs 325"
+   560→        - button "Add to Cart" [ref=e135]
+   561→      - generic [ref=e88] clickable [cursor:pointer, onclick]
+   562→        - generic
+   563→          - image "Glam Gas Built In Hob Single Burner Grey"
+   564→          - StaticText "NEW"
+   565→          - button "Quick View" [ref=e233]
+   566→          - generic
+   567→            - button [ref=e234]
+   568→            - button [ref=e235]
+   569→        - paragraph
+   570→          - StaticText "Glam Gas"
+   571→        - paragraph
+   572→          - StaticText "Glam Gas Built In Hob Single Burner Grey"
+   573→        - StaticText "("
+   574→        - StaticText "6"
+   575→        - StaticText ")"
+   576→        - StaticText "Rs 16,500"
+   577→        - button "Add to Cart" [ref=e136]
+   578→      - generic [ref=e89] clickable [cursor:pointer, onclick]
+   579→        - generic
+   580→          - image "Joyroom PD Fast Charger 30W With Cable"
+   581→          - StaticText "5% OFF"
+   582→          - StaticText "NEW"
+   583→          - button "Quick View" [ref=e236]
+   584→          - generic
+   585→            - button [ref=e237]
+   586→            - button [ref=e238]
+   587→        - paragraph
+   588→          - StaticText "Joyroom"
+   589→        - paragraph
+   590→          - StaticText "Joyroom PD Fast Charger 30W With Cable"
+   591→        - StaticText "("
+   592→        - StaticText "15"
+   593→        - StaticText ")"
+   594→        - StaticText "Rs 3,325"
+   595→        - StaticText "Rs 3,500"
+   596→        - button "Add to Cart" [ref=e137]
+   597→      - generic [ref=e90] clickable [cursor:pointer, onclick]
+   598→        - generic
+   599→          - image "Pace Setters Blue Fuel Collar Shirt Camel"
+   600→          - StaticText "NEW"
+   601→          - button "Quick View" [ref=e239]
+   602→          - generic
+   603→            - button [ref=e240]
+   604→            - button [ref=e241]
+   605→        - paragraph
+   606→          - StaticText "Pace Setters"
+   607→        - paragraph
+   608→          - StaticText "Pace Setters Blue Fuel Collar Shirt Camel"
+   609→        - StaticText "("
+   610→        - StaticText "12"
+   611→        - StaticText ")"
+   612→        - StaticText "Rs 2,595"
+   613→        - button "Add to Cart" [ref=e138]
+   614→      - generic [ref=e91] clickable [cursor:pointer, onclick]
+   615→        - generic
+   616→          - image "Warq Notes Fancy Unicorn Pen Assorted"
+   617→          - StaticText "NEW"
+   618→          - button "Quick View" [ref=e242]
+   619→          - generic
+   620→            - button [ref=e243]
+   621→            - button [ref=e244]
+   622→        - paragraph
+   623→          - StaticText "Warq Notes"
+   624→        - paragraph
+   625→          - StaticText "Warq Notes Fancy Unicorn Pen Assorted"
+   626→        - StaticText "("
+   627→        - StaticText "30"
+   628→        - StaticText ")"
+   629→        - StaticText "Rs 265"
+   630→        - button "Add to Cart" [ref=e139]
+   631→      - generic [ref=e92] clickable [cursor:pointer, onclick]
+   632→        - generic
+   633→          - image "SJ Women's Earring Jewelry Golden Ruby"
+   634→          - StaticText "NEW"
+   635→          - button "Quick View" [ref=e245]
+   636→          - generic
+   637→            - button [ref=e246]
+   638→            - button [ref=e247]
+   639→        - paragraph
+   640→          - StaticText "SJ"
+   641→        - paragraph
+   642→          - StaticText "SJ Women's Earring Jewelry Golden Ruby"
+   643→        - StaticText "("
+   644→        - StaticText "14"
+   645→        - StaticText ")"
+   646→        - StaticText "Rs 2,295"
+   647→        - button "Add to Cart" [ref=e140]
+   648→    - generic
+   649→      - heading "Best Sellers" [level=3, ref=e93]
+   650→      - generic [ref=e94] clickable [cursor:pointer, onclick]
+   651→        - generic
+   652→          - image "Maybelline Superstay Teddy Tint Lip & Cheek Color 5ml"
+   653→          - button "Quick View" [ref=e248]
+   654→          - generic
+   655→            - button [ref=e249]
+   656→            - button [ref=e250]
+   657→        - paragraph
+   658→          - StaticText "Maybelline"
+   659→        - paragraph
+   660→          - StaticText "Maybelline Superstay Teddy Tint Lip & Cheek Color 5ml"
+   661→        - StaticText "("
+   662→        - StaticText "1"
+   663→        - StaticText ")"
+   664→        - StaticText "Rs 3,650"
+   665→        - button "Add to Cart" [ref=e141]
+   666→      - generic [ref=e95] clickable [cursor:pointer, onclick]
+   667→        - generic
+   668→          - image "L'Oreal Hyaluron Expert Night Cream Mask 50ML"
+   669→          - button "Quick View" [ref=e251]
+   670→          - generic
+   671→            - button [ref=e252]
+   672→            - button [ref=e253]
+   673→        - paragraph
+   674→          - StaticText "L'Oreal"
+   675→        - paragraph
+   676→          - StaticText "L'Oreal Hyaluron Expert Night Cream Mask 50ML"
+   677→        - StaticText "("
+   678→        - StaticText "43"
+   679→        - StaticText ")"
+   680→        - StaticText "Rs 4,099"
+   681→        - button "Add to Cart" [ref=e142]
+   682→      - generic [ref=e96] clickable [cursor:pointer, onclick]
+   683→        - generic
+   684→          - image "Bisconni Chai Wala Plain Cake 20g"
+   685→          - button "Quick View" [ref=e254]
+   686→          - generic
+   687→            - button [ref=e255]
+   688→            - button [ref=e256]
+   689→        - paragraph
+   690→          - StaticText "Bisconni"
+   691→        - paragraph
+   692→          - StaticText "Bisconni Chai Wala Plain Cake 20g"
+   693→        - StaticText "("
+   694→        - StaticText "200"
+   695→        - StaticText ")"
+   696→        - StaticText "Rs 20"
+   697→        - button "Add to Cart" [ref=e143]
+   698→      - generic [ref=e97] clickable [cursor:pointer, onclick]
+   699→        - generic
+   700→          - image "Glam Gas 6 Function Range Hood 90CM Windy-12"
+   701→          - button "Quick View" [ref=e257]
+   702→          - generic
+   703→            - button [ref=e258]
+   704→            - button [ref=e259]
+   705→        - paragraph
+   706→          - StaticText "Glam Gas"
+   707→        - paragraph
+   708→          - StaticText "Glam Gas 6 Function Range Hood 90CM Windy-12"
+   709→        - StaticText "("
+   710→        - StaticText "5"
+   711→        - StaticText ")"
+   712→        - StaticText "Rs 73,200"
+   713→        - button "Add to Cart" [ref=e144]
+   714→      - generic [ref=e98] clickable [cursor:pointer, onclick]
+   715→        - generic
+   716→          - image "Anex Deluxe Blender & Grinder AG-6139SS"
+   717→          - button "Quick View" [ref=e260]
+   718→          - generic
+   719→            - button [ref=e261]
+   720→            - button [ref=e262]
+   721→        - paragraph
+   722→          - StaticText "Anex"
+   723→        - paragraph
+   724→          - StaticText "Anex Deluxe Blender & Grinder AG-6139SS"
+   725→        - StaticText "("
+   726→        - StaticText "15"
+   727→        - StaticText ")"
+   728→        - StaticText "Rs 16,150"
+   729→        - button "Add to Cart" [ref=e145]
+   730→      - generic [ref=e99] clickable [cursor:pointer, onclick]
+   731→        - generic
+   732→          - image "Redmi Buds 8 Lite Earbuds ANC White"
+   733→          - button "Quick View" [ref=e263]
+   734→          - generic
+   735→            - button [ref=e264]
+   736→            - button [ref=e265]
+   737→        - paragraph
+   738→          - StaticText "Redmi"
+   739→        - paragraph
+   740→          - StaticText "Redmi Buds 8 Lite Earbuds ANC White"
+   741→        - StaticText "("
+   742→        - StaticText "85"
+   743→        - StaticText ")"
+   744→        - StaticText "Rs 8,500"
+   745→        - button "Add to Cart" [ref=e146]
+   746→      - generic [ref=e100] clickable [cursor:pointer, onclick]
+   747→        - generic
+   748→          - image "HOCO Sonar Sports Bluetooth Speaker"
+   749→          - button "Quick View" [ref=e266]
+   750→          - generic
+   751→            - button [ref=e267]
+   752→            - button [ref=e268]
+   753→        - paragraph
+   754→          - StaticText "HOCO"
+   755→        - paragraph
+   756→          - StaticText "HOCO Sonar Sports Bluetooth Speaker"
+   757→        - StaticText "("
+   758→        - StaticText "20"
+   759→        - StaticText ")"
+   760→        - StaticText "Rs 4,059"
+   761→        - button "Add to Cart" [ref=e147]
+   762→      - generic [ref=e101] clickable [cursor:pointer, onclick]
+   763→        - generic
+   764→          - image "Indus Men's Cotton T-Shirt Sky Blue"
+   765→          - button "Quick View" [ref=e269]
+   766→          - generic
+   767→            - button [ref=e270]
+   768→            - button [ref=e271]
+   769→        - paragraph
+   770→          - StaticText "Indus"
+   771→        - paragraph
+   772→          - StaticText "Indus Men's Cotton T-Shirt Sky Blue"
+   773→        - StaticText "("
+   774→        - StaticText "48"
+   775→        - StaticText ")"
+   776→        - StaticText "Rs 1,250"
+   777→        - button "Add to Cart" [ref=e148]
+   778→    - generic
+   779→      - heading "What Our Customers Say" [level=3, ref=e102]
+   780→      - image "Ayesha Khan"
+   781→      - paragraph
+   782→        - StaticText "Ayesha Khan"
+   783→      - paragraph
+   784→        - StaticText "Verified Buyer"
+   785→      - paragraph
+   786→        - StaticText "“Best online shopping experience in Pakistan! Fast delivery and genuine products every time.”"
+   787→      - image "Bilal Ahmed"
+   788→      - paragraph
+   789→        - StaticText "Bilal Ahmed"
+   790→      - paragraph
+   791→        - StaticText "Verified Buyer"
+   792→      - paragraph
+   793→        - StaticText "“Bachat Bazar has everything I need at great prices. The Cash on Delivery option is so convenient!”"
+   794→      - image "Fatima Ali"
+   795→      - paragraph
+   796→        - StaticText "Fatima Ali"
+   797→      - paragraph
+   798→        - StaticText "Verified Buyer"
+   799→      - paragraph
+   800→        - StaticText "“Love the variety of products. Quality is excellent and prices are very reasonable compared to other stores.”"
+   801→      - image "Usman Malik"
+   802→      - paragraph
+   803→        - StaticText "Usman Malik"
+   804→      - paragraph
+   805→        - StaticText "Verified Buyer"
+   806→      - paragraph
+   807→        - StaticText "“Ordered groceries and they arrived the same day. Amazing service and the website is so easy to use!”"
+   808→    - generic
+   809→      - heading "From the Blog" [level=3, ref=e103]
+   810→      - button "All Posts" [ref=e104]
+   811→      - image "10 Best Beauty Products for Glowing Skin"
+   812→      - paragraph
+   813→        - StaticText "Jul 1, 2026 · Beauty Desk"
+   814→      - paragraph
+   815→        - StaticText "10 Best Beauty Products for Glowing Skin"
+   816→      - paragraph
+   817→        - StaticText "Discover the top skincare picks that will give you that radiant glow this season."
+   818→      - image "Smart Home Appliances That Save Time"
+   819→      - paragraph
+   820→        - StaticText "Jun 25, 2026 · Home Team"
+   821→      - paragraph
+   822→        - StaticText "Smart Home Appliances That Save Time"
+   823→      - paragraph
+   824→        - StaticText "Upgrade your kitchen with these time-saving appliances that make cooking a breeze."
+   825→      - image "Men's Fashion Trends for 2026"
+   826→      - paragraph
+   827→        - StaticText "Jun 18, 2026 · Fashion Edit"
+   828→      - paragraph
+   829→        - StaticText "Men's Fashion Trends for 2026"
+   830→      - paragraph
+   831→        - StaticText "Stay stylish with the latest fashion trends for men this year."
+   832→      - image "Best Phone Accessories Under Rs 5,000"
+   833→      - paragraph
+   834→        - StaticText "Jun 10, 2026 · Tech Desk"
+   835→      - paragraph
+   836→        - StaticText "Best Phone Accessories Under Rs 5,000"
+   837→      - paragraph
+   838→        - StaticText "From earbuds to chargers, here are the best accessories that won't break the bank."
+   839→    - generic
+   840→      - heading "Top Brands" [level=3, ref=e105]
+   841→      - StaticText "Maybelline"
+   842→      - StaticText "Garnier"
+   843→      - StaticText "L'Oreal"
+   844→      - StaticText "Garnier"
+   845→      - StaticText "Johnson's"
+   846→      - StaticText "Listerine"
+   847→      - StaticText "Aveeno"
+   848→      - StaticText "Clean & Clear"
+   849→      - StaticText "Nivea"
+   850→      - StaticText "Nivea"
+   851→      - StaticText "Neutrogena"
+   852→      - StaticText "Medicube"
+   853→      - StaticText "Remia"
+   854→      - StaticText "Santan"
+   855→      - StaticText "Mr. Muscle"
+   856→      - StaticText "Bisconni"
+   857→      - StaticText "Knorr"
+   858→      - StaticText "Daffodils"
+   859→      - StaticText "Fresh Street"
+   860→      - StaticText "Fresh Street"
+   861→      - StaticText "Maybelline"
+   862→      - StaticText "Garnier"
+   863→      - StaticText "L'Oreal"
+   864→      - StaticText "Garnier"
+   865→      - StaticText "Johnson's"
+   866→      - StaticText "Listerine"
+   867→      - StaticText "Aveeno"
+   868→      - StaticText "Clean & Clear"
+   869→      - StaticText "Nivea"
+   870→      - StaticText "Nivea"
+   871→      - StaticText "Neutrogena"
+   872→      - StaticText "Medicube"
+   873→      - StaticText "Remia"
+   874→      - StaticText "Santan"
+   875→      - StaticText "Mr. Muscle"
+   876→      - StaticText "Bisconni"
+   877→      - StaticText "Knorr"
+   878→      - StaticText "Daffodils"
+   879→      - StaticText "Fresh Street"
+   880→      - StaticText "Fresh Street"
+   881→    - generic
+   882→      - paragraph
+   883→        - StaticText "Free Shipping"
+   884→      - paragraph
+   885→        - StaticText "Orders over Rs 25,000"
+   886→      - paragraph
+   887→        - StaticText "Genuine Products"
+   888→      - paragraph
+   889→        - StaticText "100% authentic items"
+   890→      - paragraph
+   891→        - StaticText "7-Day Returns"
+   892→      - paragraph
+   893→        - StaticText "Easy return policy"
+   894→      - paragraph
+   895→        - StaticText "Cash on Delivery"
+   896→      - paragraph
+   897→        - StaticText "Pay when you receive"
+   898→  - contentinfo
+   899→    - StaticText "B"
+   900→    - StaticText "Bachat Bazar"
+   901→    - paragraph
+   902→      - StaticText "Pakistan's #1 online marketplace for quality products at the best prices."
+   903→    - button [ref=e20]
+   904→    - button [ref=e21]
+   905→    - button [ref=e22]
+   906→    - button [ref=e23]
+   907→    - heading "Quick Links" [level=4, ref=e24]
+   908→    - button "Home" [ref=e25]
+   909→    - button "Shop" [ref=e26]
+   910→    - button "Deals" [ref=e27]
+   911→    - button "New" [ref=e28]
+   912→    - heading "Help" [level=4, ref=e29]
+   913→    - button "About Us" [ref=e30]
+   914→    - button "Contact" [ref=e31]
+   915→    - button "FAQ" [ref=e32]
+   916→    - button "Blog" [ref=e33]
+   917→    - heading "Newsletter" [level=4, ref=e34]
+   918→    - paragraph
+   919→      - StaticText "Get the latest deals in your inbox."
+   920→    - textbox "Email address" [ref=e35]
+   921→    - button "Subscribe" [ref=e36]
+   922→    - paragraph
+   923→      - StaticText "© 2026 Bachat Bazar. All rights reserved."
+   924→    - button "Admin" [ref=e37]
+   925→    - StaticText "Privacy Policy"
+   926→    - StaticText "Terms of Service"
+   927→  - StaticText "We use cookies to enhance your experience. By continuing, you agree to our cookie policy."
+   928→  - button "Accept" [ref=e38]
+   929→  - region "Notifications (F8)" [ref=e10]
+   930→    - list
+   931→  - button "Open Next.js Dev Tools" [expanded=false, ref=e157]
+   932→    - image
+   933→  - alert

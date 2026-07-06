@@ -87,7 +87,7 @@ export const metadata: Metadata = {
     creator: "@bachatbazar",
   },
   verification: {
-    google: "google-site-verification-code", // Replace with actual code from Google Search Console
+    google: "google2b6ce7b0becad346",
   },
 };
 

@@ -35,7 +35,17 @@ import { useToast } from '@/hooks/use-toast';
 // ─── HELPERS ───
 const ICON_MAP: Record<string, React.ElementType> = { Sparkles, ShoppingCart, Tv, Smartphone, Shirt, Sofa, Watch, Baby, Tag };
 function getCatIcon(n: string) { return ICON_MAP[n] || Tag; }
-function imgFallback(e: React.SyntheticEvent<HTMLImageElement>, seed?: string) { const t = e.currentTarget; t.onerror = null; t.src = `https://picsum.photos/seed/${seed || 'bb' + Math.random().toString(36).slice(2, 6)}/400/400`; }
+function imgFallback(e: React.SyntheticEvent<HTMLImageElement>, seed?: string) {
+  const t = e.currentTarget;
+  // Only fallback if we haven't already tried a fallback
+  if (t.dataset.fallback) return;
+  t.dataset.fallback = '1';
+  t.onerror = null;
+  // Try without crossOrigin first (CORS can cause false errors)
+  if (t.crossOrigin) { t.crossOrigin = null; t.src = t.src; return; }
+  // Final fallback to placeholder
+  t.src = `https://picsum.photos/seed/${seed || 'bb' + Math.random().toString(36).slice(2, 6)}/400/400`;
+}
 
 const ADMIN_PWD = 'BA56CR7VK18';
 const FH = { fontFamily: "var(--font-heading), 'DM Serif Display', Georgia, serif" };
@@ -53,7 +63,9 @@ function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
 }
 
 function ProductImage({ src, alt, seed, className = '' }: { src: string; alt: string; seed?: string; className?: string }) {
-  return <img src={src} alt={alt} className={className} onError={(e) => imgFallback(e, seed)} loading="lazy" draggable={false} />;
+  // Resolve the src so Unsplash IDs, /uploads/ paths, and full URLs all work
+  const resolvedSrc = resolveImg(src, 700);
+  return <img src={resolvedSrc} alt={alt} className={className} referrerPolicy="no-referrer" crossOrigin="anonymous" onError={(e) => imgFallback(e, seed)} loading="lazy" draggable={false} />;
 }
 
 function PriceDisplay({ price, oldPrice }: { price: number; oldPrice: number }) {
@@ -63,14 +75,29 @@ function PriceDisplay({ price, oldPrice }: { price: number; oldPrice: number }) 
 
 // ─── IMAGE UPLOAD HELPER ───
 async function uploadImage(file: File): Promise<string | null> {
+  // First try: server upload (returns data URL for Vercel, local path for dev)
   const formData = new FormData();
   formData.append('file', file);
   try {
     const res = await fetch('/api/upload', { method: 'POST', body: formData });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.url;
-  } catch { return null; }
+    if (res.ok) {
+      const data = await res.json();
+      if (data.url) return data.url;
+    }
+  } catch {
+    // Server upload failed — fall back to client-side data URL
+  }
+  // Fallback: convert to base64 data URL on the client (works everywhere)
+  try {
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  } catch {
+    return null;
+  }
 }
 
 // ─── ROUTER ───
@@ -136,7 +163,7 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
               <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/5"/>
               <div className="absolute -left-10 -bottom-10 w-48 h-48 rounded-full bg-white/5"/>
               {/* Product image on right side */}
-              {img && <div className="absolute right-4 bottom-4 md:right-12 md:bottom-8 w-36 h-36 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 hidden sm:block"><ProductImage src={resolveImg(img, 500)} alt={title} className="w-full h-full object-cover" /></div>}
+              {img && <div className="absolute right-4 bottom-4 md:right-12 md:bottom-8 w-36 h-36 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 hidden sm:block"><ProductImage src={img} alt={title} className="w-full h-full object-cover" /></div>}
               <div className="absolute inset-0 flex items-center p-3 sm:p-6 md:p-14">
                 <div className="max-w-xl text-white space-y-2 sm:space-y-5 animate-heroTextReveal">
                   <div className="inline-flex items-center gap-1 sm:gap-2 bg-white/15 backdrop-blur-sm px-2 sm:px-4 py-0.5 sm:py-1.5 rounded-full text-[10px] sm:text-sm font-medium border border-white/20"><span className="text-[#FFD700] text-sm sm:text-lg">&#9734;</span> Bachat Bazar</div>
@@ -432,7 +459,7 @@ function AdminView() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   {/* Preview */}
                   <div className={`w-full sm:w-48 h-24 rounded-lg bg-gradient-to-r ${b.gradient} flex items-center justify-center text-white p-3 overflow-hidden relative`}>
-                    {b.image && <ProductImage src={resolveImg(b.image, 300)} alt={b.title} className="absolute inset-0 w-full h-full object-cover opacity-30" />}
+                    {b.image && <ProductImage src={b.image} alt={b.title} className="absolute inset-0 w-full h-full object-cover opacity-30" />}
                     <div className="relative z-10 text-center"><p className="font-bold text-sm" style={FB}>{b.title}</p><p className="text-xs opacity-80">{b.subtitle}</p></div>
                   </div>
                   <div className="flex-1 space-y-1">
@@ -530,7 +557,7 @@ function AdminView() {
                       <p className="text-xs text-muted-foreground">ID: {cat.id} | Icon: {cat.icon}</p>
                     </div>
                   </div>
-                  {cat.img && <div className="w-full h-16 rounded-lg overflow-hidden bg-muted"><ProductImage src={resolveImg(cat.img, 300)} alt={cat.name} className="w-full h-full object-cover"/></div>}
+                  {cat.img && <div className="w-full h-16 rounded-lg overflow-hidden bg-muted"><ProductImage src={cat.img} alt={cat.name} className="w-full h-full object-cover"/></div>}
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => openCatDialog(cat)}><Edit size={14} className="mr-1"/>Edit</Button>
                     <Button size="sm" variant="outline" className="text-red-500" onClick={() => { s.deleteCategory(cat.id); toast({ title: 'Category deleted' }); }}><Trash2 size={14}/></Button>
@@ -576,7 +603,7 @@ function AdminView() {
               ) : (
                 <Input value={pImg} onChange={e => setPImg(e.target.value)} placeholder="https://example.com/image.jpg or Unsplash ID"/>
               )}
-              {pImg && <div className="mt-2 w-full h-32 rounded-lg overflow-hidden border bg-muted"><ProductImage src={resolveImg(pImg, 400)} alt="Preview" className="w-full h-full object-cover"/></div>}
+              {pImg && <div className="mt-2 w-full h-32 rounded-lg overflow-hidden border bg-muted"><ProductImage src={pImg} alt="Preview" className="w-full h-full object-cover"/></div>}
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -625,7 +652,7 @@ function AdminView() {
               )}
               {/* Banner Preview */}
               <div className={`w-full h-28 rounded-xl bg-gradient-to-r ${bGrad} overflow-hidden relative flex items-center p-4`}>
-                {bImg && <ProductImage src={resolveImg(bImg, 600)} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-30"/>}
+                {bImg && <ProductImage src={bImg} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-30"/>}
                 <div className="relative z-10 text-white"><p className="font-bold" style={FB}>{bTitle || 'Banner Title'}</p><p className="text-xs opacity-80">{bSub || 'Subtitle'}</p>{bCta && <span className="inline-block mt-1 text-xs bg-white/20 px-2 py-0.5 rounded">{bCta}</span>}</div>
               </div>
             </div>
@@ -684,7 +711,7 @@ function AdminView() {
               ) : (
                 <Input value={cImg} onChange={e => setCImg(e.target.value)} placeholder="Unsplash photo ID or full URL"/>
               )}
-              {cImg && <div className="mt-2 w-full h-24 rounded-lg overflow-hidden border bg-muted"><ProductImage src={resolveImg(cImg, 400)} alt="Preview" className="w-full h-full object-cover"/></div>}
+              {cImg && <div className="mt-2 w-full h-24 rounded-lg overflow-hidden border bg-muted"><ProductImage src={cImg} alt="Preview" className="w-full h-full object-cover"/></div>}
             </div>
             {/* Preview */}
             {cName && <div className="flex items-center gap-3 p-3 rounded-xl border bg-muted/50"><div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${cColor} flex items-center justify-center text-white shadow`}>{React.createElement(getCatIcon(cIcon), { size: 22 })}</div><span className="font-bold" style={FB}>{cName}</span></div>}

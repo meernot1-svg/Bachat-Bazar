@@ -6,9 +6,10 @@
    ============================================================ */
 
 // Direct image URL builder - uses reliable product image sources
-// Handles: full URLs (https://...), local paths (/uploads/...), Unsplash IDs
+// Handles: data URLs (data:...), full URLs (https://...), local paths (/uploads/...), Unsplash IDs
 export const U = (id: string, w = 700) => {
   if (typeof id !== 'string' || !id) return `https://picsum.photos/seed/placeholder/${w}/${w}`;
+  if (/^data:/i.test(id)) return id;          // Base64 data URL — use as-is
   if (/^https?:\/\//.test(id)) return id;   // Full URL — use as-is
   if (/^\//.test(id)) return id;            // Local path like /uploads/... — use as-is
   return `https://images.unsplash.com/photo-${id}?w=${w}&q=80&auto=format&fit=crop`;
@@ -17,6 +18,7 @@ export const U = (id: string, w = 700) => {
 // Helper: resolve image src — same logic as U() for inline use
 export const resolveImg = (src: string, w = 400) => {
   if (!src) return '';
+  if (/^data:/i.test(src)) return src;
   if (/^https?:\/\//.test(src)) return src;
   if (/^\//.test(src)) return src;
   return U(src, w);

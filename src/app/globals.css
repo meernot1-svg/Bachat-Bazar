@@ -507,12 +507,14 @@ body {
   }
 
   /* Cards in cart/checkout - better mobile layout */
-  .flex.flex-col.lg:flex-row {
+  [class*="flex-col"][class*="lg:flex-row"],
+  [class*="flex-col"][class*="lg\\:flex-row"] {
     flex-direction: column !important;
   }
 
   /* Admin dashboard cards */
-  .grid.grid-cols-2.md:grid-cols-4 > div {
+  [class*="grid-cols-2"][class*="md:grid-cols-4"] > div,
+  [class*="grid-cols-2"][class*="md\\:grid-cols-4"] > div {
     min-width: 140px !important;
   }
 

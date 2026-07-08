@@ -381,6 +381,6 @@ export const useStore = create<StoreState>()(
         set({ sales: get().sales.map(s => s.id === id ? { ...s, active: !s.active } : s) });
       },
     }),
-    { name: 'bachatbazar_v8' }
+    { name: 'bachatbazar_v9' }
   )
 );

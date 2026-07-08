@@ -37,14 +37,23 @@ const ICON_MAP: Record<string, React.ElementType> = { Sparkles, ShoppingCart, Tv
 function getCatIcon(n: string) { return ICON_MAP[n] || Tag; }
 function imgFallback(e: React.SyntheticEvent<HTMLImageElement>, seed?: string) {
   const t = e.currentTarget;
-  // Only fallback if we haven't already tried a fallback
   if (t.dataset.fallback) return;
   t.dataset.fallback = '1';
   t.onerror = null;
   // Try without crossOrigin first (CORS can cause false errors)
-  if (t.crossOrigin) { t.crossOrigin = null; t.src = t.src; return; }
-  // Final fallback to placeholder
-  t.src = `https://picsum.photos/seed/${seed || 'bb' + Math.random().toString(36).slice(2, 6)}/400/400`;
+  if (t.crossOrigin) { t.removeAttribute('crossorigin'); t.src = t.src; return; }
+  // Final fallback to a colored placeholder with product initial
+  const initial = (seed || 'B').charAt(0).toUpperCase();
+  const canvas = document.createElement('canvas');
+  canvas.width = 400; canvas.height = 400;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#E8F5E9'; ctx.fillRect(0, 0, 400, 400);
+    ctx.fillStyle = '#006233'; ctx.font = 'bold 120px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(initial, 200, 200);
+  }
+  t.src = canvas.toDataURL('image/png');
 }
 
 const ADMIN_PWD = 'BA56CR7VK18';
@@ -63,9 +72,30 @@ function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
 }
 
 function ProductImage({ src, alt, seed, className = '' }: { src: string; alt: string; seed?: string; className?: string }) {
-  // Resolve the src so Unsplash IDs, /uploads/ paths, and full URLs all work
+  const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
   const resolvedSrc = resolveImg(src, 700);
-  return <img src={resolvedSrc} alt={alt} className={className} referrerPolicy="no-referrer" crossOrigin="anonymous" onError={(e) => imgFallback(e, seed)} loading="lazy" draggable={false} />;
+  return (
+    <div className={`relative ${className}`}>
+      {/* Skeleton while loading */}
+      {!loaded && !errored && (
+        <div className="absolute inset-0 bg-muted animate-pulse rounded-inherit flex items-center justify-center">
+          <Package size={28} className="text-muted-foreground/30" />
+        </div>
+      )}
+      <img
+        src={resolvedSrc}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+        onLoad={() => setLoaded(true)}
+        onError={(e) => { setErrored(true); imgFallback(e, seed); setLoaded(true); }}
+        loading="lazy"
+        draggable={false}
+      />
+    </div>
+  );
 }
 
 function PriceDisplay({ price, oldPrice }: { price: number; oldPrice: number }) {
@@ -192,11 +222,11 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
       {/* ─── CATEGORIES — CLEARLY VISIBLE ─── */}
       <section className="mb-4 sm:mb-10">
         <h3 className="text-sm sm:text-xl font-bold mb-3 sm:mb-5 flex items-center gap-2 text-slate-900 dark:text-slate-50" style={FH}><Store size={16} className="text-[#006233] sm:w-[20px]"/> Shop by Category</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+        <div className="flex sm:grid sm:grid-cols-4 gap-2 sm:gap-4 overflow-x-auto no-scrollbar pb-2 sm:pb-0 -mx-2 px-2 sm:mx-0 sm:px-0">
           {s.categories().map(cat => {
             const Icon = getCatIcon(cat.icon);
             return (
-              <button key={cat.id} onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate(makeHash('shop', undefined, { category: cat.id })); }} className="category-card group relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl ring-1 ring-black/5 dark:ring-white/10 aspect-[4/3] sm:aspect-[3/2]">
+              <button key={cat.id} onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate(makeHash('shop', undefined, { category: cat.id })); }} className="category-card group relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl ring-1 ring-black/5 dark:ring-white/10 aspect-[4/3] sm:aspect-[3/2] shrink-0 w-[42vw] sm:w-auto">
                 <ProductImage src={U(cat.img, 600)} alt={cat.name} seed={cat.img} className="cat-img w-full h-full object-cover absolute inset-0 group-hover:scale-108 transition duration-300" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 group-hover:from-black/85 group-hover:via-black/50 group-hover:to-black/30 transition-all"/>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-1 sm:p-3 z-10">
@@ -209,7 +239,7 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
         </div>
       </section>
 
-      {/* Flash Sale */}{flashItems.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><Flame size={16} className="text-red-500 sm:w-[20px]"/> Flash Sale</h3><div className="flex items-center gap-1 text-[10px] sm:text-sm bg-red-50 dark:bg-red-900/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full"><Clock size={12} className="text-red-500 sm:w-[14px]"/> Ends in <CountdownTimer targetDate={flashSaleEnd}/></div></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">{flashItems.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+      {/* Flash Sale */}{flashItems.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><Flame size={16} className="text-red-500 sm:w-[20px]"/> Flash Sale</h3><div className="flex items-center gap-1 text-[10px] sm:text-sm bg-red-50 dark:bg-red-900/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full"><Clock size={12} className="text-red-500 sm:w-[14px]"/> Ends in <CountdownTimer targetDate={flashSaleEnd}/></div></div><div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-2 sm:pb-0 -mx-2 px-2 sm:mx-0 sm:px-0">{flashItems.map(p => <div key={p.id} className="shrink-0 w-[45vw] sm:w-auto"><ProductCard product={p} onQuickView={onQuickView}/></div>)}</div></section>)}
       {/* Featured */}{featured.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><Award size={16} className="text-[#C5A028] sm:w-[20px]"/> Featured</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { featured: 'true' }))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">View All <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">{featured.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
       {/* Eid Banner */}<div className="mb-4 sm:mb-10 rounded-lg sm:rounded-xl bg-gradient-to-r from-[#006233] to-[#004D25] p-3 sm:p-6 md:p-10 text-white flex flex-col md:flex-row items-center gap-3 sm:gap-6 shadow-xl pk-pattern relative overflow-hidden"><div className="absolute top-4 right-4 text-3xl sm:text-6xl opacity-10" style={{ fontFamily: 'serif' }}>&#9734;</div><div className="flex-1 space-y-1 sm:space-y-2"><p className="text-[#FFD700] text-[9px] sm:text-sm font-bold uppercase tracking-wider" style={FB}>Limited Time Offer</p><h3 className="text-base sm:text-2xl md:text-3xl font-bold" style={FH}>Eid Mubarak Sale — 25% Off!</h3><p className="text-xs sm:text-base opacity-90 font-medium" style={FB}>Use code <span className="font-mono bg-[#C5A028] px-1.5 sm:px-2 py-0.5 rounded text-white text-[9px] sm:text-sm">EID25</span> on orders above Rs 50,000</p></div><Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold shrink-0 shadow-lg text-xs sm:text-base w-full sm:w-auto" onClick={() => navigate(makeHash('deals'))}>Shop Deals <ArrowRight size={14} className="sm:w-[16px]"/></Button></div>
       {/* Trending */}{trending.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><TrendingUp size={16} className="text-[#00A651] sm:w-[20px]"/> Trending Now</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { trending: 'true' }))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">View All <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">{trending.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}

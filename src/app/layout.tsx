@@ -17,6 +17,14 @@ const dmSerif = DM_Serif_Display({
   display: "swap",
 });
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#006233',
+};
+
 export const metadata: Metadata = {
   title: "Bachat Bazar | Pakistan's #1 Online Shopping Marketplace - Best Deals & Prices",
   description: "Bachat Bazar is Pakistan's leading online marketplace offering best prices on Health & Beauty, Grocery, Electronics, Fashion, Home Appliances, Baby Products & more. Free delivery on orders over Rs 25,000. Cash on Delivery available nationwide.",

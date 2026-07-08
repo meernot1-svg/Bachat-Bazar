@@ -1,0 +1,20 @@
+{
+  "code": 200,
+  "data": {
+    "description": "",
+    "html": "<html style=\"height: 100%;\"><head><meta name=\"viewport\" content=\"width=device-width, minimum-scale=0.1\"><title>https://match.adsrvr.org/track/cmf/google</title></head><body style=\"margin: 0px; height: 100%; background-color: rgb(14, 14, 14);\"><p>A 1x1 image, likely be a tacker probe</p></body></html>",
+    "httpStatus": 200,
+    "httpStatusText": "OK",
+    "title": "https://match.adsrvr.org/track/cmf/google",
+    "url": "https://www.godaddy.com/resources/asia/skills/trending-products-to-sell-online-in-pakistan",
+    "usage": {
+      "tokens": 97
+    }
+  },
+  "meta": {
+    "usage": {
+      "tokens": 97
+    }
+  },
+  "status": 20000
+}

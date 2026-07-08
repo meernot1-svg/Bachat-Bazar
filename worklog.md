@@ -71,3 +71,23 @@ Stage Summary:
 - Strong low-cost selection: 31 products under Rs 500, 89 under Rs 1000
 - Markaz: 133 products, YourMart: 53 products
 - Zero broken images, zero build errors
+
+---
+Task ID: image-pricing-update
+Agent: Main Agent
+Task: Add 2-3 images per product, improve image quality, fix pricing
+
+Work Log:
+- Upgraded U() function: w=700→1200, q=80→90, added dpr=1 for sharper images
+- Upgraded resolveImg default width: 400→800
+- Updated P() image width: 700→1200
+- Added 3 images per product (main + 2 category-appropriate extras) for all 245 products
+- Replaced 3 remaining picsum.photos placeholder URLs with Unsplash IDs
+- Verified pricing: no issues, all discounts 8-41%, average 15.4%
+- Build verified successfully
+
+Stage Summary:
+- All 245 products now have 3 images each (image gallery with thumbnails)
+- Image quality: 1200px width, q=90, dpr=1
+- Zero broken images, zero placeholder images (except fallback)
+- Prices: Rs.299 - Rs.14,629, avg discount 15.4%

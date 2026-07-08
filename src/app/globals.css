@@ -418,30 +418,30 @@ body {
 
   /* Hero slider - properly sized on mobile */
   .hero-mobile {
-    min-height: 200px !important;
-    max-height: 260px !important;
+    min-height: 220px !important;
+    max-height: 280px !important;
   }
 
-  /* Hero text - smaller on mobile */
+  /* Hero text - better sizing on mobile */
   .hero-mobile h2 {
-    font-size: 0.95rem !important;
-    line-height: 1.3 !important;
+    font-size: 1.05rem !important;
+    line-height: 1.35 !important;
   }
 
   .hero-mobile p {
-    font-size: 0.7rem !important;
+    font-size: 0.72rem !important;
   }
 
-  /* Hero buttons - smaller on mobile */
+  /* Hero buttons - better touch targets on mobile */
   .hero-mobile button {
-    padding: 0.4rem 0.8rem !important;
-    font-size: 0.7rem !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.75rem !important;
   }
 
   /* Better mobile spacing */
   main {
     padding-top: 8px !important;
-    padding-bottom: 70px !important; /* Account for bottom nav */
+    padding-bottom: 72px !important;
     padding-left: 8px !important;
     padding-right: 8px !important;
   }
@@ -470,17 +470,22 @@ body {
     max-width: calc(100vw - 16px) !important;
   }
 
-  /* Category cards - ensure proper sizing */
+  /* Category cards - better sizing on mobile */
   .category-card {
-    min-height: 120px !important;
+    min-height: 110px !important;
+    max-height: 140px !important;
   }
 
-  /* Footer - better spacing */
+  /* Footer - 2 columns on mobile for better space usage */
   footer .grid {
-    gap: 16px !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+  footer .col-span-2 {
+    grid-column: span 2 !important;
   }
 
-  /* Product grid - ensure proper gaps */
+  /* Product grid - proper gaps */
   .grid.grid-cols-2 {
     gap: 8px !important;
   }
@@ -527,7 +532,7 @@ body {
 
   /* Product card - better mobile sizing */
   .product-card {
-    border-radius: 12px !important;
+    border-radius: 10px !important;
   }
 
   /* Product card image - consistent aspect ratio */
@@ -535,33 +540,30 @@ body {
     aspect-ratio: 1 / 1 !important;
   }
 
-  /* Category scroll - horizontal scroll on mobile */
-  .category-scroll {
-    display: flex !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    gap: 8px !important;
-    padding-bottom: 4px !important;
-  }
-  .category-scroll::-webkit-scrollbar {
-    display: none !important;
-  }
-  .category-scroll > * {
-    flex-shrink: 0 !important;
-  }
-
-  /* Product grid - tight but readable on mobile */
-  .grid.grid-cols-2 {
-    gap: 6px !important;
-  }
-
-  /* Product card text - prevent overflow */
+  /* Product card text - better readability on mobile */
   .product-card .line-clamp-2 {
     -webkit-line-clamp: 2 !important;
     line-clamp: 2 !important;
     overflow: hidden !important;
     word-break: break-word !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Product card text - better readability */
+  .product-card p:first-child {
+    font-size: 10px !important;
+  }
+
+  /* Product price - better sizing on mobile */
+  .product-card span.font-bold {
+    font-size: 13px !important;
+  }
+
+  /* Add to Cart button - better touch target */
+  .product-card button.h-7 {
+    height: 30px !important;
+    font-size: 11px !important;
   }
 
   /* Cart/checkout items - compact on mobile */
@@ -575,15 +577,6 @@ body {
     font-size: 1rem !important;
   }
 
-  /* Footer - single column on small screens */
-  footer .grid {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
-  footer .col-span-2 {
-    grid-column: span 1 !important;
-  }
-
   /* Quick view dialog - full height on mobile */
   [data-radix-dialog-content] {
     max-height: 85vh !important;
@@ -592,11 +585,11 @@ body {
 
   /* Section headings - proper sizing */
   section h3 {
-    font-size: 0.9rem !important;
+    font-size: 0.95rem !important;
   }
 
-  /* Testimonial cards - single column */
-  .testimonial-grid {
+  /* Testimonial cards - single column on mobile */
+  section > div > .grid {
     grid-template-columns: 1fr !important;
   }
 
@@ -621,11 +614,6 @@ body {
     bottom: 56px !important;
   }
 
-  /* Price text - readable on mobile */
-  .product-card .text-base {
-    font-size: 14px !important;
-  }
-
   /* Admin panel - full width tabs */
   .admin-tabs-mobile {
     overflow-x: auto !important;
@@ -645,6 +633,89 @@ body {
   .product-card span {
     overflow-wrap: break-word;
     word-break: break-word;
+  }
+
+  /* Product detail page - better mobile layout */
+  .animate-fadeUp > .flex {
+    gap: 16px !important;
+  }
+
+  /* Flash sale & category scroll items - proper width */
+  [class*="shrink-0"][class*="w-"] {
+    width: 44vw !important;
+  }
+
+  /* Promo strip - better text on mobile */
+  .bg-gradient-to-r button {
+    min-height: 32px !important;
+  }
+
+  /* Feature strip - better spacing on mobile */
+  section > .grid {
+    gap: 8px !important;
+  }
+
+  /* Ensure buttons in promo have minimum touch size */
+  button, a[role="button"] {
+    min-height: 32px;
+    min-width: 32px;
+  }
+
+  /* Product detail thumbnails - smaller on mobile */
+  [class*="w-14"][class*="h-14"] {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* Scrollbar hide for horizontal sections */
+  .overflow-x-auto {
+    scrollbar-width: none !important;
+  }
+  .overflow-x-auto::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Blog cards - single column on small mobile */
+  section .grid:has(> div .aspect-video) {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Fix: Sheet panels should slide from edge */
+  [data-radix-collection-item] {
+    max-width: 100vw !important;
+  }
+}
+
+/* Extra small screens (below 380px) */
+@media (max-width: 380px) {
+  .hero-mobile {
+    min-height: 180px !important;
+  }
+
+  .hero-mobile h2 {
+    font-size: 0.9rem !important;
+  }
+
+  /* Product grid - tighter gap on very small screens */
+  .grid.grid-cols-2 {
+    gap: 6px !important;
+  }
+
+  /* Bottom nav - slightly smaller */
+  nav.fixed.bottom-0 .h-14 {
+    height: 52px !important;
+  }
+}
+
+/* Tablet improvements (640px - 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .hero-mobile {
+    min-height: 300px !important;
+  }
+
+  /* Product grid - better gaps on tablet */
+  main .grid {
+    gap: 12px !important;
   }
 }
 

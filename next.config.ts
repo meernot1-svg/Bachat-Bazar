@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "content.public.markaz.app" },
       { protocol: "https", hostname: "admin.yourmart.pk" },
       { protocol: "https", hostname: "picsum.photos" },
+      { protocol: "https", hostname: "sfile.chatglm.cn" },
     ],
   },
 };

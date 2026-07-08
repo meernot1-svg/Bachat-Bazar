@@ -40,20 +40,9 @@ function imgFallback(e: React.SyntheticEvent<HTMLImageElement>, seed?: string) {
   if (t.dataset.fallback) return;
   t.dataset.fallback = '1';
   t.onerror = null;
-  // Try without crossOrigin first (CORS can cause false errors)
-  if (t.crossOrigin) { t.removeAttribute('crossorigin'); t.src = t.src; return; }
-  // Final fallback to a colored placeholder with product initial
-  const initial = (seed || 'B').charAt(0).toUpperCase();
-  const canvas = document.createElement('canvas');
-  canvas.width = 400; canvas.height = 400;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    ctx.fillStyle = '#E8F5E9'; ctx.fillRect(0, 0, 400, 400);
-    ctx.fillStyle = '#006233'; ctx.font = 'bold 120px sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(initial, 200, 200);
-  }
-  t.src = canvas.toDataURL('image/png');
+  // Fallback to picsum with a seed for consistent placeholder images
+  const fallbackSeed = encodeURIComponent((seed || 'product').replace(/[^a-zA-Z0-9]/g, '-').slice(0, 30));
+  t.src = `https://picsum.photos/seed/${fallbackSeed}/400/400`;
 }
 
 const ADMIN_PWD = 'BA56CR7VK18';
@@ -88,7 +77,6 @@ function ProductImage({ src, alt, seed, className = '' }: { src: string; alt: st
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         referrerPolicy="no-referrer"
-        crossOrigin="anonymous"
         onLoad={() => setLoaded(true)}
         onError={(e) => { setErrored(true); imgFallback(e, seed); setLoaded(true); }}
         loading="lazy"

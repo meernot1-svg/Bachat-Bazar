@@ -1,0 +1,18 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "vegetable chopper kitchen"
+✅ Got 1 image
+{
+  "success": true,
+  "query": "vegetable chopper kitchen",
+  "count": 1,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/829bf4f2f276.jpg",
+      "caption": "",
+      "source": "Naaptol.com",
+      "original_width": "1200px",
+      "original_height": "1200px"
+    }
+  ]
+}

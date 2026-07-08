@@ -28,12 +28,13 @@ import {
   Home, Store, Zap, TrendingUp, Award, ThumbsUp, Info, HelpCircle, BookOpen,
   Users, ArrowRight, Image as ImageIcon, ShieldCheck,
   Upload, Megaphone, Percent, Edit, Save, PlusCircle, Trash, TableProperties,
-  Link, FileImage, EyeOff, RefreshCw
+  Link, FileImage, EyeOff, RefreshCw,
+  Scissors, Bed, Car, PenTool, Footprints, SprayCan, PawPrint, Dumbbell, ChefHat
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // ─── HELPERS ───
-const ICON_MAP: Record<string, React.ElementType> = { Sparkles, ShoppingCart, Tv, Smartphone, Shirt, Sofa, Watch, Baby, Tag };
+const ICON_MAP: Record<string, React.ElementType> = { Sparkles, ShoppingCart, Tv, Smartphone, Shirt, Sofa, Watch, Baby, Tag, Scissors, Bed, Car, PenTool, Footprints, SprayCan, PawPrint, Moon, Dumbbell, ChefHat };
 function getCatIcon(n: string) { return ICON_MAP[n] || Tag; }
 function imgFallback(e: React.SyntheticEvent<HTMLImageElement>, seed?: string) {
   const t = e.currentTarget;
@@ -319,10 +320,11 @@ function ProductDetailView({ id, onQuickView, navigate }: { id: string; onQuickV
           </div>
           <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground pt-2"><span className="flex items-center gap-1"><Truck size={12} className="sm:w-[14px]"/> Free delivery 25K+</span><span className="flex items-center gap-1"><RotateCcw size={12} className="sm:w-[14px]"/> 7-day returns</span><span className="flex items-center gap-1"><ShieldCheck size={12} className="sm:w-[14px]"/> Genuine</span></div>
           <Separator/>
-          <Tabs value={tab} onValueChange={setTab}><TabsList><TabsTrigger value="desc">Description</TabsTrigger><TabsTrigger value="specs">Specifications</TabsTrigger><TabsTrigger value="features">Features</TabsTrigger></TabsList>
+          <Tabs value={tab} onValueChange={setTab}><TabsList><TabsTrigger value="desc">Description</TabsTrigger><TabsTrigger value="specs">Specifications</TabsTrigger><TabsTrigger value="features">Features</TabsTrigger><TabsTrigger value="reviews">Reviews ({product.reviews})</TabsTrigger></TabsList>
           <TabsContent value="desc" className="text-sm text-muted-foreground leading-relaxed" style={FB}>{product.description}</TabsContent>
           <TabsContent value="specs"><div className="space-y-1">{Object.entries(product.specs).map(([k,v]) => <div key={k} className="flex justify-between text-sm py-1 border-b last:border-0"><span className="text-muted-foreground">{k}</span><span className="font-medium">{v}</span></div>)}</div></TabsContent>
           <TabsContent value="features"><ul className="space-y-1">{product.features.map((f,i) => <li key={i} className="flex items-center gap-2 text-sm"><Check size={14} className="text-[#006233]"/>{f}</li>)}</ul></TabsContent>
+          <TabsContent value="reviews"><div className="space-y-4">{(product.reviewList || []).map((r: any) => <div key={r.id} className="border rounded-lg p-3 sm:p-4"><div className="flex items-center gap-3 mb-2"><div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#006233] to-[#00A651] flex items-center justify-center text-white text-xs font-bold">{r.name.charAt(0)}</div><div className="flex-1 min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="font-semibold text-sm">{r.name}</span>{r.verified && <Badge className="bg-[#006233]/10 text-[#006233] text-[9px] px-1.5 py-0">Verified</Badge>}</div><div className="flex items-center gap-2"><StarRating rating={r.rating} size={10}/><span className="text-xs text-muted-foreground">{r.date}</span></div></div></div><p className="text-sm text-muted-foreground leading-relaxed">{r.text}</p><div className="flex items-center gap-3 mt-2"><button className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"><ThumbsUp size={12}/>{r.helpful} helpful</button></div></div>)}{product.reviewList && product.reviewList.length > 0 && <div className="text-center pt-2"><p className="text-xs text-muted-foreground">Showing {product.reviewList.length} of {product.reviews} reviews</p></div>}</div></TabsContent>
           </Tabs>
         </div>
       </div>

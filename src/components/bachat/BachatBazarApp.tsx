@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useStore } from '@/lib/store';
-import { PRODUCTS, CATEGORIES, COUPONS, TESTIMONIALS, BLOGS, HERO_SLIDES, SHIPPING_METHODS, PAYMENTS, U, resolveImg, type Product, type BannerData, type SaleData } from '@/lib/data';
+import { PRODUCTS, CATEGORIES, COUPONS, TESTIMONIALS, BLOGS, HERO_SLIDES, SHIPPING_METHODS, PAYMENTS, FLASH_SALE_IDS, U, resolveImg, type Product, type BannerData, type SaleData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -121,13 +121,13 @@ async function uploadImage(file: File): Promise<string | null> {
 
 // ─── ROUTER ───
 interface RouteInfo { view: string; id: string; query: Record<string, string>; }
-function parseHash(hash: string): RouteInfo { const h = hash.replace(/^#\/?/, '') || ''; const [path, qs] = h.split('?'); const parts = path.split('/').filter(Boolean); const query: Record<string, string> = {}; if (qs) qs.split('&').forEach(p => { const [k, v] = p.split('='); if (k) query[decodeURIComponent(k)] = decodeURIComponent(v || ''); }); return { view: parts[0] || '', id: parts[1] || '', query }; }
-function makeHash(view: string, id?: string, query?: Record<string, string>) { let h = '#/' + view; if (id) h += '/' + id; if (query && Object.keys(query).length) h += '?' + Object.entries(query).map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&'); return h; }
+function parsePath(pathname: string, search?: string): RouteInfo { const p = pathname.replace(/^\/+/, '') || ''; const [path, qs] = p.split('?'); const parts = path.split('/').filter(Boolean); const query: Record<string, string> = {}; const queryString = qs || search || ''; if (queryString) queryString.replace(/^\?/, '').split('&').forEach(seg => { const [k, v] = seg.split('='); if (k) query[decodeURIComponent(k)] = decodeURIComponent(v || ''); }); return { view: parts[0] || '', id: parts[1] || '', query }; }
+function makePath(view: string, id?: string, query?: Record<string, string>) { let h = '/' + view; if (id) h += '/' + id; if (query && Object.keys(query).length) h += '?' + Object.entries(query).map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&'); return h; }
 
 // ─── PRODUCT CARD ───
 function ProductCard({ product, onQuickView }: { product: Product; onQuickView: (p: Product) => void }) {
   const s = useStore(); const { toast } = useToast(); const inWish = s.inWishlist(product.id); const inComp = s.inCompare(product.id);
-  const handleClick = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); window.location.hash = makeHash('product', String(product.id)); };
+  const handleClick = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); window.history.pushState({}, '', makePath('product', String(product.id))); window.dispatchEvent(new PopStateEvent('popstate')); };
   const handleCart = (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); if (s.addToCart(product.id)) { toast({ title: 'Added to cart', description: product.name.slice(0, 40) }); } else { toast({ title: 'Out of stock', variant: 'destructive' }); } };
   return (
     <div className="product-card animate-cardFadeUp group bg-card rounded-xl border overflow-hidden cursor-pointer" onClick={handleClick}>
@@ -156,7 +156,7 @@ function ProductCard({ product, onQuickView }: { product: Product; onQuickView: 
 function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {
   const s = useStore(); const [heroIdx, setHeroIdx] = useState(0);
   const allProducts = s.allProducts(); const featured = allProducts.filter(p => p.featured).slice(0, 8); const trending = allProducts.filter(p => p.trending).slice(0, 8); const newArrivals = allProducts.filter(p => p.isNew).slice(0, 8); const bestSellers = allProducts.filter(p => p.bestSeller).slice(0, 8);
-  const flashSaleEnd = useMemo(() => new Date(Date.now() + 6 * 3600000), []); const flashItems = allProducts.filter(p => p.oldPrice > p.price).slice(0, 6);
+  const flashSaleEnd = useMemo(() => new Date(Date.now() + 6 * 3600000), []); const flashItems = allProducts.filter(p => p.flashSale || FLASH_SALE_IDS.has(p.id));
   const activeSales = s.sales.filter(sale => sale.active);
   // Admin-controlled banners for hero slider
   const heroBanners = s.banners.filter(b => b.active).sort((a, b) => a.order - b.order);
@@ -200,12 +200,12 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
       </div>
 
       {/* Active Sales */}
-      {activeSales.length > 0 && (<div className="mb-4 sm:mb-8 flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">{activeSales.map(sale => (<button key={sale.id} onClick={() => navigate(makeHash('shop', undefined, { category: sale.categoryId }))} className="shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-3 rounded-xl text-white shadow-lg hover:scale-[1.02] transition-transform" style={{ background: `linear-gradient(135deg, ${sale.bannerColor}, ${sale.bannerColor}dd)` }}><Percent size={14} className="text-white/80 sm:w-[18px]"/><div className="text-left"><p className="font-bold text-xs sm:text-sm" style={FH}>{sale.name}</p><p className="text-[10px] sm:text-xs opacity-90 line-clamp-1">{sale.discountPercent}% off — {sale.description}</p></div><ArrowRight size={14} className="ml-1 sm:ml-2 opacity-70 sm:w-[16px]"/></button>))}</div>)}
+      {activeSales.length > 0 && (<div className="mb-4 sm:mb-8 flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">{activeSales.map(sale => (<button key={sale.id} onClick={() => navigate(makePath('shop', undefined, { category: sale.categoryId }))} className="shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-3 rounded-xl text-white shadow-lg hover:scale-[1.02] transition-transform" style={{ background: `linear-gradient(135deg, ${sale.bannerColor}, ${sale.bannerColor}dd)` }}><Percent size={14} className="text-white/80 sm:w-[18px]"/><div className="text-left"><p className="font-bold text-xs sm:text-sm" style={FH}>{sale.name}</p><p className="text-[10px] sm:text-xs opacity-90 line-clamp-1">{sale.discountPercent}% off — {sale.description}</p></div><ArrowRight size={14} className="ml-1 sm:ml-2 opacity-70 sm:w-[16px]"/></button>))}</div>)}
 
       {/* Promo Strip */}
       <div className="mb-4 sm:mb-8 bg-gradient-to-r from-[#006233] via-[#00A651] to-[#006233] rounded-lg sm:rounded-xl p-2.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 text-white shadow-lg">
         <div className="flex items-center gap-2 sm:gap-3"><span className="text-base sm:text-2xl">&#127477;&#127472;</span><div><p className="font-bold text-[10px] sm:text-sm md:text-base" style={FH}>Pakistan Zindabad! Free Delivery Nationwide</p><p className="text-[9px] sm:text-xs opacity-80">On orders above Rs 25,000 — Cash on Delivery Available</p></div></div>
-        <Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold text-[10px] sm:text-sm shrink-0 shadow w-full sm:w-auto h-7 sm:h-auto" onClick={() => navigate(makeHash('shop'))}>Shop Now</Button>
+        <Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold text-[10px] sm:text-sm shrink-0 shadow w-full sm:w-auto h-7 sm:h-auto" onClick={() => navigate(makePath('shop'))}>Shop Now</Button>
       </div>
 
       {/* ─── CATEGORIES — CLEARLY VISIBLE ─── */}
@@ -215,7 +215,7 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
           {s.categories().map(cat => {
             const Icon = getCatIcon(cat.icon);
             return (
-              <button key={cat.id} onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate(makeHash('shop', undefined, { category: cat.id })); }} className="category-card group relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl ring-1 ring-black/5 dark:ring-white/10 aspect-[4/3] sm:aspect-[3/2] shrink-0 w-[42vw] sm:w-auto">
+              <button key={cat.id} onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate(makePath('shop', undefined, { category: cat.id })); }} className="category-card group relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl ring-1 ring-black/5 dark:ring-white/10 aspect-[4/3] sm:aspect-[3/2] shrink-0 w-[42vw] sm:w-auto">
                 <ProductImage src={U(cat.img, 600)} alt={cat.name} seed={cat.img} className="cat-img w-full h-full object-cover absolute inset-0 group-hover:scale-108 transition duration-300" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 group-hover:from-black/85 group-hover:via-black/50 group-hover:to-black/30 transition-all"/>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-1 sm:p-3 z-10">
@@ -228,14 +228,87 @@ function HomeView({ onQuickView, navigate }: { onQuickView: (p: Product) => void
         </div>
       </section>
 
-      {/* Flash Sale */}{flashItems.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><Flame size={16} className="text-red-500 sm:w-[20px]"/> Flash Sale</h3><div className="flex items-center gap-1 text-[10px] sm:text-sm bg-red-50 dark:bg-red-900/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full"><Clock size={12} className="text-red-500 sm:w-[14px]"/> Ends in <CountdownTimer targetDate={flashSaleEnd}/></div></div><div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-2 sm:pb-0 -mx-2 px-2 sm:mx-0 sm:px-0">{flashItems.map(p => <div key={p.id} className="shrink-0 w-[45vw] sm:w-auto"><ProductCard product={p} onQuickView={onQuickView}/></div>)}</div></section>)}
-      {/* Featured */}{featured.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><Award size={16} className="text-[#C5A028] sm:w-[20px]"/> Featured</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { featured: 'true' }))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">View All <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">{featured.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
-      {/* Eid Banner */}<div className="mb-4 sm:mb-10 rounded-lg sm:rounded-xl bg-gradient-to-r from-[#006233] to-[#004D25] p-3 sm:p-6 md:p-10 text-white flex flex-col md:flex-row items-center gap-3 sm:gap-6 shadow-xl pk-pattern relative overflow-hidden"><div className="absolute top-4 right-4 text-3xl sm:text-6xl opacity-10" style={{ fontFamily: 'serif' }}>&#9734;</div><div className="flex-1 space-y-1 sm:space-y-2"><p className="text-[#FFD700] text-[9px] sm:text-sm font-bold uppercase tracking-wider" style={FB}>Limited Time Offer</p><h3 className="text-base sm:text-2xl md:text-3xl font-bold" style={FH}>Eid Mubarak Sale — 25% Off!</h3><p className="text-xs sm:text-base opacity-90 font-medium" style={FB}>Use code <span className="font-mono bg-[#C5A028] px-1.5 sm:px-2 py-0.5 rounded text-white text-[9px] sm:text-sm">EID25</span> on orders above Rs 50,000</p></div><Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold shrink-0 shadow-lg text-xs sm:text-base w-full sm:w-auto" onClick={() => navigate(makeHash('deals'))}>Shop Deals <ArrowRight size={14} className="sm:w-[16px]"/></Button></div>
-      {/* Trending */}{trending.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><TrendingUp size={16} className="text-[#00A651] sm:w-[20px]"/> Trending Now</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('shop', undefined, { trending: 'true' }))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">View All <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">{trending.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
-      {/* New Arrivals */}{newArrivals.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><Zap size={16} className="text-[#C5A028] sm:w-[20px]"/> New Arrivals</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('new'))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">View All <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">{newArrivals.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+      {/* ─── FLASH SALE ─── */}
+      {flashItems.length > 0 && (
+        <section className="mb-4 sm:mb-10">
+          {/* Header with gradient background */}
+          <div className="flex items-center justify-between mb-3 sm:mb-5 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-t-xl sm:rounded-t-2xl px-3 sm:px-5 py-2.5 sm:py-3">
+            <div className="flex items-center gap-1.5 sm:gap-3">
+              <div className="relative">
+                <Flame size={20} className="text-white sm:w-[28px] sm:h-[28px]"/>
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-yellow-300 rounded-full animate-ping"/>
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-yellow-300 rounded-full"/>
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-xl md:text-2xl font-bold text-white tracking-wide" style={FH}>Flash Sale</h3>
+                <p className="text-[9px] sm:text-xs text-white/80 hidden sm:block">Grab the hottest deals before they're gone!</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-0.5">
+              <span className="text-[9px] sm:text-xs text-white/70 uppercase tracking-wider">Ends in</span>
+              <div className="flex items-center gap-1 bg-black/25 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-1 sm:py-1.5">
+                <Clock size={12} className="text-yellow-300 sm:w-[14px]"/>
+                <CountdownTimer targetDate={flashSaleEnd}/>
+              </div>
+            </div>
+          </div>
+          {/* Product grid with red-tinted background */}
+          <div className="bg-gradient-to-b from-red-50/80 to-orange-50/50 dark:from-red-950/30 dark:to-orange-950/20 rounded-b-xl sm:rounded-b-2xl p-2.5 sm:p-4 border border-t-0 border-red-200/60 dark:border-red-900/30">
+            <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar pb-1 sm:pb-0 -mx-0.5 px-0.5 sm:mx-0 sm:px-0">
+              {flashItems.map(p => {
+                const discount = p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+                const soldPercent = Math.min(95, Math.max(40, 100 - Math.round(p.stock / 100 * 100)));
+                return (
+                  <div key={p.id} className="shrink-0 w-[42vw] sm:w-auto group" onClick={() => onQuickView(p)}>
+                    <div className="relative bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-red-100 dark:border-red-900/30">
+                      {/* Discount badge */}
+                      <div className="absolute top-1.5 left-1.5 z-10 bg-red-600 text-white text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg shadow-lg">
+                        -{discount}%
+                      </div>
+                      {/* Image */}
+                      <div className="aspect-square overflow-hidden">
+                        <ProductImage src={p.images[0] || p.imageId} alt={p.name} seed={String(p.id)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
+                      </div>
+                      {/* Info */}
+                      <div className="p-2 sm:p-2.5 space-y-1 sm:space-y-1.5">
+                        <p className="text-[10px] sm:text-xs font-medium text-slate-700 dark:text-slate-200 line-clamp-2 leading-tight min-h-[28px] sm:min-h-[32px]" style={FB}>{p.name}</p>
+                        <div className="flex items-baseline gap-1 sm:gap-1.5">
+                          <span className="font-bold text-xs sm:text-sm text-red-600 dark:text-red-400" style={FB}>Rs {p.price.toLocaleString()}</span>
+                          {p.oldPrice > p.price && <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through">Rs {p.oldPrice.toLocaleString()}</span>}
+                        </div>
+                        {/* Stock bar */}
+                        <div className="space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[8px] sm:text-[9px] text-orange-600 dark:text-orange-400 font-medium">
+                              <Flame size={8} className="inline mr-0.5 -mt-0.5"/>{soldPercent}% sold
+                            </span>
+                            <span className="text-[8px] sm:text-[9px] text-muted-foreground">{p.stock} left</span>
+                          </div>
+                          <div className="w-full h-1 sm:h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-red-500 to-orange-400 rounded-full" style={{ width: `${soldPercent}%` }}/>
+                          </div>
+                        </div>
+                        {/* Rating */}
+                        <div className="flex items-center gap-0.5">
+                          <StarRating rating={p.rating} size={10}/>
+                          <span className="text-[9px] text-muted-foreground">({p.reviews})</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+      {/* Featured */}{featured.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><Award size={16} className="text-[#C5A028] sm:w-[20px]"/> Featured</h3><Button variant="ghost" size="sm" onClick={() => navigate(makePath('shop', undefined, { featured: 'true' }))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">View All <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">{featured.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+      {/* Eid Banner */}<div className="mb-4 sm:mb-10 rounded-lg sm:rounded-xl bg-gradient-to-r from-[#006233] to-[#004D25] p-3 sm:p-6 md:p-10 text-white flex flex-col md:flex-row items-center gap-3 sm:gap-6 shadow-xl pk-pattern relative overflow-hidden"><div className="absolute top-4 right-4 text-3xl sm:text-6xl opacity-10" style={{ fontFamily: 'serif' }}>&#9734;</div><div className="flex-1 space-y-1 sm:space-y-2"><p className="text-[#FFD700] text-[9px] sm:text-sm font-bold uppercase tracking-wider" style={FB}>Limited Time Offer</p><h3 className="text-base sm:text-2xl md:text-3xl font-bold" style={FH}>Eid Mubarak Sale — 25% Off!</h3><p className="text-xs sm:text-base opacity-90 font-medium" style={FB}>Use code <span className="font-mono bg-[#C5A028] px-1.5 sm:px-2 py-0.5 rounded text-white text-[9px] sm:text-sm">EID25</span> on orders above Rs 50,000</p></div><Button className="bg-[#C5A028] hover:bg-[#B08D20] text-white font-bold shrink-0 shadow-lg text-xs sm:text-base w-full sm:w-auto" onClick={() => navigate(makePath('deals'))}>Shop Deals <ArrowRight size={14} className="sm:w-[16px]"/></Button></div>
+      {/* Trending */}{trending.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><TrendingUp size={16} className="text-[#00A651] sm:w-[20px]"/> Trending Now</h3><Button variant="ghost" size="sm" onClick={() => navigate(makePath('shop', undefined, { trending: 'true' }))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">View All <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">{trending.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
+      {/* New Arrivals */}{newArrivals.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><Zap size={16} className="text-[#C5A028] sm:w-[20px]"/> New Arrivals</h3><Button variant="ghost" size="sm" onClick={() => navigate(makePath('new'))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">View All <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">{newArrivals.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
       {/* Best Sellers */}{bestSellers.length > 0 && (<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><ThumbsUp size={16} className="text-[#006233] sm:w-[20px]"/> Best Sellers</h3></div><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">{bestSellers.map(p => <ProductCard key={p.id} product={p} onQuickView={onQuickView}/>)}</div></section>)}
       {/* Testimonials */}<section className="mb-4 sm:mb-10"><h3 className="text-sm sm:text-xl font-bold mb-2 sm:mb-4 flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><Users size={16} className="text-[#006233] sm:w-[20px]"/> What Our Customers Say</h3><div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">{TESTIMONIALS.map((t, i) => (<Card key={i} className="p-3 sm:p-4 border-t-2 border-t-[#C5A028]"><div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3"><img src={U(t.avatar, 80)} alt={t.name} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover" onError={(e) => imgFallback(e, t.name)}/><div><p className="font-semibold text-xs sm:text-sm" style={FB}>{t.name}</p><p className="text-[10px] sm:text-xs text-[#C5A028]">{t.role}</p></div></div><StarRating rating={t.rating} size={10}/><p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground line-clamp-3 sm:line-clamp-none">&ldquo;{t.text}&rdquo;</p></Card>))}</div></section>
-      {/* Blog */}<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><BookOpen size={16} className="text-[#006233] sm:w-[20px]"/> From the Blog</h3><Button variant="ghost" size="sm" onClick={() => navigate(makeHash('blog'))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">All Posts <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">{BLOGS.map((b) => (<Card key={b.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"><div className="aspect-video overflow-hidden"><ProductImage src={U(b.img, 400)} alt={b.title} seed={b.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" /></div><div className="p-2 sm:p-3 space-y-1"><p className="text-[10px] sm:text-xs text-[#C5A028] font-medium">{b.date} &middot; {b.author}</p><p className="font-semibold text-xs sm:text-sm" style={FB}>{b.title}</p><p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2">{b.excerpt}</p></div></Card>))}</div></section>
+      {/* Blog */}<section className="mb-4 sm:mb-10"><div className="flex items-center justify-between mb-2 sm:mb-4"><h3 className="text-sm sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 text-slate-900 dark:text-slate-50" style={FH}><BookOpen size={16} className="text-[#006233] sm:w-[20px]"/> From the Blog</h3><Button variant="ghost" size="sm" onClick={() => navigate(makePath('blog'))} className="text-[#006233] dark:text-[#00A651] text-[10px] sm:text-sm">All Posts <ChevronRight size={12} className="sm:w-[14px]"/></Button></div><div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">{BLOGS.map((b) => (<Card key={b.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"><div className="aspect-video overflow-hidden"><ProductImage src={U(b.img, 400)} alt={b.title} seed={b.img} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" /></div><div className="p-2 sm:p-3 space-y-1"><p className="text-[10px] sm:text-xs text-[#C5A028] font-medium">{b.date} &middot; {b.author}</p><p className="font-semibold text-xs sm:text-sm" style={FB}>{b.title}</p><p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2">{b.excerpt}</p></div></Card>))}</div></section>
       {/* Brands */}<section className="mb-4 sm:mb-10"><h3 className="text-sm sm:text-xl font-bold mb-2 sm:mb-4 text-slate-900 dark:text-slate-50" style={FH}>Top Brands</h3><div className="overflow-hidden"><div className="marquee-track flex gap-8 whitespace-nowrap">{[...Array(2)].map((_, si) => (<React.Fragment key={si}>{s.allProducts().slice(0, 20).map((p, i) => <span key={`${si}-${i}`} className="text-lg font-bold text-[#006233]/20 dark:text-[#00A651]/20 px-4" style={FB}>{p.brand}</span>)}</React.Fragment>))}</div></div></section>
       {/* Features */}<section className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">{[{ icon: Truck, title: 'Free Shipping', desc: 'Orders over Rs 25K' },{ icon: ShieldCheck, title: 'Genuine', desc: '100% authentic' },{ icon: RotateCcw, title: '7-Day Returns', desc: 'Easy return' },{ icon: Banknote, title: 'COD', desc: 'Pay on receive' }].map((f, i) => (<div key={i} className="flex flex-col items-center text-center p-3 sm:p-4 rounded-xl bg-gradient-to-b from-[#006233]/5 to-transparent dark:from-[#00A651]/10 border border-[#006233]/10"><div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#006233]/10 dark:bg-[#00A651]/20 flex items-center justify-center mb-2"><f.icon size={18} className="text-[#006233] dark:text-[#00A651] sm:w-[22px]"/></div><p className="font-semibold text-xs sm:text-sm" style={FB}>{f.title}</p><p className="text-[10px] sm:text-xs text-muted-foreground">{f.desc}</p></div>))}</section>
     </div>
@@ -296,11 +369,11 @@ function ProductDetailView({ id, onQuickView, navigate }: { id: string; onQuickV
   const product = s.getProduct(Number(id));
   useEffect(() => { if (product) s.pushRecent(product.id); }, [product?.id]);
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [id]);
-  if (!product) return <div className="text-center py-20"><p className="text-lg">Product not found</p><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makeHash('shop'))}>Back to Shop</Button></div>;
+  if (!product) return <div className="text-center py-20"><p className="text-lg">Product not found</p><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate(makePath('shop'))}>Back to Shop</Button></div>;
   const inWish = s.inWishlist(product.id); const related = product.related.map(rid => s.getProduct(rid)).filter(Boolean) as Product[];
   return (
     <div className="animate-fadeUp">
-      <button onClick={() => navigate(makeHash('shop'))} className="text-xs sm:text-sm text-muted-foreground hover:text-foreground mb-3 sm:mb-4 flex items-center gap-1"><ChevronLeft size={14}/>Back to Shop</button>
+      <button onClick={() => navigate(makePath('shop'))} className="text-xs sm:text-sm text-muted-foreground hover:text-foreground mb-3 sm:mb-4 flex items-center gap-1"><ChevronLeft size={14}/>Back to Shop</button>
       <div className="flex flex-col md:flex-row gap-4 sm:gap-8">
         <div className="md:w-1/2 space-y-2 sm:space-y-3">
           <div className="aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-muted shadow-lg"><ProductImage src={product.images[imgIdx] || product.images[0]} alt={product.name} seed={product.imageId} className="w-full h-full object-cover"/></div>
@@ -340,7 +413,7 @@ function AdminView() {
   const [tab, setTab] = useState('dashboard');
   // Product dialog
   const [prodDialog, setProdDialog] = useState(false); const [editProd, setEditProd] = useState<Product | null>(null);
-  const [pName, setPName] = useState(''); const [pBrand, setPBrand] = useState(''); const [pCat, setPCat] = useState('beauty'); const [pPrice, setPPrice] = useState(0); const [pOldPrice, setPOldPrice] = useState(0); const [pStock, setPStock] = useState(0); const [pImg, setPImg] = useState(''); const [pDesc, setPDesc] = useState(''); const [pFeatured, setPFeatured] = useState(false); const [pNew, setPNew] = useState(false); const [pTrending, setPTrending] = useState(false); const [pBestSeller, setPBestSeller] = useState(false); const [pSearch, setPSearch] = useState('');
+  const [pName, setPName] = useState(''); const [pBrand, setPBrand] = useState(''); const [pCat, setPCat] = useState('beauty'); const [pPrice, setPPrice] = useState(0); const [pOldPrice, setPOldPrice] = useState(0); const [pStock, setPStock] = useState(0); const [pImg, setPImg] = useState(''); const [pDesc, setPDesc] = useState(''); const [pFeatured, setPFeatured] = useState(false); const [pNew, setPNew] = useState(false); const [pTrending, setPTrending] = useState(false); const [pBestSeller, setPBestSeller] = useState(false); const [pFlashSale, setPFlashSale] = useState(false); const [pSearch, setPSearch] = useState('');
   const [pImgMode, setPImgMode] = useState<'upload' | 'url'>('upload'); const [pUploading, setPUploading] = useState(false);
   const pFileRef = useRef<HTMLInputElement>(null);
   // Banner dialog
@@ -363,13 +436,13 @@ function AdminView() {
 
   // Product handlers
   const openProdDialog = (p?: Product) => {
-    if (p) { setEditProd(p); setPName(p.name); setPBrand(p.brand); setPCat(p.category); setPPrice(p.price); setPOldPrice(p.oldPrice); setPStock(p.stock); setPImg(p.images[0] || ''); setPDesc(p.description); setPFeatured(p.featured); setPNew(p.isNew); setPTrending(p.trending); setPBestSeller(p.bestSeller); setPImgMode(p.images[0] && !p.images[0].includes('/uploads/') ? 'url' : 'upload'); }
-    else { setEditProd(null); setPName(''); setPBrand(''); setPCat('beauty'); setPPrice(0); setPOldPrice(0); setPStock(0); setPImg(''); setPDesc(''); setPFeatured(false); setPNew(false); setPTrending(false); setPBestSeller(false); setPImgMode('upload'); }
+    if (p) { setEditProd(p); setPName(p.name); setPBrand(p.brand); setPCat(p.category); setPPrice(p.price); setPOldPrice(p.oldPrice); setPStock(p.stock); setPImg(p.images[0] || ''); setPDesc(p.description); setPFeatured(p.featured); setPNew(p.isNew); setPTrending(p.trending); setPBestSeller(p.bestSeller); setPFlashSale(!!p.flashSale); setPImgMode(p.images[0] && !p.images[0].includes('/uploads/') ? 'url' : 'upload'); }
+    else { setEditProd(null); setPName(''); setPBrand(''); setPCat('beauty'); setPPrice(0); setPOldPrice(0); setPStock(0); setPImg(''); setPDesc(''); setPFeatured(false); setPNew(false); setPTrending(false); setPBestSeller(false); setPFlashSale(false); setPImgMode('upload'); }
     setProdDialog(true);
   };
   const saveProd = () => {
     const imgUrl = pImg || '';
-    const d = { name: pName, brand: pBrand, category: pCat, price: pPrice, oldPrice: pOldPrice, stock: pStock, images: imgUrl ? [imgUrl] : [], imageId: imgUrl, description: pDesc, featured: pFeatured, isNew: pNew, trending: pTrending, bestSeller: pBestSeller };
+    const d = { name: pName, brand: pBrand, category: pCat, price: pPrice, oldPrice: pOldPrice, stock: pStock, images: imgUrl ? [imgUrl] : [], imageId: imgUrl, description: pDesc, featured: pFeatured, isNew: pNew, trending: pTrending, bestSeller: pBestSeller, flashSale: pFlashSale };
     if (editProd) { s.updateProduct(editProd.id, d); toast({ title: 'Product updated' }); }
     else { s.addProduct(d); toast({ title: 'Product added' }); }
     setProdDialog(false);
@@ -386,7 +459,7 @@ function AdminView() {
   // Banner handlers
   const openBanDialog = (b?: BannerData) => {
     if (b) { setEditBan(b); setBTitle(b.title); setBSub(b.subtitle); setBCta(b.cta); setBLink(b.ctaLink); setBGrad(b.gradient); setBImg(b.image); setBActive(b.active); setBOrder(b.order); setBImgMode(b.image && !b.image.includes('/uploads/') ? 'url' : 'upload'); }
-    else { setEditBan(null); setBTitle(''); setBSub(''); setBCta('Shop Now'); setBLink('#/shop'); setBGrad('from-[#006233] to-[#00A651]'); setBImg(''); setBActive(true); setBOrder(s.banners.length + 1); setBImgMode('upload'); }
+    else { setEditBan(null); setBTitle(''); setBSub(''); setBCta('Shop Now'); setBLink('/shop'); setBGrad('from-[#006233] to-[#00A651]'); setBImg(''); setBActive(true); setBOrder(s.banners.length + 1); setBImgMode('upload'); }
     setBanDialog(true);
   };
   const saveBan = () => {
@@ -452,6 +525,7 @@ function AdminView() {
           <TabsTrigger value="dashboard" className="gap-1 text-xs sm:text-sm shrink-0"><BarChart3 size={12} className="sm:w-[14px]"/>Dashboard</TabsTrigger>
           <TabsTrigger value="banners" className="gap-1 text-xs sm:text-sm shrink-0"><Megaphone size={12} className="sm:w-[14px]"/>Banners</TabsTrigger>
           <TabsTrigger value="sales" className="gap-1 text-xs sm:text-sm shrink-0"><Percent size={12} className="sm:w-[14px]"/>Sales</TabsTrigger>
+          <TabsTrigger value="flashsale" className="gap-1 text-xs sm:text-sm shrink-0 text-red-600 font-bold"><Flame size={12} className="sm:w-[14px]"/>Flash Sale</TabsTrigger>
           <TabsTrigger value="products" className="gap-1 text-xs sm:text-sm shrink-0"><BoxIcon size={12} className="sm:w-[14px]"/>Products</TabsTrigger>
           <TabsTrigger value="orders" className="gap-1 text-xs sm:text-sm shrink-0"><ClipboardList size={12} className="sm:w-[14px]"/>Orders</TabsTrigger>
           <TabsTrigger value="categories" className="gap-1 text-xs sm:text-sm shrink-0"><Tag size={12} className="sm:w-[14px]"/>Categories</TabsTrigger>
@@ -463,6 +537,7 @@ function AdminView() {
             <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-[#006233]/10 flex items-center justify-center"><BoxIcon size={18} className="text-[#006233]"/></div><div><p className="text-2xl font-bold" style={FH}>{s.allProducts().length}</p><p className="text-xs text-muted-foreground">Products</p></div></div></Card>
             <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-[#C5A028]/10 flex items-center justify-center"><Megaphone size={18} className="text-[#C5A028]"/></div><div><p className="text-2xl font-bold" style={FH}>{s.banners.length}</p><p className="text-xs text-muted-foreground">Banners</p></div></div></Card>
             <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center"><Percent size={18} className="text-red-500"/></div><div><p className="text-2xl font-bold" style={FH}>{s.sales.filter(x => x.active).length}</p><p className="text-xs text-muted-foreground">Active Sales</p></div></div></Card>
+            <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center"><Flame size={18} className="text-red-500"/></div><div><p className="text-2xl font-bold" style={FH}>{s.allProducts().filter(p => p.flashSale).length}</p><p className="text-xs text-muted-foreground">Flash Sale</p></div></div></Card>
             <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center"><ClipboardList size={18} className="text-blue-500"/></div><div><p className="text-2xl font-bold" style={FH}>{s.orders.length}</p><p className="text-xs text-muted-foreground">Orders</p></div></div></Card>
             <Card className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center"><Tag size={18} className="text-purple-500"/></div><div><p className="text-2xl font-bold" style={FH}>{s.categories().length}</p><p className="text-xs text-muted-foreground">Categories</p></div></div></Card>
           </div>
@@ -521,6 +596,83 @@ function AdminView() {
           </div>
         </TabsContent>
 
+        {/* ─── FLASH SALE MANAGEMENT ─── */}
+        <TabsContent value="flashsale" className="space-y-4">
+          {(() => {
+            const flashProds = s.allProducts().filter(p => p.flashSale);
+            const nonFlashProds = s.allProducts().filter(p => !p.flashSale && p.oldPrice > p.price);
+            return (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold flex items-center gap-2" style={FH}><Flame size={18} className="text-red-500"/>Flash Sale Products ({flashProds.length})</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Add or remove products from the homepage Flash Sale section. Only discounted products can be added.</p>
+                  </div>
+                </div>
+                <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/20 border border-red-200/60 dark:border-red-900/30 rounded-xl p-3 sm:p-4">
+                  <p className="text-xs text-red-700 dark:text-red-300 font-medium mb-2">Currently in Flash Sale ({flashProds.length} products):</p>
+                  {flashProds.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-4 text-center">No products in Flash Sale. Add some from the list below.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                      {flashProds.map(p => {
+                        const disc = p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+                        return (
+                          <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-red-100 dark:border-red-900/30 shadow-sm">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 relative">
+                              <ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/>
+                              <div className="absolute top-0 left-0 bg-red-600 text-white text-[9px] font-bold px-1 py-0.5 rounded-br-lg">-{disc}%</div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate" style={FB}>{p.name}</p>
+                              <p className="text-xs text-muted-foreground">Rs {p.price.toLocaleString()} <span className="line-through">Rs {p.oldPrice.toLocaleString()}</span></p>
+                            </div>
+                            <Button size="sm" variant="outline" className="text-red-500 hover:bg-red-50 hover:text-red-600 shrink-0" onClick={() => { s.toggleFlashSale(p.id); toast({ title: `"${p.name.slice(0,30)}" removed from Flash Sale` }); }}>
+                              <Trash2 size={14} className="mr-1"/>Remove
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                {/* Add products section */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-sm" style={FH}>Add Products to Flash Sale</h4>
+                  </div>
+                  <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input placeholder="Search discounted products..." value={pSearch} onChange={e => setPSearch(e.target.value)} className="pl-9"/></div>
+                  <div className="space-y-2 max-h-[350px] overflow-y-auto custom-scrollbar">
+                    {nonFlashProds.filter(p => {
+                      if (!pSearch) return true;
+                      const q = pSearch.toLowerCase();
+                      return p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
+                    }).map(p => {
+                      const disc = p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+                      return (
+                        <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-lg border hover:bg-muted/50 transition">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 relative">
+                            <ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/>
+                            <div className="absolute top-0 left-0 bg-orange-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-br-lg">-{disc}%</div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate" style={FB}>{p.name}</p>
+                            <p className="text-xs text-muted-foreground">Rs {p.price.toLocaleString()} <span className="line-through">Rs {p.oldPrice.toLocaleString()}</span> | {s.categories().find(c => c.id === p.category)?.name || p.category}</p>
+                          </div>
+                          <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white shrink-0" onClick={() => { s.toggleFlashSale(p.id); toast({ title: `"${p.name.slice(0,30)}" added to Flash Sale!` }); }}>
+                            <Flame size={14} className="mr-1"/>Add
+                          </Button>
+                        </div>
+                      );
+                    })}
+                    {nonFlashProds.length === 0 && <p className="text-center py-8 text-muted-foreground text-sm">All discounted products are already in Flash Sale, or no discounted products exist.</p>}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </TabsContent>
+
         {/* ─── PRODUCTS (WITH IMAGE UPLOAD) ─── */}
         <TabsContent value="products" className="space-y-4">
           <div className="flex items-center justify-between"><h3 className="font-bold" style={FH}>Products ({s.allProducts().length})</h3><Button size="sm" onClick={() => openProdDialog()} className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white"><PlusCircle size={14} className="mr-1"/>Add Product</Button></div>
@@ -532,7 +684,7 @@ function AdminView() {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate" style={FB}>{p.name}</p>
                   <p className="text-xs text-muted-foreground">{p.brand} | {s.categories().find(c => c.id === p.category)?.name || p.category} | Rs {p.price.toLocaleString()}</p>
-                  <div className="flex gap-1 mt-1">{p.featured && <Badge className="text-[10px] px-1 py-0 bg-[#C5A028] text-white">Featured</Badge>}{p.isNew && <Badge className="text-[10px] px-1 py-0 bg-blue-500 text-white">New</Badge>}{p.trending && <Badge className="text-[10px] px-1 py-0 bg-green-500 text-white">Trending</Badge>}{p.bestSeller && <Badge className="text-[10px] px-1 py-0 bg-purple-500 text-white">Best Seller</Badge>}</div>
+                  <div className="flex gap-1 mt-1">{p.flashSale && <Badge className="text-[10px] px-1 py-0 bg-red-500 text-white">Flash Sale</Badge>}{p.featured && <Badge className="text-[10px] px-1 py-0 bg-[#C5A028] text-white">Featured</Badge>}{p.isNew && <Badge className="text-[10px] px-1 py-0 bg-blue-500 text-white">New</Badge>}{p.trending && <Badge className="text-[10px] px-1 py-0 bg-green-500 text-white">Trending</Badge>}{p.bestSeller && <Badge className="text-[10px] px-1 py-0 bg-purple-500 text-white">Best Seller</Badge>}</div>
                 </div>
                 <div className="flex gap-1 shrink-0">
                   <Button size="sm" variant="ghost" onClick={() => openProdDialog(p)}><Edit size={14}/></Button>
@@ -631,6 +783,7 @@ function AdminView() {
               <div className="flex items-center gap-2"><Switch checked={pNew} onCheckedChange={setPNew}/><Label style={FB}>New</Label></div>
               <div className="flex items-center gap-2"><Switch checked={pTrending} onCheckedChange={setPTrending}/><Label style={FB}>Trending</Label></div>
               <div className="flex items-center gap-2"><Switch checked={pBestSeller} onCheckedChange={setPBestSeller}/><Label style={FB}>Best Seller</Label></div>
+              <div className="flex items-center gap-2"><Switch checked={pFlashSale} onCheckedChange={setPFlashSale}/><Label style={FB} className="text-red-600 font-bold">Flash Sale</Label></div>
             </div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setProdDialog(false)}>Cancel</Button><Button className="bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold" onClick={saveProd} disabled={!pName || !pImg}><Save size={14} className="mr-1"/>{editProd ? 'Update' : 'Add'} Product</Button></DialogFooter>
@@ -646,7 +799,7 @@ function AdminView() {
             <div><Label style={FB}>Subtitle</Label><Input value={bSub} onChange={e => setBSub(e.target.value)} placeholder="Banner subtitle"/></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label style={FB}>CTA Text</Label><Input value={bCta} onChange={e => setBCta(e.target.value)} placeholder="Shop Now"/></div>
-              <div><Label style={FB}>CTA Link</Label><Input value={bLink} onChange={e => setBLink(e.target.value)} placeholder="#/shop"/></div>
+              <div><Label style={FB}>CTA Link</Label><Input value={bLink} onChange={e => setBLink(e.target.value)} placeholder="/shop"/></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label style={FB}>Gradient</Label><Select value={bGrad} onValueChange={setBGrad}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="from-[#006233] to-[#00A651]">Green</SelectItem><SelectItem value="from-[#004D25] to-[#006233]">Dark Green</SelectItem><SelectItem value="from-[#1A4D8F] to-[#2E6BC6]">Blue</SelectItem><SelectItem value="from-[#8B1A1A] to-[#C41E3A]">Red</SelectItem><SelectItem value="from-[#006233] to-[#C5A028]">Green-Gold</SelectItem><SelectItem value="from-[#1A4D8F] to-[#00A651]">Blue-Green</SelectItem></SelectContent></Select></div>
@@ -745,17 +898,22 @@ function AdminView() {
 
 // ─── MAIN APP ───
 const navLinks = [
-  { href: '#/', label: 'Home' },
-  { href: '#/shop', label: 'Shop' },
-  { href: '#/deals', label: 'Deals' },
-  { href: '#/new', label: 'New' },
-  { href: '#/about', label: 'About' },
-  { href: '#/contact', label: 'Contact' },
+  { href: '/', label: 'Home' },
+  { href: '/shop', label: 'Shop' },
+  { href: '/deals', label: 'Deals' },
+  { href: '/new', label: 'New' },
+  { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
 ];
 
-export default function BachatBazarApp() {
+interface BachatBazarAppProps { initialPath?: string; }
+export default function BachatBazarApp({ initialPath }: BachatBazarAppProps) {
   const s = useStore(); const { toast } = useToast();
-  const [route, setRoute] = useState<RouteInfo>(() => { if (typeof window !== 'undefined') return parseHash(window.location.hash); return { view: '', id: '', query: {} }; });
+  const [route, setRoute] = useState<RouteInfo>(() => {
+    if (typeof window === 'undefined') return { view: '', id: '', query: {} };
+    if (initialPath) return parsePath(initialPath);
+    return parsePath(window.location.pathname, window.location.search);
+  });
   const [cartOpen, setCartOpen] = useState(false); const [wishOpen, setWishOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false); const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login'|'register'>('login');
@@ -767,11 +925,11 @@ export default function BachatBazarApp() {
   const [searchQ, setSearchQ] = useState('');
   const mainRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { const h = () => { setRoute(parseHash(window.location.hash)); window.scrollTo({ top: 0 }); }; window.addEventListener('hashchange', h); return () => window.removeEventListener('hashchange', h); }, []);
+  useEffect(() => { const h = () => { setRoute(parsePath(window.location.pathname, window.location.search)); window.scrollTo({ top: 0 }); }; window.addEventListener('popstate', h); return () => window.removeEventListener('popstate', h); }, []);
   useEffect(() => { if (s.theme === 'dark') document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [s.theme]);
   useEffect(() => { const h = () => setShowBackTop(window.scrollY > 400); window.addEventListener('scroll', h, { passive: true }); return () => window.removeEventListener('scroll', h); }, []);
 
-  const navigate = useCallback((hash: string) => { window.location.hash = hash; }, []);
+  const navigate = useCallback((path: string) => { window.history.pushState({}, '', path); setRoute(parsePath(path)); window.scrollTo({ top: 0 }); }, []);
   const cartCount = s.cartCount(); const wishCount = s.wishlist.length;
   const cartProducts = s.cart.map(i => ({ ...i, product: s.getProduct(i.id) }));
   const cartTotals = s.cartTotals();
@@ -816,22 +974,22 @@ export default function BachatBazarApp() {
       {/* ─── MAIN NAVBAR ─── */}
       <header className="glass sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
-          <button onClick={() => navigate('#/')} className="flex items-center gap-1.5 sm:gap-2 shrink-0"><div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-[#006233] to-[#00A651] flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow" style={FH}>B</div><span className="font-bold text-base sm:text-lg gradient-text hidden sm:inline" style={FH}>Bachat Bazar</span></button>
-          <div className="flex-1 relative max-w-md"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground sm:w-[16px]"/><Input placeholder="Search..." value={searchQ} onChange={e => setSearchQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && searchQ) { navigate(makeHash('shop', undefined, { search: searchQ })); setSearchQ(''); } }} className="pl-9 h-8 sm:h-9 text-sm"/></div>
+          <button onClick={() => navigate('/')} className="flex items-center gap-1.5 sm:gap-2 shrink-0"><div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-[#006233] to-[#00A651] flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow" style={FH}>B</div><span className="font-bold text-base sm:text-lg gradient-text hidden sm:inline" style={FH}>Bachat Bazar</span></button>
+          <div className="flex-1 relative max-w-md"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground sm:w-[16px]"/><Input placeholder="Search..." value={searchQ} onChange={e => setSearchQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && searchQ) { navigate(makePath('shop', undefined, { search: searchQ })); setSearchQ(''); } }} className="pl-9 h-8 sm:h-9 text-sm"/></div>
           <div className="flex items-center gap-0.5 sm:gap-1">
             <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9" onClick={() => setCartOpen(true)}><ShoppingCart size={18} className="sm:w-[20px]"/>{cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-[#C5A028] text-white text-[8px] sm:text-[10px] rounded-full flex items-center justify-center font-bold">{cartCount}</span>}</Button>
             <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9 hidden sm:flex" onClick={() => setWishOpen(true)}><Heart size={18} className="sm:w-[20px]"/>{wishCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">{wishCount}</span>}</Button>
             <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 hidden sm:flex" onClick={() => setNotifOpen(!notifOpen)}><Bell size={18} className="sm:w-[20px]"/>{s.notifs.filter(n => !n.read).length > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"/>}</Button>
             {/* ─── ADMIN BUTTON (VISIBLE) ─── */}
-            <Button variant="ghost" size="icon" className="text-[#006233] dark:text-[#00A651] hover:bg-[#006233]/10 h-8 w-8 sm:h-9 sm:w-9" onClick={() => navigate(makeHash('admin'))} title="Admin Panel"><Settings size={18} className="sm:w-[20px]"/></Button>
+            <Button variant="ghost" size="icon" className="text-[#006233] dark:text-[#00A651] hover:bg-[#006233]/10 h-8 w-8 sm:h-9 sm:w-9" onClick={() => navigate(makePath('admin'))} title="Admin Panel"><Settings size={18} className="sm:w-[20px]"/></Button>
             <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 hidden sm:flex" onClick={s.toggleTheme}>{s.theme === 'dark' ? <Sun size={18}/> : <Moon size={18}/>}</Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 hidden sm:flex" onClick={() => s.user ? navigate(makeHash('account')) : setAuthOpen(true)}><User size={18} className="sm:w-[20px]"/></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 hidden sm:flex" onClick={() => s.user ? navigate(makePath('account')) : setAuthOpen(true)}><User size={18} className="sm:w-[20px]"/></Button>
             <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 sm:h-9 sm:w-9" onClick={() => setMobileMenu(true)}><Menu size={20}/></Button>
           </div>
         </div>
         {/* Desktop nav links */}
         <div className="hidden md:block border-t border-border/50">
-          <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 py-1.5">{navLinks.map(l => (<button key={l.href} onClick={() => navigate(l.href)} className={`px-3 py-1 rounded-full text-sm font-medium transition ${('#/' + route.view === l.href) || (l.href === '#/' && route.view === '') ? 'bg-[#006233] text-white' : 'text-muted-foreground hover:bg-muted'}`}>{l.label}</button>))}<Separator orientation="vertical" className="h-4 mx-1"/>{s.categories().slice(0, 6).map(cat => { const Icon = getCatIcon(cat.icon); return (<button key={cat.id} onClick={() => navigate(makeHash('shop', undefined, { category: cat.id }))} className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition ${route.query.category === cat.id ? 'bg-[#006233] text-white' : 'text-muted-foreground hover:bg-muted'}`}><Icon size={12}/>{cat.name}</button>); })}</div>
+          <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 py-1.5">{navLinks.map(l => (<button key={l.href} onClick={() => navigate(l.href)} className={`px-3 py-1 rounded-full text-sm font-medium transition ${('/' + route.view === l.href) || (l.href === '/' && route.view === '') ? 'bg-[#006233] text-white' : 'text-muted-foreground hover:bg-muted'}`}>{l.label}</button>))}<Separator orientation="vertical" className="h-4 mx-1"/>{s.categories().slice(0, 6).map(cat => { const Icon = getCatIcon(cat.icon); return (<button key={cat.id} onClick={() => navigate(makePath('shop', undefined, { category: cat.id }))} className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition ${route.query.category === cat.id ? 'bg-[#006233] text-white' : 'text-muted-foreground hover:bg-muted'}`}><Icon size={12}/>{cat.name}</button>); })}</div>
         </div>
       </header>
 
@@ -846,8 +1004,8 @@ export default function BachatBazarApp() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
             <div className="col-span-2 md:col-span-1"><div className="flex items-center gap-2 mb-3 sm:mb-4"><div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/10 flex items-center justify-center text-white font-bold text-xs sm:text-sm" style={FH}>B</div><span className="font-bold text-sm sm:text-lg" style={FH}>Bachat Bazar</span></div><p className="text-xs sm:text-sm opacity-80 leading-relaxed">Pakistan&apos;s #1 Online Marketplace. Quality products at the best prices with nationwide delivery.</p><div className="flex gap-2 sm:gap-3 mt-3 sm:mt-4"><a href="#" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Facebook size={12} className="sm:w-[14px]"/></a><a href="#" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Instagram size={12} className="sm:w-[14px]"/></a><a href="#" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Twitter size={12} className="sm:w-[14px]"/></a><a href="#" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><Youtube size={12} className="sm:w-[14px]"/></a></div></div>
-            <div><h4 className="font-bold text-xs sm:text-base mb-2 sm:mb-3" style={FH}>Quick Links</h4><div className="space-y-1 sm:space-y-2">{navLinks.map(l => <button key={l.href} onClick={() => navigate(l.href)} className="block text-[11px] sm:text-sm opacity-80 hover:opacity-100 transition">{l.label}</button>)}<button onClick={() => navigate(makeHash('faq'))} className="block text-[11px] sm:text-sm opacity-80 hover:opacity-100 transition">FAQ</button><button onClick={() => navigate(makeHash('blog'))} className="block text-[11px] sm:text-sm opacity-80 hover:opacity-100 transition">Blog</button></div></div>
-            <div><h4 className="font-bold text-xs sm:text-base mb-2 sm:mb-3" style={FH}>Categories</h4><div className="space-y-1 sm:space-y-2">{s.categories().map(c => <button key={c.id} onClick={() => navigate(makeHash('shop', undefined, { category: c.id }))} className="block text-[11px] sm:text-sm opacity-80 hover:opacity-100 transition">{c.name}</button>)}</div></div>
+            <div><h4 className="font-bold text-xs sm:text-base mb-2 sm:mb-3" style={FH}>Quick Links</h4><div className="space-y-1 sm:space-y-2">{navLinks.map(l => <button key={l.href} onClick={() => navigate(l.href)} className="block text-[11px] sm:text-sm opacity-80 hover:opacity-100 transition">{l.label}</button>)}<button onClick={() => navigate(makePath('faq'))} className="block text-[11px] sm:text-sm opacity-80 hover:opacity-100 transition">FAQ</button><button onClick={() => navigate(makePath('blog'))} className="block text-[11px] sm:text-sm opacity-80 hover:opacity-100 transition">Blog</button></div></div>
+            <div><h4 className="font-bold text-xs sm:text-base mb-2 sm:mb-3" style={FH}>Categories</h4><div className="space-y-1 sm:space-y-2">{s.categories().map(c => <button key={c.id} onClick={() => navigate(makePath('shop', undefined, { category: c.id }))} className="block text-[11px] sm:text-sm opacity-80 hover:opacity-100 transition">{c.name}</button>)}</div></div>
             <div><h4 className="font-bold text-xs sm:text-base mb-2 sm:mb-3" style={FH}>Contact</h4><div className="space-y-1.5 sm:space-y-2 text-[11px] sm:text-sm opacity-80"><div className="flex items-center gap-1.5 sm:gap-2"><Phone size={12} className="sm:w-[14px]"/>+92 42 3576 1234</div><div className="flex items-center gap-1.5 sm:gap-2"><Mail size={12} className="sm:w-[14px]"/>support@bachatbazar.pk</div><div className="flex items-center gap-1.5 sm:gap-2"><MapPin size={12} className="sm:w-[14px]"/>Gulberg III, Lahore</div></div><div className="mt-3 sm:mt-4"><h5 className="font-medium text-[10px] sm:text-xs mb-1.5 sm:mb-2">We Accept</h5><div className="flex gap-1.5 sm:gap-2 flex-wrap">{['JazzCash','EasyPaisa','Visa','COD'].map(m => <span key={m} className="text-[10px] sm:text-xs bg-white/10 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">{m}</span>)}</div></div></div>
           </div>
           <div className="border-t border-white/10 mt-4 sm:mt-8 pt-4 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 text-[10px] sm:text-xs opacity-60"><p>&copy; 2026 Bachat Bazar. All rights reserved.</p><p>Made with &#10084;&#65039; in Pakistan</p></div>
@@ -857,19 +1015,19 @@ export default function BachatBazarApp() {
       {/* ─── DRAWERS ─── */}
       <Sheet open={cartOpen} onOpenChange={setCartOpen}><SheetContent className="w-full sm:max-w-md flex flex-col"><SheetHeader><SheetTitle style={FH}>Cart ({cartCount})</SheetTitle><SheetDescription>Your shopping cart</SheetDescription></SheetHeader>
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 py-4">{cartProducts.length === 0 ? <div className="text-center py-10 text-muted-foreground"><ShoppingCart size={40} className="mx-auto mb-2 opacity-30"/><p className="text-sm">Cart is empty</p></div> : cartProducts.map(({ id, qty, product: p }) => p && (<div key={id} className="flex gap-3 p-3 rounded-xl border"><div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-muted"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><p className="text-xs text-[#C5A028]">{p.brand}</p><div className="flex items-center justify-between mt-1"><PriceDisplay price={p.price} oldPrice={p.oldPrice}/><div className="flex items-center border rounded"><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => s.setQty(id, Math.max(1, qty - 1))}><Minus size={10}/></Button><span className="text-xs font-semibold w-6 text-center">{qty}</span><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => s.setQty(id, qty + 1)}><Plus size={10}/></Button></div></div></div><Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 shrink-0" onClick={() => { s.removeFromCart(id); toast({ title: 'Removed' }); }}><Trash2 size={12}/></Button></div>))}</div>
-      {cartProducts.length > 0 && (<SheetFooter className="border-t pt-4 space-y-3"><div className="space-y-1 w-full"><div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-medium">{cartTotals.totalDisplay}</span></div><p className="text-xs text-muted-foreground">Shipping & tax calculated at checkout</p></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-3" onClick={() => { setCartOpen(false); navigate(makeHash('cart')); }}>View Cart</Button><Button variant="outline" className="w-full" onClick={() => { setCartOpen(false); navigate(makeHash('checkout')); }}>Checkout</Button></SheetFooter>)}</SheetContent></Sheet>
+      {cartProducts.length > 0 && (<SheetFooter className="border-t pt-4 space-y-3"><div className="space-y-1 w-full"><div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-medium">{cartTotals.totalDisplay}</span></div><p className="text-xs text-muted-foreground">Shipping & tax calculated at checkout</p></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-3" onClick={() => { setCartOpen(false); navigate(makePath('cart')); }}>View Cart</Button><Button variant="outline" className="w-full" onClick={() => { setCartOpen(false); navigate(makePath('checkout')); }}>Checkout</Button></SheetFooter>)}</SheetContent></Sheet>
 
       <Sheet open={wishOpen} onOpenChange={setWishOpen}><SheetContent className="w-full sm:max-w-md flex flex-col"><SheetHeader><SheetTitle style={FH}>Wishlist ({wishCount})</SheetTitle><SheetDescription>Products you love</SheetDescription></SheetHeader>
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 py-4">{s.wishlist.length === 0 ? <div className="text-center py-10 text-muted-foreground"><Heart size={40} className="mx-auto mb-2 opacity-30"/><p className="text-sm">Wishlist is empty</p></div> : s.wishlist.map(id => { const p = s.getProduct(id); return p ? (<div key={id} className="flex gap-3 p-3 rounded-xl border"><div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-muted"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><PriceDisplay price={p.price} oldPrice={p.oldPrice}/></div><Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 shrink-0" onClick={() => { s.toggleWishlist(id); toast({ title: 'Removed' }); }}><Trash2 size={12}/></Button></div>) : null; })}</div>
-      {s.wishlist.length > 0 && <SheetFooter><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { setWishOpen(false); navigate(makeHash('wishlist')); }}>View All</Button></SheetFooter>}</SheetContent></Sheet>
+      {s.wishlist.length > 0 && <SheetFooter><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { setWishOpen(false); navigate(makePath('wishlist')); }}>View All</Button></SheetFooter>}</SheetContent></Sheet>
 
       <Sheet open={mobileMenu} onOpenChange={setMobileMenu}><SheetContent className="w-full sm:max-w-xs flex flex-col" side="left"><SheetHeader><SheetTitle style={FH}><span className="gradient-text">Bachat Bazar</span></SheetTitle><SheetDescription>Pakistan&apos;s #1 Marketplace</SheetDescription></SheetHeader>
-      <nav className="flex-1 overflow-y-auto custom-scrollbar space-y-1 py-4">{[...navLinks, { href: makeHash('faq'), label: 'FAQ' }, { href: makeHash('blog'), label: 'Blog' }].map(l => (<button key={l.href} onClick={() => { navigate(l.href); setMobileMenu(false); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted transition">{l.label}</button>))}
+      <nav className="flex-1 overflow-y-auto custom-scrollbar space-y-1 py-4">{[...navLinks, { href: makePath('faq'), label: 'FAQ' }, { href: makePath('blog'), label: 'Blog' }].map(l => (<button key={l.href} onClick={() => { navigate(l.href); setMobileMenu(false); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted transition">{l.label}</button>))}
       <Separator className="my-3"/>
       <p className="px-3 text-xs text-muted-foreground font-medium mb-2">Categories</p>
-      {s.categories().map(c => { const Icon = getCatIcon(c.icon); return (<button key={c.id} onClick={() => { navigate(makeHash('shop', undefined, { category: c.id })); setMobileMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted transition"><Icon size={14}/>{c.name}</button>); })}
+      {s.categories().map(c => { const Icon = getCatIcon(c.icon); return (<button key={c.id} onClick={() => { navigate(makePath('shop', undefined, { category: c.id })); setMobileMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted transition"><Icon size={14}/>{c.name}</button>); })}
       <Separator className="my-3"/>
-      <button onClick={() => { navigate(makeHash('admin')); setMobileMenu(false); }} className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white rounded-lg px-3 py-2.5 text-sm font-bold flex items-center gap-2 mb-2"><Settings size={14}/>Admin Panel</button>
+      <button onClick={() => { navigate(makePath('admin')); setMobileMenu(false); }} className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white rounded-lg px-3 py-2.5 text-sm font-bold flex items-center gap-2 mb-2"><Settings size={14}/>Admin Panel</button>
       <div className="flex items-center gap-2 px-3">
         <Button variant="ghost" size="sm" className="flex-1" onClick={() => { s.toggleTheme(); }}>{s.theme === 'dark' ? <><Sun size={14} className="mr-1"/>Light Mode</> : <><Moon size={14} className="mr-1"/>Dark Mode</>}</Button>
         <Button variant="ghost" size="sm" className="flex-1" onClick={() => { setMobileMenu(false); setAuthOpen(true); }}><User size={14} className="mr-1"/>Account</Button>
@@ -877,7 +1035,7 @@ export default function BachatBazarApp() {
       </nav></SheetContent></Sheet>
 
       <Dialog open={!!quickView} onOpenChange={() => setQuickView(null)}><DialogContent className="max-w-2xl"><DialogHeader><DialogTitle className="sr-only">Quick View</DialogTitle><DialogDescription className="sr-only">Product quick view</DialogDescription></DialogHeader>
-      {quickView && (<div className="flex flex-col md:flex-row gap-6"><div className="md:w-1/2 aspect-square rounded-xl overflow-hidden bg-muted"><ProductImage src={quickView.images[0]} alt={quickView.name} seed={quickView.imageId} className="w-full h-full object-cover"/></div><div className="md:w-1/2 space-y-3"><p className="text-sm text-[#C5A028] font-semibold" style={FB}>{quickView.brand}</p><h3 className="text-xl font-bold" style={FH}>{quickView.name}</h3><div className="flex items-center gap-2"><StarRating rating={quickView.rating}/><span className="text-xs text-muted-foreground">({quickView.reviews})</span></div><PriceDisplay price={quickView.price} oldPrice={quickView.oldPrice}/><p className="text-sm text-muted-foreground line-clamp-3">{quickView.description}</p><div className="flex gap-2 pt-2"><Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { s.addToCart(quickView.id); toast({ title: 'Added to cart' }); }}><ShoppingCart size={14} className="mr-1"/>Add to Cart</Button><Button variant="outline" onClick={() => { setQuickView(null); navigate(makeHash('product', String(quickView.id))); }}>View Details</Button></div></div></div>)}</DialogContent></Dialog>
+      {quickView && (<div className="flex flex-col md:flex-row gap-6"><div className="md:w-1/2 aspect-square rounded-xl overflow-hidden bg-muted"><ProductImage src={quickView.images[0]} alt={quickView.name} seed={quickView.imageId} className="w-full h-full object-cover"/></div><div className="md:w-1/2 space-y-3"><p className="text-sm text-[#C5A028] font-semibold" style={FB}>{quickView.brand}</p><h3 className="text-xl font-bold" style={FH}>{quickView.name}</h3><div className="flex items-center gap-2"><StarRating rating={quickView.rating}/><span className="text-xs text-muted-foreground">({quickView.reviews})</span></div><PriceDisplay price={quickView.price} oldPrice={quickView.oldPrice}/><p className="text-sm text-muted-foreground line-clamp-3">{quickView.description}</p><div className="flex gap-2 pt-2"><Button className="flex-1 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => { s.addToCart(quickView.id); toast({ title: 'Added to cart' }); }}><ShoppingCart size={14} className="mr-1"/>Add to Cart</Button><Button variant="outline" onClick={() => { setQuickView(null); navigate(makePath('product', String(quickView.id))); }}>View Details</Button></div></div></div>)}</DialogContent></Dialog>
 
       <Dialog open={authOpen} onOpenChange={setAuthOpen}><DialogContent className="max-w-sm"><DialogHeader><DialogTitle style={FH}>{authMode === 'login' ? 'Sign In' : 'Create Account'}</DialogTitle><DialogDescription>{authMode === 'login' ? 'Welcome back to Bachat Bazar' : 'Join Bachat Bazar today'}</DialogDescription></DialogHeader>
       <div className="space-y-3">{authMode === 'register' && <div><Label>Name</Label><Input value={authName} onChange={e => setAuthName(e.target.value)} placeholder="Muhammad Ali"/></div>}<div><Label>Email</Label><Input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="you@example.com"/></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold" onClick={handleAuth}>{authMode === 'login' ? 'Sign In' : 'Create Account'}</Button><p className="text-center text-xs text-muted-foreground">{authMode === 'login' ? "Don't have an account? " : 'Already have an account? '}<button className="text-[#006233] dark:text-[#00A651] font-medium" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>{authMode === 'login' ? 'Sign Up' : 'Sign In'}</button></p></div></DialogContent></Dialog>
@@ -887,11 +1045,11 @@ export default function BachatBazarApp() {
       {/* Mobile Bottom Navigation */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-zinc-900 border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.08)] safe-bottom">
         <div className="flex items-center justify-around h-14">
-          <button onClick={() => navigate('#/')} className={`flex flex-col items-center justify-center gap-0.5 w-16 h-full transition ${route.view === '' || route.view === 'home' ? 'text-[#006233] dark:text-[#00A651]' : 'text-gray-400'}`}><Home size={18}/><span className="text-[9px] font-medium">Home</span></button>
-          <button onClick={() => navigate('#/shop')} className={`flex flex-col items-center justify-center gap-0.5 w-16 h-full transition ${route.view === 'shop' ? 'text-[#006233] dark:text-[#00A651]' : 'text-gray-400'}`}><Store size={18}/><span className="text-[9px] font-medium">Shop</span></button>
-          <button onClick={() => navigate('#/deals')} className={`flex flex-col items-center justify-center gap-0.5 w-16 h-full transition ${route.view === 'deals' ? 'text-[#006233] dark:text-[#00A651]' : 'text-gray-400'}`}><Flame size={18}/><span className="text-[9px] font-medium">Deals</span></button>
+          <button onClick={() => navigate('/')} className={`flex flex-col items-center justify-center gap-0.5 w-16 h-full transition ${route.view === '' || route.view === 'home' ? 'text-[#006233] dark:text-[#00A651]' : 'text-gray-400'}`}><Home size={18}/><span className="text-[9px] font-medium">Home</span></button>
+          <button onClick={() => navigate('/shop')} className={`flex flex-col items-center justify-center gap-0.5 w-16 h-full transition ${route.view === 'shop' ? 'text-[#006233] dark:text-[#00A651]' : 'text-gray-400'}`}><Store size={18}/><span className="text-[9px] font-medium">Shop</span></button>
+          <button onClick={() => navigate('/deals')} className={`flex flex-col items-center justify-center gap-0.5 w-16 h-full transition ${route.view === 'deals' ? 'text-[#006233] dark:text-[#00A651]' : 'text-gray-400'}`}><Flame size={18}/><span className="text-[9px] font-medium">Deals</span></button>
           <button onClick={() => setCartOpen(true)} className="flex flex-col items-center justify-center gap-0.5 w-16 h-full transition text-gray-400 relative"><ShoppingCart size={18}/>{cartCount > 0 && <span className="absolute top-1 right-2 w-4 h-4 bg-[#C5A028] text-white text-[8px] rounded-full flex items-center justify-center font-bold">{cartCount}</span>}<span className="text-[9px] font-medium">Cart</span></button>
-          <button onClick={() => s.user ? navigate(makeHash('account')) : setMobileMenu(true)} className="flex flex-col items-center justify-center gap-0.5 w-16 h-full transition text-gray-400"><User size={18}/><span className="text-[9px] font-medium">More</span></button>
+          <button onClick={() => s.user ? navigate(makePath('account')) : setMobileMenu(true)} className="flex flex-col items-center justify-center gap-0.5 w-16 h-full transition text-gray-400"><User size={18}/><span className="text-[9px] font-medium">More</span></button>
         </div>
       </nav>
 
@@ -909,10 +1067,10 @@ function CartView({ navigate }: { navigate: (h: string) => void }) {
   return (
     <div className="animate-fadeUp space-y-4 sm:space-y-6">
       <h2 className="text-lg sm:text-2xl font-bold" style={FH}>Shopping Cart</h2>
-      {cartProducts.length === 0 ? <div className="text-center py-16 sm:py-20"><ShoppingCart size={36} className="mx-auto mb-3 opacity-30 sm:w-[48px]"/><p className="text-sm sm:text-lg font-medium">Your cart is empty</p><Button className="mt-3 sm:mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white text-sm" onClick={() => navigate(makeHash('shop'))}>Start Shopping</Button></div> :
+      {cartProducts.length === 0 ? <div className="text-center py-16 sm:py-20"><ShoppingCart size={36} className="mx-auto mb-3 opacity-30 sm:w-[48px]"/><p className="text-sm sm:text-lg font-medium">Your cart is empty</p><Button className="mt-3 sm:mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white text-sm" onClick={() => navigate(makePath('shop'))}>Start Shopping</Button></div> :
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         <div className="flex-1 space-y-2 sm:space-y-3">{cartProducts.map(({ id, qty, product: p }) => p && (<Card key={id} className="p-2.5 sm:p-4 flex gap-2 sm:gap-4"><div className="w-14 h-14 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-muted shrink-0"><ProductImage src={p.images[0]} alt={p.name} seed={p.imageId} className="w-full h-full object-cover"/></div><div className="flex-1 space-y-0.5 sm:space-y-1"><p className="font-medium text-xs sm:text-base truncate" style={FB}>{p.name}</p><p className="text-[10px] sm:text-xs text-[#C5A028]">{p.brand}</p><PriceDisplay price={p.price} oldPrice={p.oldPrice}/><div className="flex items-center gap-1.5 sm:gap-2 mt-1"><div className="flex items-center border rounded"><Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7" onClick={() => s.setQty(id, Math.max(1, qty - 1))}><Minus size={10} className="sm:w-[12px]"/></Button><span className="w-6 sm:w-8 text-center font-semibold text-xs sm:text-sm">{qty}</span><Button variant="ghost" size="icon" className="h-6 w-6 sm:h-7 sm:w-7" onClick={() => s.setQty(id, qty + 1)}><Plus size={10} className="sm:w-[12px]"/></Button></div><Button variant="ghost" size="sm" className="text-red-500 h-6 text-[10px] sm:text-sm" onClick={() => { s.removeFromCart(id); toast({ title: 'Removed' }); }}><Trash2 size={12} className="mr-0.5 sm:w-[14px]"/>Remove</Button></div></div></Card>))}</div>
-        <Card className="lg:w-80 p-3 sm:p-6 space-y-3 sm:space-y-4 h-fit"><h3 className="font-bold text-sm sm:text-base" style={FH}>Order Summary</h3><div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm"><div className="flex justify-between"><span>Subtotal</span><span>{totals.subDisplay}</span></div><div className="flex justify-between text-green-600"><span>Discount</span><span>-{totals.discountDisplay}</span></div><div className="flex justify-between"><span>Shipping</span><span>{totals.shipDisplay}</span></div><div className="flex justify-between"><span>Tax (8%)</span><span>{totals.taxDisplay}</span></div><Separator/><div className="flex justify-between font-bold text-sm sm:text-base"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{totals.totalDisplay}</span></div></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-2 sm:py-3 text-sm" onClick={() => navigate(makeHash('checkout'))}>Proceed to Checkout</Button></Card>
+        <Card className="lg:w-80 p-3 sm:p-6 space-y-3 sm:space-y-4 h-fit"><h3 className="font-bold text-sm sm:text-base" style={FH}>Order Summary</h3><div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm"><div className="flex justify-between"><span>Subtotal</span><span>{totals.subDisplay}</span></div><div className="flex justify-between text-green-600"><span>Discount</span><span>-{totals.discountDisplay}</span></div><div className="flex justify-between"><span>Shipping</span><span>{totals.shipDisplay}</span></div><div className="flex justify-between"><span>Tax (8%)</span><span>{totals.taxDisplay}</span></div><Separator/><div className="flex justify-between font-bold text-sm sm:text-base"><span>Total</span><span className="text-[#006233] dark:text-[#00A651]">{totals.totalDisplay}</span></div></div><Button className="w-full bg-gradient-to-r from-[#006233] to-[#00A651] text-white font-bold py-2 sm:py-3 text-sm" onClick={() => navigate(makePath('checkout'))}>Proceed to Checkout</Button></Card>
       </div>}
     </div>
   );
@@ -922,7 +1080,7 @@ function CheckoutView({ navigate }: { navigate: (h: string) => void }) {
   const s = useStore(); const { toast } = useToast();
   const [payMethod, setPayMethod] = useState('cod'); const totals = s.cartTotals();
   const address = s.addresses[0];
-  const handlePlace = () => { if (s.cart.length === 0) return; const order = s.placeOrder(payMethod, address || { id:1, label:'Home', name:'', line:'', city:'', state:'', zip:'', country:'Pakistan', phone:'', default:true }); toast({ title: 'Order placed!', description: `Order #${order.id}` }); navigate(makeHash('orders')); };
+  const handlePlace = () => { if (s.cart.length === 0) return; const order = s.placeOrder(payMethod, address || { id:1, label:'Home', name:'', line:'', city:'', state:'', zip:'', country:'Pakistan', phone:'', default:true }); toast({ title: 'Order placed!', description: `Order #${order.id}` }); navigate(makePath('orders')); };
   return (
     <div className="animate-fadeUp space-y-4 sm:space-y-6">
       <h2 className="text-lg sm:text-2xl font-bold" style={FH}>Checkout</h2>
@@ -951,12 +1109,12 @@ function CompareView({ navigate }: { navigate: (h: string) => void }) {
 
 function OrdersView({ navigate }: { navigate: (h: string) => void }) {
   const s = useStore();
-  return (<div className="animate-fadeUp space-y-4 sm:space-y-6"><h2 className="text-lg sm:text-2xl font-bold" style={FH}>My Orders</h2>{s.orders.length === 0 ? <div className="text-center py-16 sm:py-20"><Package size={36} className="mx-auto mb-3 opacity-30 sm:w-[48px]"/><p className="text-sm sm:text-lg font-medium">No orders yet</p><Button className="mt-3 sm:mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white text-sm" onClick={() => navigate(makeHash('shop'))}>Start Shopping</Button></div> : <div className="space-y-2 sm:space-y-3">{s.orders.map(o => (<Card key={o.id} className="p-3 sm:p-4 space-y-1.5 sm:space-y-2"><div className="flex items-center justify-between"><span className="font-bold text-sm">#{o.id}</span><Badge className={`${o.status === 'Delivered' ? 'bg-green-500' : o.status === 'Cancelled' ? 'bg-red-500' : 'bg-blue-500'} text-white text-[10px] sm:text-sm`}>{o.status}</Badge></div><p className="text-[10px] sm:text-xs text-muted-foreground">{new Date(o.date).toLocaleDateString()}</p><div className="space-y-0.5 sm:space-y-1">{o.items.map((it,i) => <p key={i} className="text-xs sm:text-sm">{it.name?.slice(0,30)} x{it.qty} — {s.money((it.price||0)*it.qty)}</p>)}</div><div className="flex justify-between font-bold pt-1 border-t text-sm"><span>Total</span><span className="text-[#006233]">{o.totals.totalDisplay}</span></div></Card>))}</div>}</div>);
+  return (<div className="animate-fadeUp space-y-4 sm:space-y-6"><h2 className="text-lg sm:text-2xl font-bold" style={FH}>My Orders</h2>{s.orders.length === 0 ? <div className="text-center py-16 sm:py-20"><Package size={36} className="mx-auto mb-3 opacity-30 sm:w-[48px]"/><p className="text-sm sm:text-lg font-medium">No orders yet</p><Button className="mt-3 sm:mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white text-sm" onClick={() => navigate(makePath('shop'))}>Start Shopping</Button></div> : <div className="space-y-2 sm:space-y-3">{s.orders.map(o => (<Card key={o.id} className="p-3 sm:p-4 space-y-1.5 sm:space-y-2"><div className="flex items-center justify-between"><span className="font-bold text-sm">#{o.id}</span><Badge className={`${o.status === 'Delivered' ? 'bg-green-500' : o.status === 'Cancelled' ? 'bg-red-500' : 'bg-blue-500'} text-white text-[10px] sm:text-sm`}>{o.status}</Badge></div><p className="text-[10px] sm:text-xs text-muted-foreground">{new Date(o.date).toLocaleDateString()}</p><div className="space-y-0.5 sm:space-y-1">{o.items.map((it,i) => <p key={i} className="text-xs sm:text-sm">{it.name?.slice(0,30)} x{it.qty} — {s.money((it.price||0)*it.qty)}</p>)}</div><div className="flex justify-between font-bold pt-1 border-t text-sm"><span>Total</span><span className="text-[#006233]">{o.totals.totalDisplay}</span></div></Card>))}</div>}</div>);
 }
 
 function AccountView({ navigate }: { navigate: (h: string) => void }) {
-  const s = useStore(); if (!s.user) return <div className="text-center py-20"><p className="text-lg">Please sign in</p><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate('#/')}>Go Home</Button></div>;
-  return (<div className="animate-fadeUp space-y-4 sm:space-y-6"><h2 className="text-lg sm:text-2xl font-bold" style={FH}>My Account</h2><Card className="p-4 sm:p-6 space-y-2 sm:space-y-3"><div className="flex items-center gap-3 sm:gap-4"><div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#006233]/10 flex items-center justify-center"><User size={18} className="text-[#006233] sm:w-[24px]"/></div><div><p className="font-bold text-sm sm:text-lg" style={FB}>{s.user.name}</p><p className="text-xs sm:text-sm text-muted-foreground">{s.user.email}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Joined {new Date(s.user.joined).toLocaleDateString()}</p></div></div><Separator/><div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"><div className="text-center"><p className="text-xl sm:text-2xl font-bold text-[#006233]" style={FH}>{s.orders.length}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Orders</p></div><div className="text-center"><p className="text-xl sm:text-2xl font-bold text-pink-500" style={FH}>{s.wishlist.length}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Wishlist</p></div><div className="text-center"><p className="text-xl sm:text-2xl font-bold text-[#C5A028]" style={FH}>{s.rewards}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Rewards</p></div><div className="text-center"><p className="text-xl sm:text-2xl font-bold text-green-500" style={FH}>{s.cartCount()}</p><p className="text-[10px] sm:text-xs text-muted-foreground">In Cart</p></div></div></Card><Button variant="outline" className="text-sm" onClick={() => { s.logout(); navigate('#/'); }}>Sign Out</Button></div>);
+  const s = useStore(); if (!s.user) return <div className="text-center py-20"><p className="text-lg">Please sign in</p><Button className="mt-4 bg-gradient-to-r from-[#006233] to-[#00A651] text-white" onClick={() => navigate('/')}>Go Home</Button></div>;
+  return (<div className="animate-fadeUp space-y-4 sm:space-y-6"><h2 className="text-lg sm:text-2xl font-bold" style={FH}>My Account</h2><Card className="p-4 sm:p-6 space-y-2 sm:space-y-3"><div className="flex items-center gap-3 sm:gap-4"><div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#006233]/10 flex items-center justify-center"><User size={18} className="text-[#006233] sm:w-[24px]"/></div><div><p className="font-bold text-sm sm:text-lg" style={FB}>{s.user.name}</p><p className="text-xs sm:text-sm text-muted-foreground">{s.user.email}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Joined {new Date(s.user.joined).toLocaleDateString()}</p></div></div><Separator/><div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"><div className="text-center"><p className="text-xl sm:text-2xl font-bold text-[#006233]" style={FH}>{s.orders.length}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Orders</p></div><div className="text-center"><p className="text-xl sm:text-2xl font-bold text-pink-500" style={FH}>{s.wishlist.length}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Wishlist</p></div><div className="text-center"><p className="text-xl sm:text-2xl font-bold text-[#C5A028]" style={FH}>{s.rewards}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Rewards</p></div><div className="text-center"><p className="text-xl sm:text-2xl font-bold text-green-500" style={FH}>{s.cartCount()}</p><p className="text-[10px] sm:text-xs text-muted-foreground">In Cart</p></div></div></Card><Button variant="outline" className="text-sm" onClick={() => { s.logout(); navigate('/'); }}>Sign Out</Button></div>);
 }
 
 function DealsView({ onQuickView, navigate }: { onQuickView: (p: Product) => void; navigate: (h: string) => void }) {

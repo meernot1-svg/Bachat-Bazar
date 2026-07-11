@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   /* Vercel handles output automatically — no standalone needed */
@@ -6,7 +7,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "static.markaz.app" },
@@ -14,6 +19,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "admin.yourmart.pk" },
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "sfile.chatglm.cn" },
+      { protocol: "https", hostname: "bachatbazar.pk" },
     ],
   },
 };

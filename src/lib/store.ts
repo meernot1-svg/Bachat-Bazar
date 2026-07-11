@@ -116,6 +116,7 @@ interface StoreState {
   updateSale: (id: string, d: Partial<SaleData>) => void;
   deleteSale: (id: string) => void;
   toggleSale: (id: string) => void;
+  toggleFlashSale: (id: number) => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -379,6 +380,9 @@ export const useStore = create<StoreState>()(
       deleteSale: (id) => set({ sales: get().sales.filter(s => s.id !== id) }),
       toggleSale: (id) => {
         set({ sales: get().sales.map(s => s.id === id ? { ...s, active: !s.active } : s) });
+      },
+      toggleFlashSale: (id) => {
+        set({ catalog: get().catalog.map(p => p.id === id ? { ...p, flashSale: !p.flashSale } : p) });
       },
     }),
     { name: 'bachatbazar_v11' }

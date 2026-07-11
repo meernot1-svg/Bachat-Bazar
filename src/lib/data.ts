@@ -146,8 +146,6 @@ export interface SaleData {
 // Category images - each with a correct, category-appropriate Unsplash photo
 export const CATEGORIES: Category[] = [
   { id:'beauty', name:'Health & Beauty', icon:'Sparkles', color:'from-emerald-600 to-teal-500', img:'1596462502278-27bfdc403348' },
-  { id:'grocery', name:'Grocery & Pet Care', icon:'ShoppingCart', color:'from-amber-500 to-orange-500', img:'1542838132-92f5d5c0b1bc' },
-  { id:'appliances', name:'TV & Home Appliances', icon:'Tv', color:'from-sky-600 to-blue-500', img:'1556909114-f6e7ad7d3136' },
   { id:'electronics', name:'Phones & Computers', icon:'Smartphone', color:'from-violet-600 to-purple-500', img:'1511707171634-5f897ff02aa9' },
   { id:'mens-fashion', name:"Men's Fashion", icon:'Shirt', color:'from-slate-600 to-zinc-700', img:'1483985988355-763728e1935b' },
   { id:'home-lifestyle', name:'Home & Lifestyle', icon:'Sofa', color:'from-rose-500 to-pink-500', img:'1556228453-efd6c1ff04f6' },
@@ -158,13 +156,10 @@ export const CATEGORIES: Category[] = [
   { id:'sports-fitness', name:'Sports & Fitness', icon:'Dumbbell', color:'from-green-500 to-emerald-600', img:'1517836357463-d25dfeac3438' },
   { id:'islamic', name:'Islamic Products', icon:'Moon', color:'from-teal-600 to-cyan-600', img:'1542816417-0983c9c9ad53' },
   { id:'mobile-accessories', name:'Mobile Accessories', icon:'Smartphone', color:'from-indigo-500 to-blue-600', img:'1511707171634-5f897ff02aa9' },
-  { id:'hair-care', name:'Hair Care', icon:'Scissors', color:'from-pink-500 to-rose-600', img:'1522338242992-e1a54571a9f7' },
   { id:'bedding', name:'Bedding & Bedsheets', icon:'Bed', color:'from-purple-500 to-violet-600', img:'1555041469-a586c61ea9bc' },
   { id:'car-accessories', name:'Car Accessories', icon:'Car', color:'from-gray-600 to-slate-700', img:'1503376780353-7e6692767b70' },
-  { id:'stationery', name:'Stationery & School', icon:'PenTool', color:'from-cyan-500 to-teal-600', img:'1507925921958-8a62f3d1a50d' },
   { id:'womens-shoes', name:"Women's Shoes", icon:'Footprints', color:'from-fuchsia-600 to-pink-600', img:'1543163521-1bf539c55dd2' },
   { id:'fragrance', name:'Perfumes & Fragrances', icon:'SprayCan', color:'from-amber-600 to-yellow-600', img:'1541643600914-78b084683601' },
-  { id:'pet-care', name:'Pet Care', icon:'PawPrint', color:'from-lime-500 to-green-600', img:'1587300003388-59208cc962cb' },
 ];
 
 export const BRANDS = ['YourMart','J Premium','Remington','CX16','Memo','Herbiotics','SQ11','Markaz','Sapphire','Rukh','Zarar','Janan','Zafarani','MILANO','M25','Kinscoter','Haier','Dawlance','PEL','Anker','Baseus','JBL','Xiaomi','Audionic','Conatural','Medicam','Garnier','Nivea','Khaadi','Alkaram','Bonanza','Digital Quran Co','ProFit','MegaBuild','Barbie','SpeedRacer','Bonanza Satrangi','Ideas','Gul Ahmed','Sana Safinaz','Interwood','Roadster','Shell','Petpat','Furry Friends','Camlin','Dollar Stationery'];

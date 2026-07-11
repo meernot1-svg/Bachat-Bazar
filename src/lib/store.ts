@@ -385,6 +385,6 @@ export const useStore = create<StoreState>()(
         set({ catalog: get().catalog.map(p => p.id === id ? { ...p, flashSale: !p.flashSale } : p) });
       },
     }),
-    { name: 'bachatbazar_v11' }
+    { name: 'bachatbazar_v12' }
   )
 );
